@@ -26,8 +26,8 @@ public class Rental extends BaseEntity {
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @Column(name = "status", length = 20, nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
     private RentalStatus status;
 
     @Column(name = "total_amount", precision = 18, scale = 2, nullable = false)
