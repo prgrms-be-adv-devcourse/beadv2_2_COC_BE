@@ -34,10 +34,6 @@ public class SellerSettlement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "batch_id", nullable = false)
-    private SettlementBatch batch;
-
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
 
@@ -61,14 +57,13 @@ public class SellerSettlement extends BaseEntity {
     private List<SellerSettlementLine> lines = new ArrayList<>();
 
     @Builder
-    private SellerSettlement(SettlementBatch batch,
+    private SellerSettlement(
                              Long sellerId,
                              BigDecimal totalRentalAmount,
                              BigDecimal totalFeeAmount,
                              BigDecimal settlementAmount,
                              SellerSettlementStatus status,
                              LocalDateTime paidAt) {
-        this.batch = batch;
         this.sellerId = sellerId;
         this.totalRentalAmount = totalRentalAmount;
         this.totalFeeAmount = totalFeeAmount;
@@ -77,13 +72,12 @@ public class SellerSettlement extends BaseEntity {
         this.paidAt = paidAt;
     }
 
-    public static SellerSettlement create(SettlementBatch batch,
+    public static SellerSettlement create(
                                           Long sellerId,
                                           BigDecimal totalRentalAmount,
                                           BigDecimal totalFeeAmount,
                                           BigDecimal settlementAmount) {
         return SellerSettlement.builder()
-                .batch(batch)
                 .sellerId(sellerId)
                 .totalRentalAmount(totalRentalAmount)
                 .totalFeeAmount(totalFeeAmount)
