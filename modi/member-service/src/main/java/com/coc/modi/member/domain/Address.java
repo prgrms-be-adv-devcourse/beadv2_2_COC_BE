@@ -1,4 +1,4 @@
-package com.coc.modi.account.member.domain;
+package com.coc.modi.member.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
