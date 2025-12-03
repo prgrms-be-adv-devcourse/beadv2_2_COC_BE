@@ -26,21 +26,21 @@ public class SellerService {
     @Transactional(readOnly = true)
     public SellerInfo getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found. id=" + sellerId));
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
         return SellerInfo.from(seller);
     }
 
     @Transactional(readOnly = true)
     public SellerInfo getSellerByMemberId(Long memberId) {
         Seller seller = sellerRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found for memberId=" + memberId));
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
         return SellerInfo.from(seller);
     }
 
     @Transactional
     public SellerInfo registerSeller(SellerCreateCommand command) {
         if (sellerRepository.existsByMemberId(command.memberId())) {
-            throw new IllegalArgumentException("Seller already registered for memberId=" + command.memberId());
+            throw new IllegalArgumentException("이미 등록된 판매자입니다.");
         }
 
         Seller seller = Seller.create(
@@ -57,7 +57,7 @@ public class SellerService {
     @Transactional
     public SellerInfo updateSeller(Long sellerId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findById(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found. id=" + sellerId));
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
 
         seller.update(
                 command.storeName(),
@@ -72,7 +72,7 @@ public class SellerService {
     @Transactional
     public SellerInfo updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found for memberId=" + memberId));
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
 
         seller.update(
                 command.storeName(),
