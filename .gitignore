@@ -1,6 +1,6 @@
 HELP.md
 README.md
-.gradle
+modi/.gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
