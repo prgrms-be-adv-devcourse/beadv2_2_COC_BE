@@ -13,19 +13,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class SellerService {
 
     private final SellerRepository sellerRepository;
 
+    @Transactional(readOnly = true)
     public Page<SellerInfo> findSellers(Pageable pageable) {
         return sellerRepository.findAll(pageable)
                 .map(SellerInfo::from);
     }
 
+    @Transactional(readOnly = true)
     public SellerInfo getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("Seller not found. id=" + sellerId));
+        return SellerInfo.from(seller);
+    }
+
+    @Transactional(readOnly = true)
+    public SellerInfo getSellerByMemberId(Long memberId) {
+        Seller seller = sellerRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("Seller not found for memberId=" + memberId));
         return SellerInfo.from(seller);
     }
 
@@ -50,6 +58,21 @@ public class SellerService {
     public SellerInfo updateSeller(Long sellerId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("Seller not found. id=" + sellerId));
+
+        seller.update(
+                command.storeName(),
+                command.bizRegNo(),
+                command.storePhone()
+        );
+        seller.changeStatus(command.status());
+
+        return SellerInfo.from(seller);
+    }
+
+    @Transactional
+    public SellerInfo updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
+        Seller seller = sellerRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("Seller not found for memberId=" + memberId));
 
         seller.update(
                 command.storeName(),
