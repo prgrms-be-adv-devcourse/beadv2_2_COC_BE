@@ -2,6 +2,7 @@ package com.coc.modi.member.presentation;
 
 import com.coc.modi.member.application.MemberService;
 import com.coc.modi.member.application.dto.CreateMemberCommand;
+import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.presentation.dto.MemberSignupRequest;
 import com.coc.modi.common.ApiResponse;
@@ -27,6 +28,14 @@ public class MemberController {
         );
 
         MemberSignupResponse response = memberService.signup(command);
+
+        return ApiResponse.ok(response);
+    }
+
+    @GetMapping("/profile")
+    public ApiResponse<MemberProfileResponse> getProfile(Authentication authentication){
+
+        MemberProfileResponse response = memberService.getProfile(authentication);
 
         return ApiResponse.ok(response);
     }
