@@ -35,4 +35,9 @@ public class ProductRepositoryAdapter implements ProductRepository {
     public Product save(Product product) {
         return repository.save(product);
     }
+
+    @Override
+    public Product saveAndFlush(Product product) {
+        return repository.saveAndFlush(product);
+    }
 }

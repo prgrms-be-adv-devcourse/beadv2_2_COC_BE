@@ -6,6 +6,8 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.IDENTITY;
@@ -39,6 +41,9 @@ public class Product {
     @Enumerated(STRING)
     @Column(nullable = false, length = 50)
     private ProductCategory category;
+
+    @Column(name = "thumbnail_image_id")
+    private Long thumbnailImageId;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("ordering ASC")
@@ -93,6 +98,71 @@ public class Product {
         List<ProductImage> copy = new ArrayList<>(images);
         for (ProductImage image : copy) {
             removeImage(image);
+        }
+        this.thumbnailImageId = null;
+    }
+
+    public void updateThumbnailImageId(Long thumbnailImageId) {
+        this.thumbnailImageId = thumbnailImageId;
+    }
+
+    public void syncImages(List<ProductImageSpec> specs) {
+
+        // null 값인 경우 이미지 유지
+        if(specs == null) {
+            return;
+        }
+
+        // 빈 값일 경우 모든 이미지 삭제 후 썸네일 이미지도 초기화
+        if(specs.isEmpty()) {
+            clearImages();
+            this.thumbnailImageId = null;
+            return;
+        }
+
+        // 현재 이미지들을 id 기준으로 맵핑
+        Map<Long, ProductImage> currentById = this.images.stream()
+                .filter(img -> img.getId() != null)
+                .collect(Collectors.toMap(ProductImage::getId, img -> img));
+
+        // 신규/수정 처리
+        List<ProductImage> newImages = new ArrayList<>();
+
+        for (int i = 0; i < specs.size(); i++) {
+            ProductImageSpec spec = specs.get(i);
+            Integer ordering = spec.ordering() != null ? spec.ordering() : (i + 1);
+
+            if (spec.id() == null) {
+                // 새 이미지
+                ProductImage created = ProductImage.create(this, spec.url(), ordering);
+                newImages.add(created);
+            } else {
+                // 기존 이미지 수정
+                ProductImage existing = currentById.remove(spec.id());
+                if (existing == null) {
+                    // 없는 id가 왔다: 비즈니스에 따라 exception 또는 새로 추가
+                    // 여기서는 예외 던지는 걸 예시로
+                    throw new IllegalArgumentException("Invalid image id: " + spec.id());
+                }
+                existing.update(spec.url(), ordering);
+            }
+        }
+
+        // 남아 있는 currentById 값들은 요청에서 제거된 이미지 → 삭제 대상
+        for (ProductImage toRemove : currentById.values()) {
+            removeImage(toRemove);
+        }
+
+        // 새 이미지 추가
+        for (ProductImage img : newImages) {
+            addImage(img);
+        }
+
+        // 썸네일 초기화(첫 번째 이미지 기준)
+        if (this.images.isEmpty()) {
+            this.thumbnailImageId = null;
+        } else {
+            this.thumbnailImageId = this.images.get(0).getId();
         }
     }
 

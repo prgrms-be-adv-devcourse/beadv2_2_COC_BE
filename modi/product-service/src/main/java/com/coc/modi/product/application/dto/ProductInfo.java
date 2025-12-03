@@ -17,6 +17,7 @@ public record ProductInfo(
         BigDecimal pricePerDay,
         ProductStatus status,
         ProductCategory category,
+        Long thumbnailImageId,
         List<ImageInfo> images
 ) {
     public static ProductInfo from(Product product) {
@@ -32,6 +33,7 @@ public record ProductInfo(
                 product.getPricePerDay(),
                 product.getStatus(),
                 product.getCategory(),
+                product.getThumbnailImageId(),
                 images
         );
     }
@@ -39,15 +41,13 @@ public record ProductInfo(
     public record ImageInfo(
             Long id,
             String url,
-            int ordering,
-            boolean isThumbnail
+            int ordering
     ) {
         public static ImageInfo from(ProductImage image) {
             return new ImageInfo(
                     image.getId(),
                     image.getUrl(),
-                    image.getOrdering(),
-                    image.getIsThumbnail()
+                    image.getOrdering()
             );
         }
     }

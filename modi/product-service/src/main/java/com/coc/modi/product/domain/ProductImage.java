@@ -24,28 +24,21 @@ public class ProductImage {
     @Column(nullable = false)
     private Integer ordering;
 
-    @Column(name = "is_thumbnail", nullable = false)
-    private Boolean isThumbnail = false;
-
     protected ProductImage() {}
 
-    public ProductImage(Product product, String url, Integer ordering, Boolean isThumbnail) {
+    public ProductImage(Product product, String url, Integer ordering) {
         this.product = product;
         this.url = url;
         this.ordering = ordering;
-        this.isThumbnail = isThumbnail;
     }
 
-    public static ProductImage create(Product product, String url, Integer ordering, Boolean isThumbnail) {
-        return new ProductImage(product, url, ordering, isThumbnail);
+    public static ProductImage create(Product product, String url, Integer ordering) {
+        return new ProductImage(product, url, ordering);
     }
 
-    static ProductImage createProductImage(String url, Integer ordering, Boolean isThumbnail) {
-        ProductImage image = new ProductImage();
-        image.url = url;
-        image.ordering = ordering;
-        image.isThumbnail = isThumbnail;
-        return image;
+    public void update(String url, Integer ordering) {
+        this.url = url;
+        this.ordering = ordering;
     }
 
     void assignTo(Product product) {

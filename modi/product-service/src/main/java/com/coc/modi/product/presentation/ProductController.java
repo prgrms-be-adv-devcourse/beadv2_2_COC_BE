@@ -5,10 +5,8 @@ import com.coc.modi.product.application.ProductService;
 import com.coc.modi.product.application.dto.ProductCommand;
 import com.coc.modi.product.application.dto.ProductInfo;
 import com.coc.modi.product.application.dto.ProductListInfo;
-import com.coc.modi.product.presentation.dto.ImageResponseDto;
-import com.coc.modi.product.presentation.dto.ProductListResponseDto;
-import com.coc.modi.product.presentation.dto.ProductRequestDto;
-import com.coc.modi.product.presentation.dto.ProductResponseDto;
+import com.coc.modi.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.presentation.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -70,7 +68,7 @@ public class ProductController {
                 request.description(),
                 request.pricePerDay(),
                 request.category(),
-                request.imageUrls()
+                request.images()
         );
 
         ProductInfo product = service.createProduct(sellerId, command);
@@ -81,14 +79,14 @@ public class ProductController {
     // 상품 수정
     @PutMapping("/{productId}")
     public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(@PathVariable("productId") Long productId,
-            @RequestBody ProductRequestDto request) {
+            @RequestBody ProductUpdateRequestDto request) {
 
-        ProductCommand command = new ProductCommand(
+        ProductUpdateCommand command = new ProductUpdateCommand(
                 request.name(),
                 request.description(),
                 request.pricePerDay(),
                 request.category(),
-                request.imageUrls()
+                request.images()
         );
 
         ProductInfo product = service.updateProduct(productId, command);

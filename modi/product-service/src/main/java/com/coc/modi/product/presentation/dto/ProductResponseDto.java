@@ -15,6 +15,7 @@ public record ProductResponseDto(
         ProductStatus status,
         Long sellerId,
         ProductCategory category,
+        Long thumbnailImageId,
         List<ProductImageResponseDto> images
 ) {
 
@@ -32,6 +33,7 @@ public record ProductResponseDto(
                 info.status(),
                 info.sellerId(),
                 info.category(),
+                info.thumbnailImageId(),
                 images
         );
     }
