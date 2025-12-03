@@ -1,4 +1,4 @@
-package com.coc.modi.account.member.domain;
+package com.coc.modi.account.wallet.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
@@ -15,7 +15,7 @@ public class WalletTransaction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id", nullable = false)
     private MemberWallet wallet;
 
@@ -41,7 +41,6 @@ public class WalletTransaction extends BaseEntity {
     @Column(name = "related_settlement_id")
     private Long relatedSettlementId;
 
-    @Column(name = "description", length = 255)
+    @Column(length = 255)
     private String description;
-
 }

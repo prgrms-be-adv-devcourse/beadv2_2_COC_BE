@@ -1,4 +1,4 @@
-package com.coc.modi.account.member.domain;
+package com.coc.modi.account.wallet.domain;
 
 public enum WalletTransactionType {
     DEPOSIT_CHARGE,

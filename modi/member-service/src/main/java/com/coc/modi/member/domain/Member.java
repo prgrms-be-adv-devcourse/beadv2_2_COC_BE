@@ -1,14 +1,17 @@
-package com.coc.modi.account.member.domain;
+package com.coc.modi.member.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "member", schema = "public")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
     @Id
@@ -45,4 +48,26 @@ public class Member extends BaseEntity {
 
     @Column(length = 100)
     private String providerId;
+
+    private Member(String email,
+                   String password,
+                   String name,
+                   String phone,
+                   MemberRole role) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.phone = phone;
+        this.role = role;
+        this.status = MemberStatus.ACTIVE;
+        this.emailVerified = false;
+    }
+
+    public static Member create(String email,
+                                String password,
+                                String name,
+                                String phone,
+                                MemberRole role) {
+        return new Member(email, password, name, phone, role);
+    }
 }
