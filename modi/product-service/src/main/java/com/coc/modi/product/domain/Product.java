@@ -44,6 +44,41 @@ public class Product {
     @OrderBy("ordering ASC")
     private List<ProductImage> images = new ArrayList<>();
 
+    protected Product() {}
+
+    private Product(Long sellerId, String name, String description, BigDecimal pricePerDay, ProductStatus status, ProductCategory category) {
+        this.sellerId = sellerId;
+        this.name = name;
+        this.description = description;
+        this.pricePerDay = pricePerDay;
+        this.status = status;
+        this.category = category;
+    }
+
+    public static Product create(Long sellerId, String name, String description, BigDecimal pricePerDay, ProductCategory category) {
+        if (sellerId == null) {
+            throw new IllegalArgumentException("sellerId cannot be null");
+        }
+        validateProduct(name, description, pricePerDay, category);
+        ProductStatus status = ProductStatus.ACTIVE;
+        return new Product(sellerId, name, description, pricePerDay, status, category);
+    }
+
+    public void update(String name, String description, BigDecimal pricePerDay, ProductCategory category) {
+        validateProduct(name, description, pricePerDay, category);
+        this.name = name;
+        this.description = description;
+        this.pricePerDay = pricePerDay;
+        this.category = category;
+    }
+
+    public void updateStatus(ProductStatus status) {
+        if(this.status == ProductStatus.DELETE) {
+            throw new IllegalArgumentException("PRODUCT STATUS CANNOT BE DELETE");
+        }
+        this.status = status;
+    }
+
     public void addImage(ProductImage image) {
         images.add(image);
         image.assignTo(this);
@@ -58,6 +93,21 @@ public class Product {
         List<ProductImage> copy = new ArrayList<>(images);
         for (ProductImage image : copy) {
             removeImage(image);
+        }
+    }
+
+    private static void validateProduct(String name, String description, BigDecimal pricePerDay, ProductCategory category) {
+        if (name == null) {
+            throw new IllegalArgumentException("name cannot be null");
+        }
+        if (description == null) {
+            throw new IllegalArgumentException("description cannot be null");
+        }
+        if (pricePerDay == null || pricePerDay.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("price per day must be greater than 0");
+        }
+        if (category == null) {
+            throw new IllegalArgumentException("category cannot be null");
         }
     }
 }

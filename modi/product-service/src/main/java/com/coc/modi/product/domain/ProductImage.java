@@ -27,6 +27,19 @@ public class ProductImage {
     @Column(name = "is_thumbnail", nullable = false)
     private Boolean isThumbnail = false;
 
+    protected ProductImage() {}
+
+    public ProductImage(Product product, String url, Integer ordering, Boolean isThumbnail) {
+        this.product = product;
+        this.url = url;
+        this.ordering = ordering;
+        this.isThumbnail = isThumbnail;
+    }
+
+    public static ProductImage create(Product product, String url, Integer ordering, Boolean isThumbnail) {
+        return new ProductImage(product, url, ordering, isThumbnail);
+    }
+
     static ProductImage createProductImage(String url, Integer ordering, Boolean isThumbnail) {
         ProductImage image = new ProductImage();
         image.url = url;
