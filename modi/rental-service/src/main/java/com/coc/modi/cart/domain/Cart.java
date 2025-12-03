@@ -1,6 +1,5 @@
-package com.coc.modi.rental.domain;
+package com.coc.modi.cart.domain;
 
-import com.coc.modi.account.member.domain.Member;
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,9 +16,8 @@ public class Cart extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();

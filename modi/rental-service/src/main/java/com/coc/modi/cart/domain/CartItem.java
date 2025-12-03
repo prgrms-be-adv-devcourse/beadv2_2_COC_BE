@@ -1,4 +1,4 @@
-package com.coc.modi.rental.domain;
+package com.coc.modi.cart.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
@@ -23,15 +23,9 @@ public class CartItem extends BaseEntity {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
 
-    @Column(name = "rental_start_date", nullable = false)
-    private LocalDate rentalStartDate;
-
-    @Column(name = "rental_end_date", nullable = false)
-    private LocalDate rentalEndDate;
-
-    @Column(name = "total_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
 }
