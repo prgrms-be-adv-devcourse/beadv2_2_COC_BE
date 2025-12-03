@@ -2,9 +2,9 @@ package com.coc.modi.rental.infrastructure.client.dto;
 
 import java.math.BigDecimal;
 
-public record ProductPriceResponseDto(
+public record ProductResponseDto(
         Long productId,
-        String name,
-        BigDecimal price
+        BigDecimal price,
+        String status
 ) {
 }

@@ -5,6 +5,7 @@ import com.coc.modi.rental.application.RentalService;
 
 import com.coc.modi.rental.application.dto.RentalDetailResponse;
 import com.coc.modi.rental.presentation.dto.RentalFromCartRequest;
+import com.coc.modi.rental.presentation.dto.RentalRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,18 @@ public class RentalController {
 
     @PostMapping("/carts")
     public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@RequestBody RentalFromCartRequest request,
-                                                                                  @RequestParam Long memberId) {
+                                                                  @RequestParam Long memberId) {
         //현재 @RequestParam으로 받는 멤버 ID 값을 멤버 서비스 적용 이후에는 AuthenticationPrincipal에서 가져와 사용할 예정
 
         return rentalService.createRentalFromCart(request.toCommand(memberId));
     }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<Void>> createRental(@RequestBody RentalRequest rentalRequest,
+                                                          @RequestParam Long memberId) {
+
+        return rentalService.createRental(rentalRequest.toCommand(memberId));
+    }
+
+
 }
