@@ -1,8 +1,9 @@
-package com.coc.modi.common.auth;
+package com.coc.modi.auth.infrastructure.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class JwtTokenProvider {
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             @Value("${jwt.access-token-expiration}") long accessTokenValidityInMs,
                             @Value("${jwt.refresh-token-expiration}") long refreshTokenValidityInMs) {
+
         this.secretKey = secretKey;
         this.accessTokenValidityInMs = accessTokenValidityInMs;
         this.refreshTokenValidityInMs = refreshTokenValidityInMs;
@@ -37,6 +39,7 @@ public class JwtTokenProvider {
     public String generateToken(Long memberId,
                                 String role,
                                 long validityInMs){
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityInMs);
 
@@ -50,6 +53,7 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token){
+
         try {
             getClaims(token);
 

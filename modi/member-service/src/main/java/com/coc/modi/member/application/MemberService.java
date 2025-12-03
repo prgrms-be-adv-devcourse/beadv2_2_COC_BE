@@ -5,7 +5,7 @@ import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.domain.Member;
 import com.coc.modi.member.domain.MemberRole;
-import com.coc.modi.member.repository.MemberRepository;
+import com.coc.modi.member.infrastructure.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +23,7 @@ public class MemberService {
     public MemberSignupResponse signup(CreateMemberCommand command){
 
         if(memberRepository.existsByEmail(command.email())){
+
             throw new IllegalArgumentException("Email already exists");
         }
 
