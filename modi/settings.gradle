@@ -1,1 +1,9 @@
 rootProject.name = 'modi'
+
+include(
+        'common',
+        'account-service',
+        'product-service',
+        'rental-service',
+        'seller-service'
+)
