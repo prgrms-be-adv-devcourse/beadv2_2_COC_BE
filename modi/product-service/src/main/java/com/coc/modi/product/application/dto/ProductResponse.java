@@ -9,7 +9,7 @@ import com.coc.modi.product.domain.ProductStatus;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record ProductInfo(
+public record ProductResponse(
         Long id,
         Long sellerId,
         String name,
@@ -20,12 +20,12 @@ public record ProductInfo(
         Long thumbnailImageId,
         List<ImageInfo> images
 ) {
-    public static ProductInfo from(Product product) {
+    public static ProductResponse from(Product product) {
         List<ImageInfo> images = product.getImages().stream()
                 .map(ImageInfo::from)
                 .toList();
 
-        return new ProductInfo(
+        return new ProductResponse(
                 product.getId(),
                 product.getSellerId(),
                 product.getName(),

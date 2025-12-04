@@ -1,11 +1,11 @@
 package com.coc.modi.product.application.dto;
 
-import com.coc.modi.product.domain.Product;
 import com.coc.modi.product.domain.ProductStatus;
+import com.coc.modi.product.search.ProductDocument;
 
 import java.math.BigDecimal;
 
-public record ProductListInfo(
+public record ProductListResponse(
         Long id,
         String name,
         BigDecimal pricePerDay,
@@ -13,14 +13,14 @@ public record ProductListInfo(
         Long sellerId,
         String thumbnailUrl
 ) {
-    public static ProductListInfo of(Product product, String thumbnailUrl) {
-        return new ProductListInfo(
+    public static ProductListResponse from(ProductDocument product) {
+        return new ProductListResponse(
                 product.getId(),
                 product.getName(),
                 product.getPricePerDay(),
-                product.getStatus(),
+                ProductStatus.valueOf(product.getStatus()),
                 product.getSellerId(),
-                thumbnailUrl
+                product.getThumbnailUrl()
         );
     }
 }

@@ -1,11 +1,12 @@
 package com.coc.modi.product.presentation.internal;
 
 import com.coc.modi.product.application.ProductService;
-import com.coc.modi.product.domain.Product;
-import com.coc.modi.product.presentation.dto.ProductBulkResponseDto;
+import com.coc.modi.product.application.dto.ProductBulkResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -17,15 +18,10 @@ public class ProductInternalController {
     private final ProductService productService;
 
     @PostMapping("/bulk")
-    public ResponseEntity<List<ProductBulkResponseDto>> getProductsBulk(
+    public List<ProductBulkResponse> getProductsBulk(
             @RequestBody List<Long> productIds
     ) {
-        List<Product> products = productService.getProductsByIds(productIds);
 
-        List<ProductBulkResponseDto> result = products.stream()
-                .map(ProductBulkResponseDto::from)
-                .toList();
-
-        return ResponseEntity.ok(result);
+        return productService.getProductsByIds(productIds);
     }
 }

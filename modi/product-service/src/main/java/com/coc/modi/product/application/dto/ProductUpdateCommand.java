@@ -1,6 +1,5 @@
 package com.coc.modi.product.application.dto;
 
-import com.coc.modi.product.domain.ProductImageSpec;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +19,6 @@ public record ProductUpdateCommand(
         @NotBlank(message = "category is required")
         String category,
 
-        List<ProductImageSpec> images
+        List<ProductResponse.ImageInfo> images
 ) {
 }

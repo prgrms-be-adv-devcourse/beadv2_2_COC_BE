@@ -1,9 +1,6 @@
 package com.coc.modi.product.application;
 
-import com.coc.modi.product.application.dto.ProductCommand;
-import com.coc.modi.product.application.dto.ProductInfo;
-import com.coc.modi.product.application.dto.ProductListInfo;
-import com.coc.modi.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.domain.*;
 import com.coc.modi.product.infrastructure.ProductImageJpaRepository;
 import com.coc.modi.product.search.ProductDocument;
@@ -28,23 +25,16 @@ public class ProductService {
 
     // 3-1. 상품 목록 조회
     @Transactional(readOnly = true)
-    public Page<ProductListInfo> getProducts(Pageable pageable) {
+    public List<ProductListResponse> getProducts(Pageable pageable) {
 
         Page<ProductDocument> docs = searchRepository.findByStatus(ProductStatus.ACTIVE.name(), pageable);
 
-        return docs.map(doc -> new ProductListInfo(
-                doc.getId(),
-                doc.getName(),
-                doc.getPricePerDay(),
-                doc.toStatusEnum(),
-                doc.getSellerId(),
-                doc.getThumbnailUrl()
-        ));
+        return docs.map(ProductListResponse::from).getContent();
     }
 
     // 검색 기능
     @Transactional(readOnly = true)
-    public Page<ProductListInfo> searchProducts(String keyword, Pageable pageable) {
+    public List<ProductListResponse> searchProducts(String keyword, Pageable pageable) {
 
         if (keyword == null || keyword.isBlank()) {
             return getProducts(pageable);
@@ -57,24 +47,24 @@ public class ProductService {
                         pageable
                 );
 
-        return docs.map(doc -> new ProductListInfo(
+        return docs.map(doc -> new ProductListResponse(
                 doc.getId(),
                 doc.getName(),
                 doc.getPricePerDay(),
                 doc.toStatusEnum(),
                 doc.getSellerId(),
                 doc.getThumbnailUrl()
-        ));
+        )).getContent();
     }
 
     // 3-2. 상품 상세 조회
     @Transactional(readOnly = true)
-    public ProductInfo getProductDetail(Long productId) {
+    public ProductResponse getProductDetail(Long productId) {
 
         Product product = repository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("PRODUCT NOT FOUND: " + productId));
 
-        return ProductInfo.from(product);
+        return ProductResponse.from(product);
     }
 
     // 3-3. 상품 이미지 등록
@@ -89,7 +79,7 @@ public class ProductService {
 
     // 3-4. 상품 등록
     @Transactional
-    public ProductInfo createProduct(Long sellerId, ProductCommand command) {
+    public ProductResponse createProduct(Long sellerId, ProductCommand command) {
 
         Product product = Product.create(
                 sellerId,
@@ -107,12 +97,12 @@ public class ProductService {
         // ES 인덱싱
         indexToSearch(saved);
 
-        return ProductInfo.from(saved);
+        return ProductResponse.from(saved);
     }
 
     // 3-5. 상품 수정
     @Transactional
-    public ProductInfo updateProduct(Long productId, ProductUpdateCommand command) {
+    public ProductResponse updateProduct(Long productId, ProductUpdateCommand command) {
 
         Product product = repository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("PRODUCT NOT FOUND: " + productId));
@@ -124,14 +114,16 @@ public class ProductService {
 
         //이미지 변경 사항 반영 (null값인 경우 이미지 변동사항 없음)
         if(command.images() != null) {
-            product.syncImages(command.images());
+            product.syncImages(command.images().stream()
+                    .map(ProductImageSpec::from)
+                    .toList());
         }
 
         repository.saveAndFlush(product);
 
         indexToSearch(product);
 
-        return ProductInfo.from(product);
+        return ProductResponse.from(product);
     }
 
     // 3-6. 상품 숨김
@@ -149,8 +141,13 @@ public class ProductService {
     }
 
     // 내부 api
-    public List<Product> getProductsByIds(List<Long> productIds) {
-        return repository.findByIdIn(productIds);
+    @Transactional(readOnly = true)
+    public List<ProductBulkResponse> getProductsByIds(List<Long> productIds) {
+
+        return repository.findByIdIn(productIds)
+                .stream()
+                .map(ProductBulkResponse::from)
+                .toList();
     }
 
     // 상품에 이미지 추가하기

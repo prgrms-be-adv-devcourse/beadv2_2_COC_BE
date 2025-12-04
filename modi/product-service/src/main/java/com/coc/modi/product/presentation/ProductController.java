@@ -3,14 +3,13 @@ package com.coc.modi.product.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ProductService;
 import com.coc.modi.product.application.dto.ProductCommand;
-import com.coc.modi.product.application.dto.ProductInfo;
-import com.coc.modi.product.application.dto.ProductListInfo;
+import com.coc.modi.product.application.dto.ProductListResponse;
+import com.coc.modi.product.application.dto.ProductResponse;
 import com.coc.modi.product.application.dto.ProductUpdateCommand;
-import com.coc.modi.product.presentation.dto.*;
+import com.coc.modi.product.presentation.dto.ProductRequestDto;
+import com.coc.modi.product.presentation.dto.ProductUpdateRequestDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,38 +26,28 @@ public class ProductController {
 
     // 상품 목록 조회
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductListResponseDto>>> getProducts(Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProducts(Pageable pageable) {
 
-        Page<ProductListInfo> page = service.getProducts(pageable);
-
-        List<ProductListResponseDto> body = page.stream()
-                .map(ProductListResponseDto::from)
-                .toList();
-
-        return ResponseEntity.ok(ApiResponse.ok(body));
+        return ResponseEntity.ok(ApiResponse.ok(service.getProducts(pageable)));
     }
 
     // 상품 상세 조회
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductResponseDto>> getProductDetail(@PathVariable("productId") Long productId) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductDetail(@PathVariable("productId") Long productId) {
 
-        ProductInfo info = service.getProductDetail(productId);
-
-        return ResponseEntity.ok(ApiResponse.ok(ProductResponseDto.from(info)));
+        return ResponseEntity.ok(ApiResponse.ok(service.getProductDetail(productId)));
     }
 
     // 상품 이미지 등록
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ImageResponseDto>> uploadImage(@RequestPart("file") MultipartFile file) {
+    public ResponseEntity<ApiResponse<String>> uploadImage(@RequestPart("file") MultipartFile file) {
 
-        String url = service.uploadImage(file);
-
-        return ResponseEntity.ok(ApiResponse.ok(ImageResponseDto.from(url)));
+        return ResponseEntity.ok(ApiResponse.ok(service.uploadImage(file)));
     }
 
     // 상품 등록
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductResponseDto>> createProduct(@RequestBody ProductRequestDto request) {
+    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody ProductRequestDto request) {
 
         // TODO: sellerId 연결
         Long sellerId = 0L;
@@ -71,15 +60,13 @@ public class ProductController {
                 request.images()
         );
 
-        ProductInfo product = service.createProduct(sellerId, command);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(ProductResponseDto.from(product)));
+        return ResponseEntity.ok(ApiResponse.ok(service.createProduct(sellerId, command)));
     }
 
     // 상품 수정
     @PutMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(@PathVariable("productId") Long productId,
-            @RequestBody ProductUpdateRequestDto request) {
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable("productId") Long productId,
+                                                                      @RequestBody ProductUpdateRequestDto request) {
 
         ProductUpdateCommand command = new ProductUpdateCommand(
                 request.name(),
@@ -89,9 +76,7 @@ public class ProductController {
                 request.images()
         );
 
-        ProductInfo product = service.updateProduct(productId, command);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(ProductResponseDto.from(product)));
+        return ResponseEntity.ok(ApiResponse.ok(service.updateProduct(productId, command)));
     }
 
     // 상품 숨김
