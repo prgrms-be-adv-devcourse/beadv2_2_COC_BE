@@ -27,7 +27,6 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    @Lob
     @Column(nullable = false)
     private String description;
 

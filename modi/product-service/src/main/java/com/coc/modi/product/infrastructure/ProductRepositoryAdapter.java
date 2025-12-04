@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,5 +40,10 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public Product saveAndFlush(Product product) {
         return repository.saveAndFlush(product);
+    }
+
+    @Override
+    public List<Product> findByIdIn(List<Long> productIds) {
+        return repository.findByIdIn(productIds);
     }
 }

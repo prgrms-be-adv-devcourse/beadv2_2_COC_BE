@@ -6,6 +6,8 @@ import com.coc.modi.product.application.dto.ProductListInfo;
 import com.coc.modi.product.application.dto.ProductUpdateCommand;
 import com.coc.modi.product.domain.*;
 import com.coc.modi.product.infrastructure.ProductImageJpaRepository;
+import com.coc.modi.product.search.ProductDocument;
+import com.coc.modi.product.search.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,11 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,38 +24,47 @@ public class ProductService {
 
     private final ProductRepository repository;
     private final ProductImageJpaRepository imageJpaRepository;
+    private final ProductSearchRepository searchRepository;
 
     // 3-1. 상품 목록 조회
     @Transactional(readOnly = true)
     public Page<ProductListInfo> getProducts(Pageable pageable) {
 
-        Page<Product> page = repository.findAllByStatus(ProductStatus.ACTIVE, pageable);
+        Page<ProductDocument> docs = searchRepository.findByStatus(ProductStatus.ACTIVE.name(), pageable);
 
-        List<Long> thumbnailIds = page.getContent().stream()
-                .map(Product::getThumbnailImageId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        return docs.map(doc -> new ProductListInfo(
+                doc.getId(),
+                doc.getName(),
+                doc.getPricePerDay(),
+                doc.toStatusEnum(),
+                doc.getSellerId(),
+                doc.getThumbnailUrl()
+        ));
+    }
 
-        Map<Long, String> thumbnailUrlMap = Collections.emptyMap();
-        if (!thumbnailIds.isEmpty()) {
-            List<ProductImage> thumbnails = imageJpaRepository.findByIdIn(thumbnailIds);
+    // 검색 기능
+    @Transactional(readOnly = true)
+    public Page<ProductListInfo> searchProducts(String keyword, Pageable pageable) {
 
-            thumbnailUrlMap = thumbnails.stream()
-                    .collect(Collectors.toMap(
-                            ProductImage::getId,
-                            ProductImage::getUrl
-                    ));
+        if (keyword == null || keyword.isBlank()) {
+            return getProducts(pageable);
         }
 
-        Map<Long, String> finalThumbnailUrlMap = thumbnailUrlMap;
+        Page<ProductDocument> docs =
+                searchRepository.findByStatusAndNameContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
+                        ProductStatus.ACTIVE.name(), keyword,
+                        ProductStatus.ACTIVE.name(), keyword,
+                        pageable
+                );
 
-        return page.map(product ->
-                ProductListInfo.of(
-                        product,
-                        finalThumbnailUrlMap.get(product.getThumbnailImageId())
-                )
-        );
+        return docs.map(doc -> new ProductListInfo(
+                doc.getId(),
+                doc.getName(),
+                doc.getPricePerDay(),
+                doc.toStatusEnum(),
+                doc.getSellerId(),
+                doc.getThumbnailUrl()
+        ));
     }
 
     // 3-2. 상품 상세 조회
@@ -97,6 +104,9 @@ public class ProductService {
         Product saved = repository.saveAndFlush(product);
         updateThumbnailFromFirstImage(saved);
 
+        // ES 인덱싱
+        indexToSearch(saved);
+
         return ProductInfo.from(saved);
     }
 
@@ -118,7 +128,8 @@ public class ProductService {
         }
 
         repository.saveAndFlush(product);
-        updateThumbnailFromFirstImage(product);
+
+        indexToSearch(product);
 
         return ProductInfo.from(product);
     }
@@ -137,8 +148,10 @@ public class ProductService {
         changeStatus(productId, ProductStatus.DELETE);
     }
 
-    // 이미지 동기화
-
+    // 내부 api
+    public List<Product> getProductsByIds(List<Long> productIds) {
+        return repository.findByIdIn(productIds);
+    }
 
     // 상품에 이미지 추가하기
     private void addImages(Product product, List<String> imageUrls) {
@@ -165,10 +178,36 @@ public class ProductService {
         product.updateThumbnailImageId(thumbnailId);
     }
 
+    // ES 인덱싱 공통 로직
+    private void indexToSearch(Product product) {
+        String thumbnailUrl = resolveThumbnailUrl(product);
+        ProductDocument doc = ProductDocument.from(product, thumbnailUrl);
+        searchRepository.save(doc);
+    }
+
+    // 썸네일 URL 구하기 (단건)
+    private String resolveThumbnailUrl(Product product) {
+        Long thumbnailId = product.getThumbnailImageId();
+        if (thumbnailId == null) {
+            return null;
+        }
+        return imageJpaRepository.findById(thumbnailId)
+                .map(ProductImage::getUrl)
+                .orElse(null);
+    }
+
     // 상품 상태 변경
     private void changeStatus(Long productId, ProductStatus status) {
         Product product = repository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("PRODUCT NOT FOUND: " + productId));
         product.updateStatus(status);
+
+        if (status == ProductStatus.DELETE) {
+            // 완전 삭제 → ES에서도 제거
+            searchRepository.deleteById(productId);
+        } else {
+            // ACTIVE/INACTIVE 등의 상태 변경 → ES 문서 갱신
+            indexToSearch(product);
+        }
     }
 }
