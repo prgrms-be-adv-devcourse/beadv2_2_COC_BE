@@ -19,7 +19,7 @@ public class MemberController {
     private final MemberService memberService;
 
     // 회원가입
-    @PostMapping
+    @PostMapping("/signup")
     public ResponseEntity<ApiResponse<MemberSignupResponse>> signup(@RequestBody MemberSignupRequest request){
 
         MemberSignupResponse response = memberService.signup(request.toCommand());

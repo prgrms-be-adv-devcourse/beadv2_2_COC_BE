@@ -40,12 +40,7 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
 
-        return new MemberSignupResponse(
-                saved.getEmail(),
-                saved.getName(),
-                saved.getPhone(),
-                saved.getCreatedAt()
-        );
+        return MemberSignupResponse.from(saved);
     }
 
     // 내 정보 조회
@@ -57,11 +52,6 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
-        return new MemberProfileResponse(
-                member.getEmail(),
-                member.getName(),
-                member.getPhone(),
-                member.getCreatedAt()
-        );
+        return MemberProfileResponse.from(member);
     }
 }

@@ -31,17 +31,6 @@ public class MemberAuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name());
 
-        MemberLoginResponse.MemberData memberData = new MemberLoginResponse.MemberData(
-                member.getId(),
-                member.getEmail(),
-                member.getName(),
-                member.getRole().name()
-        );
-
-        return new MemberLoginResponse(
-                accessToken,
-                refreshToken,
-                memberData
-        );
+        return MemberLoginResponse.of(accessToken, refreshToken, member);
     }
 }
