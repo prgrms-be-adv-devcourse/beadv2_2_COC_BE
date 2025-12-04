@@ -41,7 +41,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: product-service/build/libs/*.jar
+          source: modi/product-service/build/libs/*.jar
           target: ${{ secrets.EC2_APP_PATH }}
 
       # 6. EC2에서 애플리케이션 재시작
