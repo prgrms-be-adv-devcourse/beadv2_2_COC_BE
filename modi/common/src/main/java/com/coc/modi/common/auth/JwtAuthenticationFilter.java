@@ -1,4 +1,4 @@
-package com.coc.modi.auth.infrastructure.jwt;
+package com.coc.modi.common.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

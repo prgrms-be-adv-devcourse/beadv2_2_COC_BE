@@ -1,6 +1,5 @@
-package com.coc.modi.auth.config;
+package com.coc.modi.common.auth;
 
-import com.coc.modi.auth.infrastructure.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
