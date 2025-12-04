@@ -6,8 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Entity
 @Table(name = "member", schema = "public")
@@ -18,33 +16,28 @@ public class Member extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 255, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 255)
-    private String password;
-
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String name;
-
-    @Column(length = 20)
-    private String phone;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private MemberRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private MemberStatus status;
 
-    @Column(nullable = false)
-    private boolean emailVerified;
+    @Column(nullable = false, length = 255)
+    private String password;
 
-    private LocalDateTime lastLoginAt;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberRole role;
+
+    @Column(nullable = false, length = 20)
+    private String phone;
 
     @Column(length = 20)
-    private String provider; // GOOGLE, KAKAO, NAVER
+    private String provider;
 
     @Column(length = 100)
     private String providerId;
@@ -62,7 +55,6 @@ public class Member extends BaseEntity {
         this.phone = phone;
         this.role = role;
         this.status = MemberStatus.ACTIVE;
-        this.emailVerified = false;
     }
 
     public static Member create(String email,
