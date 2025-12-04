@@ -57,7 +57,7 @@ jobs:
             echo "Stopping existing product-service..."
             PID=$(pgrep -f 'product-service.*\.jar' || true)
             if [ -n "$PID" ]; then
-              kill -15 $PID
+              kill -15 $PID || true
               sleep 5
             fi
 
