@@ -9,6 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+
+    defaults:
+      run:
+        working-directory: modi
+
     steps:
       # 1. 코드 체크아웃
       - name: Checkout source
