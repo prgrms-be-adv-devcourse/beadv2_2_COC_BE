@@ -9,7 +9,9 @@
         </processorPath>
         <module name="modi.common.test" />
         <module name="modi.rental-service.test" />
+        <module name="modi.member-service.main" />
         <module name="modi.seller-service.test" />
+        <module name="modi.member-service.test" />
         <module name="modi.account-service.test" />
         <module name="modi.product-service.test" />
         <module name="modi.seller-service.main" />

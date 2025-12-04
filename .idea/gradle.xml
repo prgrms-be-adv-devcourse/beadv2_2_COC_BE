@@ -4,12 +4,16 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <option name="delegatedBuild" value="false" />
+        <option name="testRunner" value="PLATFORM" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/modi" />
+        <option name="gradleJvm" value="corretto-17" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/modi" />
             <option value="$PROJECT_DIR$/modi/account-service" />
             <option value="$PROJECT_DIR$/modi/common" />
+            <option value="$PROJECT_DIR$/modi/member-service" />
             <option value="$PROJECT_DIR$/modi/product-service" />
             <option value="$PROJECT_DIR$/modi/rental-service" />
             <option value="$PROJECT_DIR$/modi/seller-service" />

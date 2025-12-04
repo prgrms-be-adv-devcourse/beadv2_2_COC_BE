@@ -1,4 +1,12 @@
+
+plugins {
+    id 'org.springframework.boot'
+    id 'java'
+}
+
 dependencies {
     implementation project(':common')
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    runtimeOnly 'org.postgresql:postgresql'
 
 }

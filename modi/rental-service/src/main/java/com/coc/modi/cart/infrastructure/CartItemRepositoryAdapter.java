@@ -1,0 +1,20 @@
+package com.coc.modi.cart.infrastructure;
+
+import com.coc.modi.cart.domain.CartItem;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+@RequiredArgsConstructor
+public class CartItemRepositoryAdapter implements CartItemRepository {
+
+    private final CartItemJpaRepository cartItemJpaRepository;
+
+    @Override
+    public List<CartItem> findAllByIdIn(List<Long> ids) {
+
+        return cartItemJpaRepository.findAllByIdIn(ids);
+    }
+}

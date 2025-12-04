@@ -2,9 +2,10 @@ package com.coc.modi.rental.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "rental", schema = "public")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Rental extends BaseEntity {
 
     @Id
@@ -21,7 +23,7 @@ public class Rental extends BaseEntity {
     private Long id;
 
     @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RentalItem> items = new ArrayList<>();
+    private List<RentalItem> items;
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;
@@ -36,6 +38,33 @@ public class Rental extends BaseEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Builder
+    private Rental(Long memberId, RentalStatus status, BigDecimal totalAmount, LocalDateTime paidAt) {
+        this.memberId = memberId;
+        this.status = status != null ? status : RentalStatus.REQUESTED;
+        this.totalAmount = totalAmount;
+        this.paidAt = paidAt;
+    }
 
-//    public static Rental create {}
+    public static Rental create(Long memberId, BigDecimal totalAmount) {
+        return Rental.builder()
+                .memberId(memberId)
+                .status(RentalStatus.REQUESTED)
+                .totalAmount(totalAmount)
+                .build();
+    }
+
+    public void addItem(RentalItem rentalItem) {
+        rentalItem.assignRental(this);
+        this.items.add(rentalItem);
+    }
+
+    public void markPaid(LocalDateTime paidAt) {
+        this.status = RentalStatus.PAID;
+        this.paidAt = paidAt;
+    }
+
+    public void updateTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 }
