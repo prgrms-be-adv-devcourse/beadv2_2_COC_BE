@@ -6,9 +6,11 @@ import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record SellerSettlementInfo(
+public record SellerSettlementResponse(
         Long id,
+        Long batchId,
         Long sellerId,
+        String periodYm,
         BigDecimal totalRentalAmount,
         BigDecimal totalFeeAmount,
         BigDecimal settlementAmount,
@@ -18,10 +20,12 @@ public record SellerSettlementInfo(
         LocalDateTime updatedAt
 ) {
 
-    public static SellerSettlementInfo from(SellerSettlement settlement) {
-        return new SellerSettlementInfo(
+    public static SellerSettlementResponse from(SellerSettlement settlement) {
+        return new SellerSettlementResponse(
                 settlement.getId(),
+                settlement.getBatchId(),
                 settlement.getSellerId(),
+                settlement.getPeriodYm(),
                 settlement.getTotalRentalAmount(),
                 settlement.getTotalFeeAmount(),
                 settlement.getSettlementAmount(),

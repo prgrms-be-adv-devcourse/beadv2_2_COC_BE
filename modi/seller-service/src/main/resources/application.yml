@@ -5,9 +5,9 @@ spring:
   application:
     name: seller-service
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/seller
+    username: postgres
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: update   # 또는 update, 초기에만 사용 가능

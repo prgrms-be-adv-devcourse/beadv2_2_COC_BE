@@ -4,7 +4,7 @@ import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 
 import java.math.BigDecimal;
 
-public record SellerSettlementLineInfo(
+public record SellerSettlementLineResponse(
         Long id,
         Long sellerSettlementId,
         Long sellerId,
@@ -15,8 +15,8 @@ public record SellerSettlementLineInfo(
         BigDecimal feeAmount
 ) {
 
-    public static SellerSettlementLineInfo from(SellerSettlementLine line) {
-        return new SellerSettlementLineInfo(
+    public static SellerSettlementLineResponse from(SellerSettlementLine line) {
+        return new SellerSettlementLineResponse(
                 line.getId(),
                 line.getSellerSettlement() != null ? line.getSellerSettlement().getId() : null,
                 line.getSellerId(),

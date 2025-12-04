@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.settlement.application.dto.SellerSettlementInfo;
-import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineInfo;
+import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
+import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineCommand;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
@@ -21,7 +21,7 @@ public class SellerSettlementService {
 
     private final SellerSettlementRepository sellerSettlementRepository;
 
-    public Page<SellerSettlementInfo> getSellerSettlements(Long sellerId, String periodYm, Pageable pageable) {
+    public Page<SellerSettlementResponse> getSellerSettlements(Long sellerId, String periodYm, Pageable pageable) {
         Page<SellerSettlement> settlements;
 
         if (periodYm != null && !periodYm.isBlank()) {
@@ -30,23 +30,23 @@ public class SellerSettlementService {
             settlements = sellerSettlementRepository.findBySellerId(sellerId, pageable);
         }
 
-        return settlements.map(SellerSettlementInfo::from);
+        return settlements.map(SellerSettlementResponse::from);
     }
 
-    public SellerSettlementInfo getSellerSettlement(Long sellerId, Long sellerSettlementId) {
+    public SellerSettlementResponse getSellerSettlement(Long sellerId, Long sellerSettlementId) {
         SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
-        return SellerSettlementInfo.from(settlement);
+        return SellerSettlementResponse.from(settlement);
     }
 
-    public List<SellerSettlementLineInfo> getSettlementLines(Long sellerId, Long sellerSettlementId) {
+    public List<SellerSettlementLineResponse> getSettlementLines(Long sellerId, Long sellerSettlementId) {
         SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
         return settlement.getLines().stream()
-                .map(SellerSettlementLineInfo::from)
+                .map(SellerSettlementLineResponse::from)
                 .toList();
     }
 
     @Transactional
-    public SellerSettlementInfo recordSettlementLine(SellerSettlementLineCommand command) {
+    public SellerSettlementResponse recordSettlementLine(SellerSettlementLineCommand command) {
         SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(
                         command.sellerId(),
                         command.periodYm())
@@ -69,7 +69,7 @@ public class SellerSettlementService {
         settlement.addLineWithAggregation(line);
 
         SellerSettlement saved = sellerSettlementRepository.save(settlement);
-        return SellerSettlementInfo.from(saved);
+        return SellerSettlementResponse.from(saved);
     }
 
     private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {

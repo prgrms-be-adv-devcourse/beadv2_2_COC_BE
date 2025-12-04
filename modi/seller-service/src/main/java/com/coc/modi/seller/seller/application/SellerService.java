@@ -1,7 +1,7 @@
 package com.coc.modi.seller.seller.application;
 
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
-import com.coc.modi.seller.seller.application.dto.SellerInfo;
+import com.coc.modi.seller.seller.application.dto.SellerResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
@@ -18,27 +18,27 @@ public class SellerService {
     private final SellerRepository sellerRepository;
 
     @Transactional(readOnly = true)
-    public Page<SellerInfo> findSellers(Pageable pageable) {
+    public Page<SellerResponse> findSellers(Pageable pageable) {
         return sellerRepository.findAll(pageable)
-                .map(SellerInfo::from);
+                .map(SellerResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public SellerInfo getSeller(Long sellerId) {
+    public SellerResponse getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
-        return SellerInfo.from(seller);
+        return SellerResponse.from(seller);
     }
 
     @Transactional(readOnly = true)
-    public SellerInfo getSellerByMemberId(Long memberId) {
+    public SellerResponse getSellerByMemberId(Long memberId) {
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
-        return SellerInfo.from(seller);
+        return SellerResponse.from(seller);
     }
 
     @Transactional
-    public SellerInfo registerSeller(SellerCreateCommand command) {
+    public SellerResponse registerSeller(SellerCreateCommand command) {
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new IllegalArgumentException("이미 등록된 판매자입니다.");
         }
@@ -51,11 +51,11 @@ public class SellerService {
         );
 
         Seller saved = sellerRepository.save(seller);
-        return SellerInfo.from(saved);
+        return SellerResponse.from(saved);
     }
 
     @Transactional
-    public SellerInfo updateSeller(Long sellerId, SellerUpdateCommand command) {
+    public SellerResponse updateSeller(Long sellerId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
 
@@ -66,11 +66,11 @@ public class SellerService {
         );
         seller.changeStatus(command.status());
 
-        return SellerInfo.from(seller);
+        return SellerResponse.from(seller);
     }
 
     @Transactional
-    public SellerInfo updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
+    public SellerResponse updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
 
@@ -81,7 +81,7 @@ public class SellerService {
         );
         seller.changeStatus(command.status());
 
-        return SellerInfo.from(seller);
+        return SellerResponse.from(seller);
     }
 
     @Transactional

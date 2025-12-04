@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:modi/account-service/src/main/java/com/coc/modi/account/member/domain/WalletTransaction.java
-package com.coc.modi.account.member.domain;
-========
 package com.coc.modi.account.wallet.domain;
->>>>>>>> dev:modi/account-service/src/main/java/com/coc/modi/account/wallet/domain/WalletTransaction.java
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
@@ -47,8 +43,4 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(length = 255)
     private String description;
-<<<<<<<< HEAD:modi/account-service/src/main/java/com/coc/modi/account/member/domain/WalletTransaction.java
-
-========
->>>>>>>> dev:modi/account-service/src/main/java/com/coc/modi/account/wallet/domain/WalletTransaction.java
 }
