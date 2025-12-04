@@ -49,21 +49,20 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script_stop: false
           script: |
-            bash -lc '
-              cd ${{ secrets.EC2_APP_PATH }}
-          
-              echo "Stopping existing product-service..."
-              PID=$(pgrep -f "product-service.*\\.jar" || true)
-              if [ -n "$PID" ]; then
-                kill -15 $PID || true
-                sleep 5
-              fi
-          
-              echo "Starting product-service..."
-              nohup java -jar product-service-*.jar > app.log 2>&1 < /dev/null &
-              disown
-            '
+            echo "🚀 product-service 재시작"
+      
+            cd /home/ec2-user/app/modi/product-service
+      
+            chmod +x start.sh || true
+            ./start.sh
+      
+            echo "🔍 프로세스 확인"
+            ps -ef | grep product-service | grep -v grep || echo "프로세스 없음"
+      
+            echo "🔍 8080 포트 확인"
+            lsof -i:8080 || echo "8080 아직 미열림"
+      
+            echo "✅ 배포 완료"
