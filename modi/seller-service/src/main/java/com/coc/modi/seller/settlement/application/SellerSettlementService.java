@@ -2,8 +2,10 @@ package com.coc.modi.seller.settlement.application;
 
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementInfo;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineInfo;
+import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineCommand;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
+import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +21,16 @@ public class SellerSettlementService {
 
     private final SellerSettlementRepository sellerSettlementRepository;
 
-    public Page<SellerSettlementInfo> getSellerSettlements(Long sellerId, Pageable pageable) {
-        return sellerSettlementRepository.findBySellerId(sellerId, pageable)
-                .map(SellerSettlementInfo::from);
+    public Page<SellerSettlementInfo> getSellerSettlements(Long sellerId, String periodYm, Pageable pageable) {
+        Page<SellerSettlement> settlements;
+
+        if (periodYm != null && !periodYm.isBlank()) {
+            settlements = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm, pageable);
+        } else {
+            settlements = sellerSettlementRepository.findBySellerId(sellerId, pageable);
+        }
+
+        return settlements.map(SellerSettlementInfo::from);
     }
 
     public SellerSettlementInfo getSellerSettlement(Long sellerId, Long sellerSettlementId) {
@@ -34,6 +43,33 @@ public class SellerSettlementService {
         return settlement.getLines().stream()
                 .map(SellerSettlementLineInfo::from)
                 .toList();
+    }
+
+    @Transactional
+    public SellerSettlementInfo recordSettlementLine(SellerSettlementLineCommand command) {
+        SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(
+                        command.sellerId(),
+                        command.periodYm())
+                .orElseGet(() -> SellerSettlement.create(
+                        command.batchId(),
+                        command.sellerId(),
+                        command.periodYm()));
+
+        settlement.assignBatchIfAbsent(command.batchId());
+
+        SellerSettlementLine line = SellerSettlementLine.of(
+                command.sellerId(),
+                command.rentalId(),
+                command.memberId(),
+                command.productId(),
+                command.rentalAmount(),
+                command.feeAmount()
+        );
+
+        settlement.addLineWithAggregation(line);
+
+        SellerSettlement saved = sellerSettlementRepository.save(settlement);
+        return SellerSettlementInfo.from(saved);
     }
 
     private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {

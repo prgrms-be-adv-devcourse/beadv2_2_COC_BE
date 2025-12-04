@@ -27,7 +27,7 @@ public class SellerSettlementController {
     public ApiResponse<Page<SellerSettlementInfo>> getMySettlements(@RequestHeader("X-Member-Id") Long sellerId,
                                                                     @RequestParam(value = "periodYm", required = false) String periodYm,
                                                                     Pageable pageable) {
-        Page<SellerSettlementInfo> settlements = sellerSettlementService.getSellerSettlements(sellerId, pageable);
+        Page<SellerSettlementInfo> settlements = sellerSettlementService.getSellerSettlements(sellerId, periodYm, pageable);
         return ApiResponse.ok(settlements);
     }
 

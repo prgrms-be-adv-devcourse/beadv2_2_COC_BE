@@ -9,6 +9,10 @@ public interface SellerSettlementRepository {
 
     Page<SellerSettlement> findBySellerId(Long sellerId, Pageable pageable);
 
+    Page<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm, Pageable pageable);
+
+    Optional<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm);
+
     Optional<SellerSettlement> findById(Long sellerSettlementId);
 
     SellerSettlement save(SellerSettlement settlement);

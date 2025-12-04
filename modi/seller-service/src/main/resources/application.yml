@@ -4,3 +4,14 @@
 spring:
   application:
     name: seller-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update   # 또는 update, 초기에만 사용 가능
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true

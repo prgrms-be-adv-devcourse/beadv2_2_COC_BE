@@ -21,6 +21,16 @@ public class SellerSettlementRepositoryAdapter implements SellerSettlementReposi
     }
 
     @Override
+    public Page<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm, Pageable pageable) {
+        return sellerSettlementJpaRepository.findBySellerIdAndPeriodYm(sellerId, periodYm, pageable);
+    }
+
+    @Override
+    public Optional<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm) {
+        return sellerSettlementJpaRepository.findBySellerIdAndPeriodYm(sellerId, periodYm);
+    }
+
+    @Override
     public Optional<SellerSettlement> findById(Long sellerSettlementId) {
         return sellerSettlementJpaRepository.findById(sellerSettlementId);
     }
