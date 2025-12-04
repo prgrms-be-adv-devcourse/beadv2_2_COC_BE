@@ -51,15 +51,17 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: false
           script: |
             cd ${{ secrets.EC2_APP_PATH }}
-
-            echo "Stopping existing product-service..."
+      
             PID=$(pgrep -f 'product-service.*\.jar' || true)
             if [ -n "$PID" ]; then
               kill -15 $PID || true
               sleep 5
             fi
-
-            echo "Starting product-service..."
-            nohup java -jar product-service-*.jar > app.log 2>&1 &
+      
+            setsid nohup java -jar product-service-*.jar \
+              > app.log 2>&1 < /dev/null &
+      
+            exit 0
