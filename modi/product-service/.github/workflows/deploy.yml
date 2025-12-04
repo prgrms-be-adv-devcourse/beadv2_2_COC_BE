@@ -1,0 +1,66 @@
+name: Deploy product-service to EC2
+
+on:
+  push:
+    branches:
+      - test/product-db
+    paths:
+      - product-service/**
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # 2. JDK 17 (Amazon Corretto)
+      - name: Set up JDK 17 (Corretto)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+
+      # 3. Gradle 실행 권한
+      - name: Grant execute permission for gradlew
+        run: |
+          cd product-service
+          chmod +x gradlew
+
+      # 4. Build (test skip)
+      - name: Build product-service
+        run: |
+          cd product-service
+          ./gradlew clean build -x test
+
+      # 5. EC2로 JAR 파일 전송
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: product-service/build/libs/*.jar
+          target: ${{ secrets.EC2_APP_PATH }}
+
+      # 6. EC2에서 애플리케이션 재시작
+      - name: Restart product-service on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ secrets.EC2_APP_PATH }}
+
+            echo "Stopping existing product-service..."
+            PID=$(pgrep -f product-service)
+            if [ -n "$PID" ]; then
+              kill -15 $PID
+              sleep 5
+            fi
+
+            echo "Starting product-service..."
+            nohup java -jar product-service-*.jar > app.log 2>&1 &
