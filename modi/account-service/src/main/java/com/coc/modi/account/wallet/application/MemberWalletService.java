@@ -15,16 +15,11 @@ public class MemberWalletService {
     private final MemberWalletRepository memberWalletRepository;
 
     @Transactional(readOnly = true)
-    public MemberWalletResponse getMemberWalletBalance(Authentication authentication){
-
-        Long memberId = (Long) authentication.getPrincipal();
+    public MemberWalletResponse getMemberWalletBalance(Long memberId){
 
         MemberWallet wallet = memberWalletRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원의 예치금을 찾을 수 없습니다."));
 
-        return new MemberWalletResponse(
-                wallet.getBalance(),
-                wallet.getCreatedAt()
-        );
+        return MemberWalletResponse.from(wallet);
     }
 }

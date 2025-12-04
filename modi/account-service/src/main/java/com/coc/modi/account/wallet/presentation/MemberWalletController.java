@@ -4,6 +4,7 @@ import com.coc.modi.account.wallet.application.MemberWalletService;
 import com.coc.modi.account.wallet.application.dto.MemberWalletResponse;
 import com.coc.modi.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,11 +17,14 @@ public class MemberWalletController {
 
     private final MemberWalletService memberWalletService;
 
+    // 예치금 조회
     @GetMapping("/balance")
-    public ApiResponse<MemberWalletResponse> getMemberWalletBalance(Authentication authentication){
+    public ResponseEntity<ApiResponse<MemberWalletResponse>> getMemberWalletBalance(Authentication authentication){
 
-        MemberWalletResponse response = memberWalletService.getMemberWalletBalance(authentication);
+        Long memberId = (Long) authentication.getPrincipal();
 
-        return ApiResponse.ok(response);
+        MemberWalletResponse response = memberWalletService.getMemberWalletBalance(memberId);
+
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
