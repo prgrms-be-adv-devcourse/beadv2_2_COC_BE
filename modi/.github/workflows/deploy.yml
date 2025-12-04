@@ -2,7 +2,7 @@ name: Deploy product-service to EC2
 
 on:
   push:
-    branches:
+    branches: #test 브랜치
       - test/product-db
     paths:
       - product-service/**
