@@ -9,8 +9,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication(scanBasePackages = {"com.coc.modi"})
 @EnableJpaAuditing
+@SpringBootApplication(
+        scanBasePackages = {
+                "com.coc.modi"
+        }
+)
 @SecurityScheme(
         name = "BearerAuth",
         type = SecuritySchemeType.HTTP,
@@ -27,3 +31,4 @@ public class MemberServiceApplication {
         SpringApplication.run(MemberServiceApplication.class, args);
     }
 }
+
