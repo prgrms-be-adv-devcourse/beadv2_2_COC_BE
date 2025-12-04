@@ -6,6 +6,7 @@ import com.coc.modi.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.auth.presentation.dto.MemberLoginRequest;
 import com.coc.modi.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,15 +20,10 @@ public class MemberAuthController {
     private final MemberAuthService memberAuthService;
 
     @PostMapping("/login")
-    public ApiResponse<MemberLoginResponse> login(@RequestBody MemberLoginRequest request){
+    public ResponseEntity<ApiResponse<MemberLoginResponse>> login(@RequestBody MemberLoginRequest request){
 
-        MemberLoginCommand command = new MemberLoginCommand(
-                request.email(),
-                request.password()
-        );
+        MemberLoginResponse response = memberAuthService.login(request.toCommand());
 
-        MemberLoginResponse response = memberAuthService.login(command);
-
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

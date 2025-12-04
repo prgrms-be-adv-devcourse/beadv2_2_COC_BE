@@ -19,6 +19,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 회원가입
     @Transactional
     public MemberSignupResponse signup(CreateMemberCommand command){
 
@@ -47,10 +48,12 @@ public class MemberService {
         );
     }
 
+    // 내 정보 조회
     @Transactional(readOnly = true)
     public MemberProfileResponse getProfile(Authentication authentication){
 
         Long memberId = (Long) authentication.getPrincipal();
+
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 

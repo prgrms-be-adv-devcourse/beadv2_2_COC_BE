@@ -9,6 +9,7 @@ public record MemberSignupRequest (
         String phone
 ) {
     public CreateMemberCommand toCommand(){
+
         return new CreateMemberCommand(
                 email,
                 password,
