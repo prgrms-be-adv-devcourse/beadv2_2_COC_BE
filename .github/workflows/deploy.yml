@@ -32,7 +32,7 @@ jobs:
       # 4. Build (test skip)
       - name: Build product-service
         run: |
-          cd product-service
+          cd modi/product-service
           ./gradlew clean build -x test
 
       # 5. EC2로 JAR 파일 전송
