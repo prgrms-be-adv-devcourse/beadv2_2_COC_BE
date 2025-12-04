@@ -4,8 +4,8 @@ on:
   push:
     branches: #test 브랜치
       - test/product-db
-    paths:
-      - product-service/**
+#    paths:
+#      - product-service/**
 
 jobs:
   deploy:
