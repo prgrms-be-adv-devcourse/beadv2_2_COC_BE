@@ -18,14 +18,14 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # 2. JDK 17 (Amazon Corretto)
+      # 2. JDK 17 설정
       - name: Set up JDK 17 (Corretto)
         uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
           java-version: '17'
 
-      # 3. Gradle 실행 권한 (루트 gradlew)
+      # 3. Gradle 실행 권한
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -37,32 +37,33 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           cat > product-service/src/main/resources/application.yml << 'EOF'
-server:
-  port: 8082
+          server:
+            port: 8082
+          
+          spring:
+            application:
+              name: product-service
+          
+            datasource:
+              url: ${DB_URL}
+              username: ${DB_USERNAME}
+              password: ${DB_PASSWORD}
+              driver-class-name: org.postgresql.Driver
+          
+            jpa:
+              open-in-view: false
+              hibernate:
+                ddl-auto: update
+              show-sql: true
+              properties:
+                hibernate:
+                  format_sql: true
+          
+          logging:
+            level:
+              org.hibernate.SQL: debug
+          EOF
 
-spring:
-  application:
-    name: product-service
-
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-logging:
-  level:
-    org.hibernate.SQL: debug
-EOF
 
 
 # 5. Build product-service (멀티모듈 방식)
