@@ -29,11 +29,47 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. Build product-service (멀티모듈 방식)
+      # 4. application.yml 생성
+      - name: Create application.yml
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          cat > product-service/src/main/resources/application.yml << 'EOF'
+server:
+  port: 8082
+
+spring:
+  application:
+    name: product-service
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+EOF
+
+
+# 5. Build product-service (멀티모듈 방식)
       - name: Build product-service
         run: ./gradlew :product-service:bootJar -x test
 
-      # 5. EC2로 JAR 파일 전송
+      # 6. EC2로 JAR 파일 전송
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -44,7 +80,7 @@ jobs:
           target: ${{ secrets.EC2_PRODUCT_PATH }}
           strip_components: 4
 
-      # 6. EC2에서 애플리케이션 재시작
+      # 7. EC2에서 애플리케이션 재시작
       - name: Restart product-service on EC2
         uses: appleboy/ssh-action@v1
         with:
