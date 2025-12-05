@@ -4,7 +4,7 @@ import com.coc.modi.auth.application.dto.MemberLoginCommand;
 import com.coc.modi.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.common.auth.JwtTokenProvider;
 import com.coc.modi.member.domain.Member;
-import com.coc.modi.member.infrastructure.MemberRepository;
+import com.coc.modi.member.domain.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

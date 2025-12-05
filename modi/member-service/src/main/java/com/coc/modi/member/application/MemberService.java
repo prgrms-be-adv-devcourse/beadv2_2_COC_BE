@@ -5,7 +5,7 @@ import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.domain.Member;
 import com.coc.modi.member.domain.MemberRole;
-import com.coc.modi.member.infrastructure.MemberRepository;
+import com.coc.modi.member.domain.MemberRepository;
 import com.coc.modi.member.infrastructure.client.AccountFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
