@@ -15,9 +15,8 @@ public class WalletTransaction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wallet_id", nullable = false)
-    private MemberWallet wallet;
+    @Column(name = "wallet_id", nullable = false)
+    private Long walletId;
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;
@@ -26,7 +25,7 @@ public class WalletTransaction extends BaseEntity {
     @Column(name = "tx_type", nullable = false, length = 30)
     private WalletTransactionType txType;
 
-    @Column(name = "amount", nullable = false, precision = 18, scale = 2)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "balance_after", nullable = false, precision = 18, scale = 2)
@@ -43,4 +42,31 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(length = 255)
     private String description;
+
+    public static WalletTransaction create(
+            MemberWallet wallet,
+            WalletTransactionType txType,
+            BigDecimal amount,
+            BigDecimal balanceAfter,
+            Long relatedPgDepositId,
+            Long relatedRentalId,
+            Long relatedSettlementId,
+            String description
+    ) {
+        WalletTransaction tx = new WalletTransaction();
+
+        tx.walletId = wallet.getId();
+        tx.memberId = wallet.getMemberId();
+        tx.txType = txType;
+        tx.amount = amount;
+        tx.balanceAfter = balanceAfter;
+        tx.relatedPgDepositId = relatedPgDepositId;
+        tx.relatedRentalId = relatedRentalId;
+        tx.relatedSettlementId = relatedSettlementId;
+        tx.description = description;
+
+        return tx;
+    }
+
+
 }

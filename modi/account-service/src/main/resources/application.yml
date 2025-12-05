@@ -1,0 +1,25 @@
+﻿server:
+  port: 8081
+
+spring:
+  application:
+    name: modi
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/modi
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:LkudBWHfiGbZbPdo8pZSFhpiB0kxR4sEuJb4yX2DzApXjgMfrfZhJR}
+  access-token-expiration: 3600000
+  refresh-token-expiration: 1209600000
