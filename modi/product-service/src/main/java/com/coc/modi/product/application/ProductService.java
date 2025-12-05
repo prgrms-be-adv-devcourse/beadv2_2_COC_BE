@@ -4,6 +4,7 @@ import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.domain.*;
 import com.coc.modi.product.infrastructure.ProductImageJpaRepository;
 import com.coc.modi.product.search.ProductDocument;
+import com.coc.modi.product.search.ProductSearchQueryRepository;
 import com.coc.modi.product.search.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,8 +23,9 @@ public class ProductService {
     private final ProductRepository repository;
     private final ProductImageJpaRepository imageJpaRepository;
     private final ProductSearchRepository searchRepository;
+    private final ProductSearchQueryRepository searchQueryRepository;
 
-    // 3-1. 상품 목록 조회
+    // 3-1. 상품 목록 조회 기본 조회만
     @Transactional(readOnly = true)
     public List<ProductListResponse> getProducts(Pageable pageable) {
 
@@ -32,29 +34,17 @@ public class ProductService {
         return docs.map(ProductListResponse::from).getContent();
     }
 
-    // 검색 기능
+    // 3-1. 상품 목록 조회 검색 기능
     @Transactional(readOnly = true)
-    public List<ProductListResponse> searchProducts(String keyword, Pageable pageable) {
+    public List<ProductListResponse> searchProducts(ProductSearchCondition condition, Pageable pageable) {
 
-        if (keyword == null || keyword.isBlank()) {
+        if (condition == null || condition.isEmpty()) {
             return getProducts(pageable);
         }
 
-        Page<ProductDocument> docs =
-                searchRepository.findByStatusAndNameContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(
-                        ProductStatus.ACTIVE.name(), keyword,
-                        ProductStatus.ACTIVE.name(), keyword,
-                        pageable
-                );
+        Page<ProductDocument> docs = searchQueryRepository.search(condition, pageable);
 
-        return docs.map(doc -> new ProductListResponse(
-                doc.getId(),
-                doc.getName(),
-                doc.getPricePerDay(),
-                doc.toStatusEnum(),
-                doc.getSellerId(),
-                doc.getThumbnailUrl()
-        )).getContent();
+        return docs.map(ProductListResponse::from).getContent();
     }
 
     // 3-2. 상품 상세 조회
@@ -152,10 +142,13 @@ public class ProductService {
 
     // 상품에 이미지 추가하기
     private void addImages(Product product, List<String> imageUrls) {
+
         product.updateThumbnailImageId(null);
+
         if(imageUrls == null || imageUrls.isEmpty()) {
             return;
         }
+
         for (int i=0; i < imageUrls.size(); i++) {
             String url = imageUrls.get(i);
             int ordering = i + 1;
@@ -167,27 +160,35 @@ public class ProductService {
 
     // 대표 이미지 설정 (첫 번째 이미지)
     private void updateThumbnailFromFirstImage(Product product) {
+
         if (product.getImages() == null || product.getImages().isEmpty()) {
             product.updateThumbnailImageId(null);
+
             return;
         }
+
         Long thumbnailId = product.getImages().get(0).getId();
         product.updateThumbnailImageId(thumbnailId);
     }
 
     // ES 인덱싱 공통 로직
     private void indexToSearch(Product product) {
+
         String thumbnailUrl = resolveThumbnailUrl(product);
         ProductDocument doc = ProductDocument.from(product, thumbnailUrl);
+
         searchRepository.save(doc);
     }
 
     // 썸네일 URL 구하기 (단건)
     private String resolveThumbnailUrl(Product product) {
+
         Long thumbnailId = product.getThumbnailImageId();
+
         if (thumbnailId == null) {
             return null;
         }
+
         return imageJpaRepository.findById(thumbnailId)
                 .map(ProductImage::getUrl)
                 .orElse(null);
@@ -195,6 +196,7 @@ public class ProductService {
 
     // 상품 상태 변경
     private void changeStatus(Long productId, ProductStatus status) {
+
         Product product = repository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("PRODUCT NOT FOUND: " + productId));
         product.updateStatus(status);

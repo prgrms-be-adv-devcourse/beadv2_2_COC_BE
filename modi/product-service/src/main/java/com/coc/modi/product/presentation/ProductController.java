@@ -2,10 +2,7 @@ package com.coc.modi.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ProductService;
-import com.coc.modi.product.application.dto.ProductCommand;
-import com.coc.modi.product.application.dto.ProductListResponse;
-import com.coc.modi.product.application.dto.ProductResponse;
-import com.coc.modi.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.presentation.dto.ProductRequestDto;
 import com.coc.modi.product.presentation.dto.ProductUpdateRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +23,11 @@ public class ProductController {
 
     // 상품 목록 조회
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProducts(Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProducts(
+            @ModelAttribute ProductSearchCondition condition,
+            Pageable pageable) {
 
-        return ResponseEntity.ok(ApiResponse.ok(service.getProducts(pageable)));
+        return ResponseEntity.ok(ApiResponse.ok(service.searchProducts(condition, pageable)));
     }
 
     // 상품 상세 조회
