@@ -6,6 +6,7 @@ import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.domain.Member;
 import com.coc.modi.member.domain.MemberRole;
 import com.coc.modi.member.infrastructure.MemberRepository;
+import com.coc.modi.member.infrastructure.client.AccountFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AccountFeignClient accountFeignClient;
 
     // 회원가입
     @Transactional
@@ -39,6 +41,9 @@ public class MemberService {
         );
 
         Member saved = memberRepository.save(member);
+
+        // 회원 지갑 생성 요청
+        accountFeignClient.createWallet(saved.getId());
 
         return MemberSignupResponse.from(saved);
     }
