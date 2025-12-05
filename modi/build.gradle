@@ -12,6 +12,18 @@ group = 'com.coc'
 version = '0.0.1-SNAPSHOT'
 description = 'modi'
 
+repositories {
+    mavenCentral()
+}
+
+tasks.named('bootJar') {
+    enabled = false
+}
+
+tasks.named('jar') {
+    enabled = true
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'

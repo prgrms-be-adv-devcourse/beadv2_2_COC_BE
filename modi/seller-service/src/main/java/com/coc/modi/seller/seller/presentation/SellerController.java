@@ -8,14 +8,8 @@ import com.coc.modi.seller.seller.presentation.dto.SellerUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,21 +19,24 @@ public class SellerController {
     private final SellerService sellerService;
 
     @PostMapping("/api/sellers")
-    public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@RequestHeader("X-Member-Id") Long memberId,
-                                                                      @Valid @RequestBody SellerCreateRequest request) {
+    public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
+                                                                      Authentication authentication) {
+        Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
         return ResponseEntity.ok(ApiResponse.ok(seller));
     }
 
     @GetMapping("/api/sellers/me")
-    public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(@RequestHeader("X-Member-Id") Long memberId) {
+    public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(Authentication authentication) {
+        Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.getSellerByMemberId(memberId);
         return ResponseEntity.ok(ApiResponse.ok(seller));
     }
 
     @PutMapping("/api/sellers/me")
-    public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(@RequestHeader("X-Member-Id") Long memberId,
+    public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(Authentication authentication,
                                                                       @Valid @RequestBody SellerUpdateRequest request) {
+        Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.updateSellerByMemberId(memberId, request.toCommand());
         return ResponseEntity.ok(ApiResponse.ok(seller));
     }
