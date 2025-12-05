@@ -36,6 +36,8 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
+          mkdir -p product-service/src/main/resources
+          
           cat > product-service/src/main/resources/application.yml << 'EOF'
           server:
             port: 8082
