@@ -18,12 +18,6 @@ public class SellerService {
     private final SellerRepository sellerRepository;
 
     @Transactional(readOnly = true)
-    public Page<SellerResponse> findSellers(Pageable pageable) {
-        return sellerRepository.findAll(pageable)
-                .map(SellerResponse::from);
-    }
-
-    @Transactional(readOnly = true)
     public SellerResponse getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
@@ -54,20 +48,6 @@ public class SellerService {
         return SellerResponse.from(saved);
     }
 
-    @Transactional
-    public SellerResponse updateSeller(Long sellerId, SellerUpdateCommand command) {
-        Seller seller = sellerRepository.findById(sellerId)
-                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다"));
-
-        seller.update(
-                command.storeName(),
-                command.bizRegNo(),
-                command.storePhone()
-        );
-        seller.changeStatus(command.status());
-
-        return SellerResponse.from(seller);
-    }
 
     @Transactional
     public SellerResponse updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
