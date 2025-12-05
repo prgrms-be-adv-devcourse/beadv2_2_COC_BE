@@ -43,6 +43,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: modi/product-service/build/libs/*.jar
           target: ${{ secrets.EC2_PRODUCT_PATH }}
+          strip_components: 4
 
       # 6. EC2에서 애플리케이션 재시작
       - name: Restart product-service on EC2
