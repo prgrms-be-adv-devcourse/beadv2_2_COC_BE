@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: modi/product-service/build/libs/*.jar
-          target: ${{ secrets.EC2_APP_PATH }}
+          target: ${{ secrets.EC2_PRODUCT_PATH }}
 
       # 6. EC2에서 애플리케이션 재시작
       - name: Restart product-service on EC2
@@ -62,7 +62,7 @@ jobs:
             echo "🔍 프로세스 확인"
             ps -ef | grep product-service | grep -v grep || echo "프로세스 없음"
             
-            echo "🔍 8080 포트 확인"
-            lsof -i:8080 || echo "8080 아직 미열림"
+            echo "🔍 8082 포트 확인"
+            lsof -i:8082 || echo "8082 아직 미열림"
             
             echo "✅ 배포 완료"
