@@ -4,6 +4,7 @@ import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.domain.*;
 import com.coc.modi.product.infrastructure.ProductImageJpaRepository;
 import com.coc.modi.product.search.ProductDocument;
+import com.coc.modi.product.search.ProductIndexService;
 import com.coc.modi.product.search.ProductSearchQueryRepository;
 import com.coc.modi.product.search.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,9 @@ public class ProductService {
     // TODO: 사용자 검증 로직 추가
 
     private final ProductRepository repository;
-    private final ProductImageJpaRepository imageJpaRepository;
     private final ProductSearchRepository searchRepository;
     private final ProductSearchQueryRepository searchQueryRepository;
+    private final ProductIndexService indexService;
 
     // 3-1. 상품 목록 조회 기본 조회만
     @Transactional(readOnly = true)
@@ -85,7 +86,7 @@ public class ProductService {
         updateThumbnailFromFirstImage(saved);
 
         // ES 인덱싱
-        indexToSearch(saved);
+        indexService.index(saved);
 
         return ProductResponse.from(saved);
     }
@@ -111,7 +112,7 @@ public class ProductService {
 
         repository.saveAndFlush(product);
 
-        indexToSearch(product);
+        indexService.index(product);
 
         return ProductResponse.from(product);
     }
@@ -171,29 +172,6 @@ public class ProductService {
         product.updateThumbnailImageId(thumbnailId);
     }
 
-    // ES 인덱싱 공통 로직
-    private void indexToSearch(Product product) {
-
-        String thumbnailUrl = resolveThumbnailUrl(product);
-        ProductDocument doc = ProductDocument.from(product, thumbnailUrl);
-
-        searchRepository.save(doc);
-    }
-
-    // 썸네일 URL 구하기 (단건)
-    private String resolveThumbnailUrl(Product product) {
-
-        Long thumbnailId = product.getThumbnailImageId();
-
-        if (thumbnailId == null) {
-            return null;
-        }
-
-        return imageJpaRepository.findById(thumbnailId)
-                .map(ProductImage::getUrl)
-                .orElse(null);
-    }
-
     // 상품 상태 변경
     private void changeStatus(Long productId, ProductStatus status) {
 
@@ -206,7 +184,7 @@ public class ProductService {
             searchRepository.deleteById(productId);
         } else {
             // ACTIVE/INACTIVE 등의 상태 변경 → ES 문서 갱신
-            indexToSearch(product);
+            indexService.index(product);
         }
     }
 }
