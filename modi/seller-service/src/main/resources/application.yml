@@ -16,6 +16,10 @@ spring:
         format_sql: true
     show-sql: true
 
+logging:
+  level:
+    format_sql: DEBUG
+
 jwt:
   secret: ${JWT_SECRET:LkudBWHfiGbZbPdo8pZSFhpiB0kxR4sEuJb4yX2DzApXjgMfrfZhJR}
   access-token-expiration: 3600000
