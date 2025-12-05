@@ -7,6 +7,7 @@ import com.coc.modi.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.domain.Rental;
 import com.coc.modi.rental.domain.RentalItem;
+import com.coc.modi.rental.domain.RentalEventType;
 import com.coc.modi.rental.infrastructure.RentalRepository;
 import com.coc.modi.rental.infrastructure.client.ProductFeignClient;
 import com.coc.modi.rental.infrastructure.client.dto.ProductResponseDto;
@@ -24,11 +25,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RentalService {
+public class RentalCreationService {
 
     private final RentalRepository rentalRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductFeignClient productFeignClient;
+    private final RentalEventLogService rentalEventLogService;
 
     @Transactional
     public ResponseEntity<ApiResponse<Void>> createRentalFromCart(CreateRentalFromCartCommand command) {
@@ -36,6 +38,7 @@ public class RentalService {
         List<CartItem> cartItems = cartItemRepository.findAllByIdIn(command.cartItemIds());
 
         if (cartItems.isEmpty()) {
+
             throw new IllegalArgumentException("장바구니 항목이 존재하지 않습니다.");
         }
 
@@ -43,6 +46,7 @@ public class RentalService {
                 .anyMatch(cartItem -> !cartItem.getCart().getMemberId().equals(command.memberId()));
 
         if (hasDifferentMember) {
+
             throw new IllegalArgumentException("다른 회원의 장바구니 항목이 포함되어 있습니다.");
         }
 
@@ -53,17 +57,15 @@ public class RentalService {
 
         List<ProductResponseDto> products = productFeignClient.getProducts(productIds);
 
-        Map<Long, ProductResponseDto> priceResponseDtoMap = products.stream()
-                .collect(Collectors.toMap(
-                        ProductResponseDto::productId, dto -> dto
-                ));
+        Map<Long, ProductResponseDto> productMap = products.stream()
+                .collect(Collectors.toMap(ProductResponseDto::productId, dto -> dto));
 
         BigDecimal rentalTotalAmount = BigDecimal.ZERO;
         Rental rental = Rental.create(command.memberId(), rentalTotalAmount);
 
         for (CartItem cartItem : cartItems) {
 
-            ProductResponseDto productResponseDto = priceResponseDtoMap.get(cartItem.getProductId());
+            ProductResponseDto productResponseDto = productMap.get(cartItem.getProductId());
 
             if (productResponseDto == null) {
 
@@ -86,6 +88,7 @@ public class RentalService {
 
             RentalItem rentalItem = RentalItem.create(
                     cartItem.getProductId(),
+                    productResponseDto.sellerId(),
                     cartItem.getStartDate(),
                     cartItem.getEndDate(),
                     unitPrice
@@ -100,6 +103,7 @@ public class RentalService {
         rental.updateTotalAmount(rentalTotalAmount);
 
         rentalRepository.save(rental);
+        logCreatedEvent(rental);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
@@ -128,11 +132,12 @@ public class RentalService {
 
         if (rentalDays <= 0) {
 
-            throw new IllegalArgumentException("대여 종료일이 시작일보다 빠릅니다. cartItemId: " + command.productId());
+            throw new IllegalArgumentException("대여 종료일이 시작일보다 빠릅니다. productId: " + command.productId());
         }
 
         RentalItem rentalItem = RentalItem.create(
                 command.productId(),
+                productResponseDto.sellerId(),
                 command.startDate(),
                 command.endDate(),
                 unitPrice
@@ -144,8 +149,18 @@ public class RentalService {
                 .setScale(2, RoundingMode.HALF_UP));
 
         rental.updateTotalAmount(rentalTotalAmount);
-        rentalRepository.save(rental);
+        logCreatedEvent(rental);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    private void logCreatedEvent(Rental rental) {
+
+        rentalEventLogService.logEvent(rental, RentalEventType.CREATED, Map.of(
+                "memberId", rental.getMemberId(),
+                "status", rental.getStatus().name(),
+                "totalAmount", rental.getTotalAmount(),
+                "itemCount", rental.getItems() == null ? 0 : rental.getItems().size()
+        ));
     }
 }

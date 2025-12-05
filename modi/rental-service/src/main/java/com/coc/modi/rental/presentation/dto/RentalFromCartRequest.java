@@ -5,7 +5,6 @@ import com.coc.modi.rental.application.dto.CreateRentalFromCartCommand;
 import java.util.List;
 
 public record RentalFromCartRequest(
-
         List<Long> cartItemIds
 ) {
 

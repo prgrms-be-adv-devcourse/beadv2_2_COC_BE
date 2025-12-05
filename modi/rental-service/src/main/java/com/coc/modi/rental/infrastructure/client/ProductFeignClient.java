@@ -15,9 +15,7 @@ import java.util.List;
 public interface ProductFeignClient {
 
     @GetMapping("/bulk")
-    List<ProductResponseDto> getProducts(
-            @RequestParam("productIds") List<Long> productIds
-    );
+    List<ProductResponseDto> getProducts(@RequestParam("productIds") List<Long> productIds);
 
     default ProductResponseDto getProducts(Long productId) {
 

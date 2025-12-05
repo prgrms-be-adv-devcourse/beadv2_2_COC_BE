@@ -2,7 +2,6 @@ package com.coc.modi.rental.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,8 +13,8 @@ import java.util.List;
 
 @Getter
 @Entity
+@NoArgsConstructor
 @Table(name = "rental", schema = "public")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Rental extends BaseEntity {
 
     @Id
@@ -23,7 +22,7 @@ public class Rental extends BaseEntity {
     private Long id;
 
     @OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RentalItem> items;
+    private List<RentalItem> items = new ArrayList<>();
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;
@@ -40,6 +39,7 @@ public class Rental extends BaseEntity {
 
     @Builder
     private Rental(Long memberId, RentalStatus status, BigDecimal totalAmount, LocalDateTime paidAt) {
+
         this.memberId = memberId;
         this.status = status != null ? status : RentalStatus.REQUESTED;
         this.totalAmount = totalAmount;
@@ -47,6 +47,7 @@ public class Rental extends BaseEntity {
     }
 
     public static Rental create(Long memberId, BigDecimal totalAmount) {
+
         return Rental.builder()
                 .memberId(memberId)
                 .status(RentalStatus.REQUESTED)
@@ -55,16 +56,59 @@ public class Rental extends BaseEntity {
     }
 
     public void addItem(RentalItem rentalItem) {
+
         rentalItem.assignRental(this);
         this.items.add(rentalItem);
     }
 
     public void markPaid(LocalDateTime paidAt) {
+
         this.status = RentalStatus.PAID;
         this.paidAt = paidAt;
     }
 
+    public void markCanceled() {
+
+        this.status = RentalStatus.CANCELED;
+    }
+
+    public void markReturned() {
+
+        this.status = RentalStatus.COMPLETED;
+    }
+
     public void updateTotalAmount(BigDecimal totalAmount) {
+
         this.totalAmount = totalAmount;
     }
+
+    public RentalStatus calculateStatus() {
+
+        List<RentalItemStatus> statuses = items.stream()
+                .map(RentalItem :: getStatus)
+                .toList();
+
+        boolean allCanceledOrRejectedOrReturned = statuses.stream()
+                .allMatch(status -> status == RentalItemStatus.CANCELED
+                || status == RentalItemStatus.REJECTED
+                || status == RentalItemStatus.RETURNED);
+
+        boolean anyRentingOrAcceptedOrRequested = statuses.stream()
+                .anyMatch(status -> status == RentalItemStatus.RENTING
+                || status == RentalItemStatus.ACCEPTED
+                || status == RentalItemStatus.REQUESTED);
+
+        if (allCanceledOrRejectedOrReturned) {
+
+            return RentalStatus.COMPLETED;
+        }
+
+        if (anyRentingOrAcceptedOrRequested) {
+
+            return RentalStatus.IN_PROGRESS;
+        }
+
+        return RentalStatus.REQUESTED;
+    }
+
 }
