@@ -2,9 +2,8 @@ package com.coc.modi.account.wallet.application;
 
 import com.coc.modi.account.wallet.application.dto.MemberWalletResponse;
 import com.coc.modi.account.wallet.domain.MemberWallet;
-import com.coc.modi.account.wallet.infrastructure.MemberWalletRepository;
+import com.coc.modi.account.wallet.domain.MemberWalletRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

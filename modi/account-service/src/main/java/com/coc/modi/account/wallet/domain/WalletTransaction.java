@@ -42,4 +42,31 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(length = 255)
     private String description;
+
+    public static WalletTransaction create(
+            MemberWallet wallet,
+            WalletTransactionType txType,
+            BigDecimal amount,
+            BigDecimal balanceAfter,
+            Long relatedPgDepositId,
+            Long relatedRentalId,
+            Long relatedSettlementId,
+            String description
+    ) {
+        WalletTransaction tx = new WalletTransaction();
+
+        tx.walletId = wallet.getId();
+        tx.memberId = wallet.getMemberId();
+        tx.txType = txType;
+        tx.amount = amount;
+        tx.balanceAfter = balanceAfter;
+        tx.relatedPgDepositId = relatedPgDepositId;
+        tx.relatedRentalId = relatedRentalId;
+        tx.relatedSettlementId = relatedSettlementId;
+        tx.description = description;
+
+        return tx;
+    }
+
+
 }

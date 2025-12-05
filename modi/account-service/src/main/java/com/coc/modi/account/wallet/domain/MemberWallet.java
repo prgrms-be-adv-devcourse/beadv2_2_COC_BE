@@ -30,4 +30,20 @@ public class MemberWallet extends BaseEntity {
     @Version
     @Column(nullable = false)
     private Long version;
+
+    public static MemberWallet create(Long memberId) {
+
+        MemberWallet wallet = new MemberWallet();
+
+        wallet.memberId = memberId;
+        wallet.balance = BigDecimal.ZERO;
+        wallet.version = 0L;
+
+        return wallet;
+    }
+
+    public void changeBalance(BigDecimal balanceAfter) {
+
+        this.balance = balanceAfter;
+    }
 }
