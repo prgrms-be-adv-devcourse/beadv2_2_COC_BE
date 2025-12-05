@@ -37,8 +37,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           mkdir -p product-service/src/main/resources
-          
-          cat > product-service/src/main/resources/application.yml << 'EOF'
+          cat > product-service/src/main/resources/application.yml <<EOF
           server:
             port: 8082
           
@@ -66,9 +65,7 @@ jobs:
               org.hibernate.SQL: debug
           EOF
 
-
-
-# 5. Build product-service (멀티모듈 방식)
+      # 5. Build product-service (멀티모듈 방식)
       - name: Build product-service
         run: ./gradlew :product-service:bootJar -x test
 
