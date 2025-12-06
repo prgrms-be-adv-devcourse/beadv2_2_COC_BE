@@ -16,7 +16,7 @@ public class MemberWalletService {
     @Transactional(readOnly = true)
     public MemberWalletResponse getMemberWalletBalance(Long memberId){
 
-        MemberWallet wallet = memberWalletRepository.findById(memberId)
+        MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원의 예치금을 찾을 수 없습니다."));
 
         return MemberWalletResponse.from(wallet);
