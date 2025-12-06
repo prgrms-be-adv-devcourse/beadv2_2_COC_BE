@@ -3,11 +3,16 @@ package com.coc.modi.seller.settlement.application;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
+import com.coc.modi.seller.settlement.infrastructure.client.RentalClient;
+import com.coc.modi.seller.settlement.infrastructure.client.dto.RentalListResponse;
+import com.coc.modi.seller.settlement.infrastructure.client.dto.RentalSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +22,7 @@ public class SettlementAggregationService {
     private static final BigDecimal FEE_RATE = new BigDecimal("0.10");
 
     private final SellerSettlementRepository sellerSettlementRepository;
+    private final RentalClient rentalClient;
 
     public SellerSettlement aggregateLine(Long sellerId,
                                           String periodYm,
@@ -27,7 +33,8 @@ public class SettlementAggregationService {
         SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm)
                 .orElseGet(() -> SellerSettlement.create(null, sellerId, periodYm));
 
-        BigDecimal feeAmount = rentalAmount.multiply(FEE_RATE).setScale(2, BigDecimal.ROUND_HALF_UP);
+        // TODO: rentalId 중복 방지 필요 시 체크
+        BigDecimal feeAmount = rentalAmount.multiply(FEE_RATE).setScale(2, RoundingMode.HALF_UP);
 
         SellerSettlementLine line = SellerSettlementLine.of(
                 sellerId,
@@ -41,5 +48,42 @@ public class SettlementAggregationService {
         settlement.addLineWithAggregation(line);
 
         return sellerSettlementRepository.save(settlement);
+    }
+
+    public void aggregateFromRental(Long sellerId,
+                                    String periodYm,
+                                    String status,
+                                    String startDate,
+                                    String endDate,
+                                    Integer page,
+                                    Integer size) {
+        RentalListResponse response = rentalClient.getRentals(
+                sellerId,
+                status,
+                periodYm,
+                startDate,
+                endDate,
+                page != null ? page : 0,
+                size != null ? size : 100
+        );
+        List<RentalSummary> rentals = response.content();
+        if (rentals == null || rentals.isEmpty()) {
+            return;
+        }
+        rentals.forEach(rental -> aggregateLine(
+                rental.sellerId(),
+                periodYm != null ? periodYm : extractPeriodYm(rental.paidAt()),
+                rental.rentalId(),
+                rental.memberId(),
+                rental.productId(),
+                rental.totalAmount()
+        ));
+    }
+
+    private String extractPeriodYm(String paidAt) {
+        if (paidAt == null || paidAt.length() < 7) {
+            return null;
+        }
+        return paidAt.substring(0, 7);
     }
 }

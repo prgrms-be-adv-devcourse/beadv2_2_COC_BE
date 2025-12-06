@@ -65,8 +65,7 @@ public class SellerSettlement extends BaseEntity {
     private List<SellerSettlementLine> lines = new ArrayList<>();
 
     @Builder
-    private SellerSettlement(
-                             Long batchId,
+    private SellerSettlement(Long batchId,
                              Long sellerId,
                              String periodYm,
                              BigDecimal totalRentalAmount,
@@ -99,6 +98,13 @@ public class SellerSettlement extends BaseEntity {
     }
 
     public void addLineWithAggregation(SellerSettlementLine line) {
+        // 멱등성: 동일 rentalId 중복 방지
+        boolean exists = this.lines.stream()
+                .anyMatch(existing -> existing.getRentalId().equals(line.getRentalId()));
+        if (exists) {
+            return;
+        }
+
         line.assignSellerSettlement(this);
         this.lines.add(line);
         this.totalRentalAmount = this.totalRentalAmount.add(line.getRentalAmount());
