@@ -40,4 +40,22 @@ public class PgDeposit extends BaseEntity {
 
     @Column(name = "failed_reason", length = 255)
     private String failedReason;
+
+    // 충전 요청 생성
+    public static PgDeposit createRequest(
+            Long memberId,
+            BigDecimal amount,
+            String pgProvider,
+            String orderId
+    ) {
+        PgDeposit pgDeposit = new PgDeposit();
+        pgDeposit.memberId = memberId;
+        pgDeposit.amount = amount;
+        pgDeposit.pgProvider = pgProvider;
+        pgDeposit.pgTid = orderId;
+        pgDeposit.status = PgDepositStatus.REQUESTED;
+        pgDeposit.requestedAt = LocalDateTime.now();
+
+        return pgDeposit;
+    }
 }

@@ -1,4 +1,9 @@
 package com.coc.modi.account.deposit.application.dto;
 
-public class DepositCommand {
+import java.math.BigDecimal;
+
+public record DepositCommand (
+        Long memberId,
+        BigDecimal amount
+) {
 }
