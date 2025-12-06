@@ -1,6 +1,6 @@
-package com.coc.modi.seller.settlement.infrastructure.client;
+package com.coc.modi.seller.infrastructure.client.rental;
 
-import com.coc.modi.seller.settlement.infrastructure.client.dto.RentalListResponse;
+import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

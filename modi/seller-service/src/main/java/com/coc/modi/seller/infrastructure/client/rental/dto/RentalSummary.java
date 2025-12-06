@@ -1,4 +1,4 @@
-package com.coc.modi.seller.settlement.infrastructure.client.dto;
+package com.coc.modi.seller.infrastructure.client.rental.dto;
 
 import java.math.BigDecimal;
 

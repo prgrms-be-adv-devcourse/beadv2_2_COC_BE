@@ -1,11 +1,11 @@
 package com.coc.modi.seller.settlement.application;
 
+import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
-import com.coc.modi.seller.settlement.infrastructure.client.RentalClient;
-import com.coc.modi.seller.settlement.infrastructure.client.dto.RentalListResponse;
-import com.coc.modi.seller.settlement.infrastructure.client.dto.RentalSummary;
+import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
+import com.coc.modi.seller.infrastructure.client.rental.dto.RentalSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +22,7 @@ public class SettlementAggregationService {
     private static final BigDecimal FEE_RATE = new BigDecimal("0.10");
 
     private final SellerSettlementRepository sellerSettlementRepository;
-    private final RentalClient rentalClient;
+    private final RentalPort rentalPort;
 
     public SellerSettlement aggregateLine(Long sellerId,
                                           String periodYm,
@@ -57,7 +57,7 @@ public class SettlementAggregationService {
                                     String endDate,
                                     Integer page,
                                     Integer size) {
-        RentalListResponse response = rentalClient.getRentals(
+        RentalListResponse response = rentalPort.getRentals(
                 sellerId,
                 status,
                 periodYm,
