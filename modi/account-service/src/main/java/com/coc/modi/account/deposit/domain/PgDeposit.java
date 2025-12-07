@@ -58,4 +58,31 @@ public class PgDeposit extends BaseEntity {
 
         return pgDeposit;
     }
+
+    // 충전 승인 처리
+    public void approve() {
+
+        if(this.status != PgDepositStatus.REQUESTED){
+
+            throw new IllegalStateException("REQEUSTED 상태만 승인 가능합니다. 현재 : " + this.status);
+        }
+
+        this.status = PgDepositStatus.SUCCESS;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    // 충전 실패 처리
+    public void fail(String failedReason) {
+
+        if(this.status != PgDepositStatus.REQUESTED){
+
+            throw new IllegalStateException("REQUESTED 상태만 실패처리 가능합니다. 현재 : " + this.status);
+        }
+
+        this.status = PgDepositStatus.FAILED;
+        this.failedReason = failedReason;
+    }
+
+
+
 }

@@ -13,6 +13,22 @@ public record WalletTransactionCommand(
         Long relatedSettlementId,
         String description
 ) {
+    public static WalletTransactionCommand forDepositCharge(
+            Long memberId,
+            Long pgDepositId,
+            BigDecimal amount
+    ) {
+        return new WalletTransactionCommand(
+                memberId,
+                WalletTransactionType.DEPOSIT_CHARGE,
+                amount,
+                pgDepositId,
+                null,
+                null,
+                "예치금 충전"
+        );
+    }
+
     public static WalletTransactionCommand forRentalPayment(
             Long memberId,
             Long rentalId,
