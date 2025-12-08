@@ -1,33 +1,27 @@
 package com.coc.modi.account;
 
-import com.coc.modi.account.deposit.infrastructure.config.TossPaymentsConfig;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
-@SpringBootApplication(
-        scanBasePackages = {
-            "com.coc.modi.account",
-            "com.coc.modi.common"
-        }
-)
 @SecurityScheme(
-        name = "BearerAuth",
+        name = "Authorization",
         type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
         bearerFormat = "JWT",
-        scheme = "bearer"
+        in = SecuritySchemeIn.HEADER
 )
-@EnableConfigurationProperties(TossPaymentsConfig.class)
+@SpringBootApplication(scanBasePackages = "com.coc.modi")
 @OpenAPIDefinition(
-        info = @Info(title = "Member Service API", version = "1.0"),
-        security = @SecurityRequirement(name = "BearerAuth")
+        info = @Info(title = "Seller Service API", version = "1.0"),
+        security = @SecurityRequirement(name = "Authorization")
 )
 public class AccountServiceApplication {
 
