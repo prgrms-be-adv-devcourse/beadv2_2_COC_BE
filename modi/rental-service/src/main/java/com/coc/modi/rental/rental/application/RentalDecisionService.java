@@ -21,18 +21,18 @@ public class RentalDecisionService {
     private final SellerFeignClient sellerFeignClient;
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> acceptRentalItem(Long rentalItemId, Long memberId) {
+    public void acceptRentalItem(Long rentalItemId, Long memberId) {
 
-        return decideRentalItem(rentalItemId, memberId, RentalItemStatus.ACCEPTED);
+        decideRentalItem(rentalItemId, memberId, RentalItemStatus.ACCEPTED);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> rejectRentalItem(Long rentalItemId, Long memberId) {
+    public void rejectRentalItem(Long rentalItemId, Long memberId) {
 
-        return decideRentalItem(rentalItemId, memberId, RentalItemStatus.REJECTED);
+        decideRentalItem(rentalItemId, memberId, RentalItemStatus.REJECTED);
     }
 
-    private ResponseEntity<ApiResponse<Void>> decideRentalItem(Long rentalItemId, Long memberId, RentalItemStatus targetStatus) {
+    private void decideRentalItem(Long rentalItemId, Long memberId, RentalItemStatus targetStatus) {
 
         RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + rentalItemId));
@@ -63,8 +63,6 @@ public class RentalDecisionService {
 
         rentalItem.decide(targetStatus);
         rental.updateStatusFromItems();
-
-        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
 }

@@ -32,7 +32,7 @@ public class RentalCreationService {
     private final RentalEventLogService rentalEventLogService;
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> createRentalFromCart(CreateRentalFromCartCommand command) {
+    public void createRentalFromCart(CreateRentalFromCartCommand command) {
 
         List<CartItem> cartItems = cartItemRepository.findAllByIdIn(command.cartItemIds());
 
@@ -102,12 +102,10 @@ public class RentalCreationService {
 
         rentalRepository.save(rental);
         logCreatedEvent(rental);
-
-        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> createRental(RentalCreateCommand command) {
+    public void createRental(RentalCreateCommand command) {
 
         ProductResponseDto productResponseDto = productFeignClient.getProducts(command.productId());
 
@@ -147,8 +145,6 @@ public class RentalCreationService {
 
         rental.updateTotalAmount(rentalTotalAmount);
         logCreatedEvent(rental);
-
-        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     private void logCreatedEvent(Rental rental) {

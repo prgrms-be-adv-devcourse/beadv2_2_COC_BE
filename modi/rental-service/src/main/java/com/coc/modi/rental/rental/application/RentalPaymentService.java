@@ -25,7 +25,7 @@ public class RentalPaymentService {
     private final RentalEventLogService rentalEventLogService;
 
     @Transactional
-    public ResponseEntity<ApiResponse<PayRentalResponse>> completePayment(Long rentalId, Long memberId) {
+    public PayRentalResponse completePayment(Long rentalId, Long memberId) {
 
         Rental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 대여 정보를 찾을 수 없습니다. rentalId: " + rentalId));
@@ -71,8 +71,6 @@ public class RentalPaymentService {
                 "rentalStatus", rental.getStatus().name()
         ));
 
-        return ResponseEntity.ok(ApiResponse.ok(
-                PayRentalResponse.create(rental, totalAmount, walletInfoResponse.balance(), paidAt)
-        ));
+        return PayRentalResponse.create(rental, totalAmount, walletInfoResponse.balance(), paidAt);
     }
 }

@@ -36,7 +36,7 @@ public class RentalLifecycleService {
     private final RentalEventLogService rentalEventLogService;
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> cancelRentalItem(Long rentalItemId, Long memberId) {
+    public void cancelRentalItem(Long rentalItemId, Long memberId) {
 
         RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + rentalItemId));
@@ -55,12 +55,10 @@ public class RentalLifecycleService {
                 "rentalItemId", rentalItemId,
                 "status", rentalItem.getStatus().name()
         ));
-
-        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(RentalReturnCommand command) {
+    public RentalReturnResponse completeReturn(RentalReturnCommand command) {
 
         RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 대여 물품 정보를 찾을 수 없습니다. rentalItemId: " + command.rentalItemId()));
@@ -98,16 +96,15 @@ public class RentalLifecycleService {
                 "memo", command.memo()
         ));
 
-        return ResponseEntity.ok(ApiResponse.ok(new RentalReturnResponse(
+        return new RentalReturnResponse(
                 rental.getId(),
                 rentalItem.getId(),
                 rental.getStatus().name(),
-                damageFee.add(lateFee).toPlainString()
-        )));
+                damageFee.add(lateFee).toPlainString());
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> extendRentalItem(ExtendRentalCommand command) {
+    public void extendRentalItem(ExtendRentalCommand command) {
 
         RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + command.rentalItemId()));
@@ -152,8 +149,6 @@ public class RentalLifecycleService {
                 "extraAmount", extraAmount,
                 "totalAmount", rental.getTotalAmount()
         ));
-
-        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @Transactional
