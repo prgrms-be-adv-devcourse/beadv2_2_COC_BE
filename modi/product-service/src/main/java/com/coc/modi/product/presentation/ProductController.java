@@ -2,18 +2,13 @@ package com.coc.modi.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ProductService;
-import com.coc.modi.product.application.dto.ProductCommand;
-import com.coc.modi.product.application.dto.ProductListResponse;
-import com.coc.modi.product.application.dto.ProductResponse;
-import com.coc.modi.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.presentation.dto.ProductRequestDto;
 import com.coc.modi.product.presentation.dto.ProductUpdateRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,9 +21,11 @@ public class ProductController {
 
     // 상품 목록 조회
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProducts(Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProducts(
+            @ModelAttribute ProductSearchCondition condition,
+            Pageable pageable) {
 
-        return ResponseEntity.ok(ApiResponse.ok(service.getProducts(pageable)));
+        return ResponseEntity.ok(ApiResponse.ok(service.searchProducts(condition, pageable)));
     }
 
     // 상품 상세 조회
@@ -36,13 +33,6 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> getProductDetail(@PathVariable("productId") Long productId) {
 
         return ResponseEntity.ok(ApiResponse.ok(service.getProductDetail(productId)));
-    }
-
-    // 상품 이미지 등록
-    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<String>> uploadImage(@RequestPart("file") MultipartFile file) {
-
-        return ResponseEntity.ok(ApiResponse.ok(service.uploadImage(file)));
     }
 
     // 상품 등록
