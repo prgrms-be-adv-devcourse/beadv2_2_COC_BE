@@ -39,16 +39,16 @@ public class RentalController {
         return rentalCreationService.createRental(rentalRequest.toCommand(memberId));
     }
 
-    @PatchMapping("/{rentalItemId}/approve")
-    public ResponseEntity<ApiResponse<Void>> approveRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-                                                               @RequestParam Long memberId) {
+    @PatchMapping("/{rentalItemId}/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
+                                                              @RequestParam Long memberId) {
 
         return rentalDecisionService.approveRentalItem(rentalItemId, memberId);
     }
 
-    @PatchMapping("/{rentalItemId}/decline")
-    public ResponseEntity<ApiResponse<Void>> declineRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-                                                               @RequestParam Long memberId) {
+    @PatchMapping("/{rentalItemId}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
+                                                              @RequestParam Long memberId) {
 
         return rentalDecisionService.declineRentalItem(rentalItemId, memberId);
     }
@@ -67,12 +67,12 @@ public class RentalController {
         return rentalLifecycleService.cancelRental(rentalId, memberId);
     }
 
-    @PostMapping("/{rentalId}/return")
-    public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(@PathVariable(name = "rentalId") Long rentalId,
+    @PostMapping("/items/{rentalItemId}/return")
+    public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(@PathVariable(name = "rentalItemId") Long rentalItemId,
                                                                             @RequestParam Long memberId,
                                                                             @RequestBody RentalReturnRequest rentalReturnRequest) {
 
-        return rentalLifecycleService.completeReturn(rentalReturnRequest.toCommand(rentalId, memberId));
+        return rentalLifecycleService.completeReturn(rentalItemId, memberId, rentalReturnRequest.toCommand(rentalItemId, memberId));
     }
 
     @PostMapping("/{rentalId}/refund")

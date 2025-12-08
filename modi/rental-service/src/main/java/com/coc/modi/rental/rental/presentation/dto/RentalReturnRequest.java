@@ -11,11 +11,11 @@ public record RentalReturnRequest(
         String lateReason,
         String memo
 ) {
-    public RentalReturnCommand toCommand(Long rentalId, Long memberId) {
+    public RentalReturnCommand toCommand(Long rentalItemId, Long memberId) {
 
         return new RentalReturnCommand(
                 memberId,
-                rentalId,
+                rentalItemId,
                 damageFee,
                 damageReason,
                 lateFee,

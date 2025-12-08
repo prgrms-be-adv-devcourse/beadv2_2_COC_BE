@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record RentalReturnCommand(
         Long memberId,
-        Long rentalId,
+        Long rentalItemId,
         BigDecimal damageFee,
         String damageReason,
         BigDecimal lateFee,
