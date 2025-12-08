@@ -2,6 +2,8 @@ package com.coc.modi.account.deposit.infrastructure.client;
 
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprovalRequest;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprovalResponse;
+import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelRequest;
+import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelResponse;
 import com.coc.modi.account.deposit.infrastructure.config.TossPaymentsConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
@@ -44,6 +46,28 @@ public class TossPaymentsClient {
 
         // 5. API 호출 및 응답 반환
         return restTemplate.postForObject(url, entity, TossPaymentApprovalResponse.class);
+    }
+
+    // Toss 결제 취소
+    public TossPaymentCancelResponse cancelPayment(String paymentKey,
+                                                   String orderId,
+                                                   BigDecimal cancelAmount,
+                                                   String cancelReason) {
+
+        String url = tossPaymentsConfig.getApiUrl() + "/" + paymentKey + "/cancel";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", tossPaymentsConfig.getAuthorizationHeader());
+
+        TossPaymentCancelRequest request = new TossPaymentCancelRequest(
+                cancelReason,
+                cancelAmount
+        );
+
+        HttpEntity<TossPaymentCancelRequest> entity = new HttpEntity<>(request, headers);
+
+        return restTemplate.postForObject(url, entity, TossPaymentCancelResponse.class);
     }
 
 }

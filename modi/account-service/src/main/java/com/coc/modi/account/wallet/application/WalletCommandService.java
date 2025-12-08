@@ -49,7 +49,7 @@ public class WalletCommandService {
         // 2. txType에 따라 예치금 입금, 차감 결정
         BigDecimal signedAmount = switch (command.txType()) {
             case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST -> command.amount();
-            case RENTAL_PAYMENT -> command.amount().negate();
+            case DEPOSIT_CANCEL, RENTAL_PAYMENT -> command.amount().negate();
         };
 
         BigDecimal balanceAfter = wallet.getBalance().add(signedAmount);

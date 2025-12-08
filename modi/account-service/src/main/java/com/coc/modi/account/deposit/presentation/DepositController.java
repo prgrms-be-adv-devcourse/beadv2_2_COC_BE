@@ -4,6 +4,7 @@ import com.coc.modi.account.deposit.application.DepositService;
 import com.coc.modi.account.deposit.application.dto.DepositResponse;
 import com.coc.modi.account.deposit.infrastructure.config.TossPaymentsConfig;
 import com.coc.modi.account.deposit.presentation.dto.DepositApprovalRequest;
+import com.coc.modi.account.deposit.presentation.dto.DepositCancelRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositRequest;
 import com.coc.modi.account.deposit.presentation.dto.TossConfigResponse;
 import com.coc.modi.common.ApiResponse;
@@ -48,6 +49,18 @@ public class DepositController {
                 tossPaymentsConfig.getSuccessUrl(),
                 tossPaymentsConfig.getFailUrl()
         );
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    // 예치금 충전 취소(환불)
+    @PostMapping("/cancel")
+    public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@RequestBody DepositCancelRequest request,
+                                                                      Authentication authentication){
+
+        Long memberId = (Long) authentication.getPrincipal();
+
+        DepositResponse response = depositService.cancelDeposit(request.toCommand(memberId));
+
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

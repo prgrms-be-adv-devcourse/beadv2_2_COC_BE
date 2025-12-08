@@ -32,6 +32,9 @@ public class PgDeposit extends BaseEntity {
     @Column(name = "pg_tid", nullable = false, length = 100)
     private String pgTid;
 
+    @Column(name = "payment_key", length = 100)
+    private String paymentKey;
+
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
 
@@ -60,13 +63,14 @@ public class PgDeposit extends BaseEntity {
     }
 
     // 충전 승인 처리
-    public void approve() {
+    public void approve(String paymentKey) {
 
         if(this.status != PgDepositStatus.REQUESTED){
 
             throw new IllegalStateException("REQEUSTED 상태만 승인 가능합니다. 현재 : " + this.status);
         }
 
+        this.paymentKey = paymentKey;
         this.status = PgDepositStatus.SUCCESS;
         this.approvedAt = LocalDateTime.now();
     }
@@ -83,6 +87,20 @@ public class PgDeposit extends BaseEntity {
         this.failedReason = failedReason;
     }
 
+    // 취소 가능 여부
+    public boolean isCancelable(){
 
+        return this.status == PgDepositStatus.REQUESTED || this.status == PgDepositStatus.SUCCESS;
+    }
+
+    // 결제 취소(환불)
+    public void cancel(String reason){
+        if(this.status != PgDepositStatus.SUCCESS && this.status != PgDepositStatus.REQUESTED){
+
+            throw new IllegalStateException("SUCCESS 상태만 취소할 수 있습니다. : " + this.status);
+        }
+        this.status = PgDepositStatus.CANCELED;
+        this.failedReason = reason;
+    }
 
 }

@@ -45,4 +45,21 @@ public record WalletTransactionCommand(
                 "렌탈결제"
         );
     }
+
+    public static WalletTransactionCommand forDepositCancel(
+            Long memberId,
+            Long depositId,
+            BigDecimal amount
+    ){
+
+        return new WalletTransactionCommand(
+                memberId,
+                WalletTransactionType.DEPOSIT_CANCEL,
+                amount,
+                depositId,
+                null,
+                null,
+                "예치금 충전 취소"
+        );
+    }
 }
