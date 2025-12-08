@@ -1,4 +1,4 @@
-package com.coc.modi.account.member.domain;
+package com.coc.modi.account.wallet.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
@@ -15,10 +15,12 @@ public class MemberWallet extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "member_id", nullable = false, unique = true)
-    private Member member;
+    @Column(name = "member_id", nullable = false, unique = true)
+    private Long memberId;
 
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal balance;
+
+    @Version
+    private Long version;
 }
