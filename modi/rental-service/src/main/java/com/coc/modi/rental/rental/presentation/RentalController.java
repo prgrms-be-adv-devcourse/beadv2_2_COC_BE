@@ -1,10 +1,7 @@
 package com.coc.modi.rental.rental.presentation;
 
 import com.coc.modi.common.ApiResponse;
-import com.coc.modi.rental.rental.application.RentalCreationService;
-import com.coc.modi.rental.rental.application.RentalDecisionService;
-import com.coc.modi.rental.rental.application.RentalLifecycleService;
-import com.coc.modi.rental.rental.application.RentalPaymentService;
+import com.coc.modi.rental.rental.application.*;
 import com.coc.modi.rental.rental.application.dto.PayRentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalReturnResponse;
@@ -25,6 +22,7 @@ public class RentalController {
     private final RentalDecisionService rentalDecisionService;
     private final RentalLifecycleService rentalLifecycleService;
     private final RentalPaymentService rentalPaymentService;
+    private final RentalQueryService rentalQueryService;
 
     @PostMapping("/carts")
     public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@RequestBody RentalFromCartRequest rentalFromCartRequest,
@@ -92,8 +90,14 @@ public class RentalController {
         return rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, memberId));
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<RentalResponse>>
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<List<RentalResponse>>> getRentalList(@RequestParam Long memberId, 여기에 동적 쿼리 필요
+//                                                                         @RequestBody) {}
 
-    @GetMapping("/details")
+    @GetMapping("/{rentalId}")
+    public ResponseEntity<ApiResponse<RentalResponse>> getRentalDetails(@PathVariable(name = "rentalId") Long rentalId,
+                                                                        @RequestParam Long memberId) {
+
+        return rentalQueryService.getRentalDetails(rentalId);
+    }
 }
