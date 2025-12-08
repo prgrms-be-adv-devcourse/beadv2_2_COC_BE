@@ -2,7 +2,6 @@ package com.coc.modi.product.application;
 
 import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.domain.*;
-import com.coc.modi.product.infrastructure.ProductImageJpaRepository;
 import com.coc.modi.product.search.ProductDocument;
 import com.coc.modi.product.search.ProductIndexService;
 import com.coc.modi.product.search.ProductSearchQueryRepository;
@@ -12,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -56,16 +54,6 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("PRODUCT NOT FOUND: " + productId));
 
         return ProductResponse.from(product);
-    }
-
-    // 3-3. 상품 이미지 등록
-    @Transactional
-    public String uploadImage(MultipartFile file) {
-
-        // TODO: S3
-        String url = "https://modi.com/image.jpg";
-
-        return url;
     }
 
     // 3-4. 상품 등록

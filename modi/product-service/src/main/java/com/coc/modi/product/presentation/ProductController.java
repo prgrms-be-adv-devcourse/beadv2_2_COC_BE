@@ -7,10 +7,8 @@ import com.coc.modi.product.presentation.dto.ProductRequestDto;
 import com.coc.modi.product.presentation.dto.ProductUpdateRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,13 +33,6 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> getProductDetail(@PathVariable("productId") Long productId) {
 
         return ResponseEntity.ok(ApiResponse.ok(service.getProductDetail(productId)));
-    }
-
-    // 상품 이미지 등록
-    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<String>> uploadImage(@RequestPart("file") MultipartFile file) {
-
-        return ResponseEntity.ok(ApiResponse.ok(service.uploadImage(file)));
     }
 
     // 상품 등록
