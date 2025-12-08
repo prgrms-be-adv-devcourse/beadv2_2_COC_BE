@@ -7,17 +7,14 @@ import java.math.BigDecimal;
 public record RentalPaymentResponse(
         Long walletId,
         Long memberId,
-        BigDecimal price,
         BigDecimal balance
 ) {
-    public static RentalPaymentResponse from(
-            MemberWallet wallet,
-            BigDecimal price
-    ) {
+
+    public static RentalPaymentResponse from(MemberWallet wallet) {
+
         return new RentalPaymentResponse(
                 wallet.getId(),
                 wallet.getMemberId(),
-                price,
                 wallet.getBalance()
         );
     }

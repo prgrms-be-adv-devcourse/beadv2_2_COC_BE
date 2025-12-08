@@ -4,13 +4,14 @@ import com.coc.modi.account.deposit.application.dto.DepositCancelCommand;
 
 import java.math.BigDecimal;
 
-public record DepositCancelRequest (
+public record DepositCancelRequest(
         String paymentKey,
         String orderId,
         BigDecimal amount,
         String reason
 ) {
-    public DepositCancelCommand toCommand(Long memberId){
+
+    public DepositCancelCommand toCommand(Long memberId) {
 
         return new DepositCancelCommand(
                 memberId,

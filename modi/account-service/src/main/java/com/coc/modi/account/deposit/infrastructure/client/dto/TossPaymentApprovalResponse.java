@@ -2,7 +2,7 @@ package com.coc.modi.account.deposit.infrastructure.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record TossPaymentApprovalResponse (
+public record TossPaymentApprovalResponse(
         String paymentKey,
         String orderId,
         String status,
@@ -17,6 +17,7 @@ public record TossPaymentApprovalResponse (
         Failure failure
 
 ){
+
     public record Card(
             String company,
             String number,

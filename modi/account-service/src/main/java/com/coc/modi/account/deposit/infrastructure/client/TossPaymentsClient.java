@@ -22,15 +22,16 @@ public class TossPaymentsClient {
     private final RestTemplate restTemplate;
 
     // Toss 결제 승인 API 호출
-    public TossPaymentApprovalResponse approvePayment (String paymentKey,
-                                                       String orderId,
-                                                       BigDecimal amount) {
+    public TossPaymentApprovalResponse approvePayment(String paymentKey,
+                                                      String orderId,
+                                                      BigDecimal amount) {
 
         // 1. 요청 URL
         String url = tossPaymentsConfig.getApiUrl() + "/confirm";
 
         // 2. 요청 헤더
         HttpHeaders headers = new HttpHeaders();
+
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", tossPaymentsConfig.getAuthorizationHeader());
 
@@ -50,13 +51,13 @@ public class TossPaymentsClient {
 
     // Toss 결제 취소
     public TossPaymentCancelResponse cancelPayment(String paymentKey,
-                                                   String orderId,
                                                    BigDecimal cancelAmount,
                                                    String cancelReason) {
 
         String url = tossPaymentsConfig.getApiUrl() + "/" + paymentKey + "/cancel";
 
         HttpHeaders headers = new HttpHeaders();
+
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", tossPaymentsConfig.getAuthorizationHeader());
 

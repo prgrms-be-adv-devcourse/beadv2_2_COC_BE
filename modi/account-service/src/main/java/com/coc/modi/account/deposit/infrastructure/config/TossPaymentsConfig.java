@@ -22,9 +22,12 @@ public class TossPaymentsConfig {
 
     // Base64 인코딩된 헤더 생성
     public String getAuthorizationHeader() {
+
         String credential = secretKey + ":";
+
         String encoded = java.util.Base64.getEncoder()
                 .encodeToString(credential.getBytes(StandardCharsets.UTF_8));
+
         return "Basic " + encoded;
     }
 

@@ -17,26 +17,31 @@ public class PgDepositRepositoryAdapter implements PgDepositRepository {
 
     @Override
     public PgDeposit save(PgDeposit pgDeposit) {
+
         return pgDepositJpaRepository.save(pgDeposit);
     }
 
     @Override
     public Optional<PgDeposit> findById(Long id) {
+
         return pgDepositJpaRepository.findById(id);
     }
 
     @Override
     public Optional<PgDeposit> findByPgTid(String pgTid) {
+
         return pgDepositJpaRepository.findByPgTid(pgTid);
     }
 
     @Override
     public List<PgDeposit> findByMemberId(Long memberId) {
+
         return pgDepositJpaRepository.findByMemberId(memberId);
     }
 
     @Override
     public List<PgDeposit> findByMemberIdAndStatus(Long memberId, PgDepositStatus status) {
+
         return pgDepositJpaRepository.findByMemberIdAndStatus(memberId, status);
     }
 }

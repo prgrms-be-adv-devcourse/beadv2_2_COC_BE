@@ -9,6 +9,7 @@ public record RentalPaymentCommand(
         Long rentalId,
         BigDecimal amount
 ) {
+
     public static RentalPaymentCommand from(RentalPaymentRequest request) {
 
         return new RentalPaymentCommand(

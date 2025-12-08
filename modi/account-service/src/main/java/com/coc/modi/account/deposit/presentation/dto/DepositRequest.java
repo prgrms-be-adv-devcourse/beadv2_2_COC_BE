@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 public record DepositRequest(
         BigDecimal amount
 ) {
+
     public DepositCommand toCommand(Long memberId) {
+
         return new DepositCommand(
                 memberId,
                 amount
