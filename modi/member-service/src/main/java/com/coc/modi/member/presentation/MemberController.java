@@ -1,10 +1,10 @@
 package com.coc.modi.member.presentation;
 
 import com.coc.modi.member.application.MemberService;
-import com.coc.modi.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.presentation.dto.MemberSignupRequest;
+import com.coc.modi.member.presentation.dto.MemberUpdateRequest;
 import com.coc.modi.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,4 +36,22 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    // 내 정보 수정
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(Authentication authentication,
+                                                                           @RequestBody MemberUpdateRequest request) {
+
+        MemberProfileResponse response = memberService.updateProfile(authentication, request.toCommand());
+
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<?>> deleteMember(Authentication authentication) {
+
+        memberService.deleteMember(authentication);
+
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
 }

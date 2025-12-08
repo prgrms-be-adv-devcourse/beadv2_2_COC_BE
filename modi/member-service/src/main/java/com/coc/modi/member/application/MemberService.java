@@ -6,6 +6,7 @@ import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.domain.Member;
 import com.coc.modi.member.domain.MemberRole;
 import com.coc.modi.member.domain.MemberRepository;
+import com.coc.modi.member.application.dto.UpdateMemberCommand;
 import com.coc.modi.member.infrastructure.client.AccountFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -64,6 +65,49 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
 
         return MemberProfileResponse.from(member);
+    }
+
+    // 회원 정보 수정
+    @Transactional
+    public MemberProfileResponse updateProfile(Authentication authentication,
+                                               UpdateMemberCommand command) {
+
+        Long memberId = (Long) authentication.getPrincipal();
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+
+        if (command.name() != null && !command.name().isBlank()) {
+
+            member.changeName(command.name());
+        }
+
+        if (command.phone() != null && !command.phone().isBlank()) {
+
+            validatePhone(command.phone());
+            member.changePhone(command.phone());
+        }
+
+        if (command.newPassword() != null && !command.newPassword().isBlank()) {
+
+            validatePassword(command.newPassword());
+            String encodedPassword = passwordEncoder.encode(command.newPassword());
+            member.changePassword(encodedPassword);
+        }
+
+        return MemberProfileResponse.from(member);
+    }
+
+    // 회원 탈퇴
+    @Transactional
+    public void deleteMember(Authentication authentication) {
+
+        Long memberId = (Long) authentication.getPrincipal();
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+
+        member.withdraw();
     }
 
     // 비밀번호 유효성 검사

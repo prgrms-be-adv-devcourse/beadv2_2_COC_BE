@@ -62,4 +62,24 @@ public class Member extends BaseEntity {
                                 MemberRole role) {
         return new Member(email, password, name, phone, role);
     }
+
+    public void changeName(String name) {
+
+        this.name = name;
+    }
+
+    public void changePhone(String phone) {
+
+        this.phone = phone;
+    }
+
+    public void changePassword(String password) {
+
+        this.password = password;
+    }
+
+    public void withdraw() {
+
+        this.status = MemberStatus.WITHDRAWN;
+    }
 }
