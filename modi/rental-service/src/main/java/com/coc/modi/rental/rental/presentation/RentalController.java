@@ -5,10 +5,12 @@ import com.coc.modi.rental.rental.application.*;
 import com.coc.modi.rental.rental.application.dto.PayRentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalReturnResponse;
+import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.presentation.dto.RentalFromCartRequest;
 import com.coc.modi.rental.rental.presentation.dto.RentalRequest;
 import com.coc.modi.rental.rental.presentation.dto.RentalReturnRequest;
 import com.coc.modi.rental.rental.presentation.dto.ExtendRentalRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,15 @@ public class RentalController {
     private final RentalLifecycleService rentalLifecycleService;
     private final RentalPaymentService rentalPaymentService;
     private final RentalQueryService rentalQueryService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<java.util.List<RentalResponse>>> searchRentals(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate endDate,
+            @RequestParam(required = false) RentalStatus rentalStatus) {
+
+        return rentalQueryService.searchRentals(startDate, endDate, rentalStatus);
+    }
 
     @PostMapping("/carts")
     public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@RequestBody RentalFromCartRequest rentalFromCartRequest,

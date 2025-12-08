@@ -135,7 +135,6 @@ public class RentalLifecycleService {
         accountFeignClient.charge(new ChargeWalletCommand(
                 command.memberId(),
                 rental.getId(),
-                rentalItem.getId(),
                 extraAmount
         ));
 
