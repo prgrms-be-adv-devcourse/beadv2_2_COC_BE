@@ -5,7 +5,7 @@ import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalStatus;
-import com.coc.modi.rental.rental.infrastructure.RentalItemRepository;
+import com.coc.modi.rental.rental.domain.RentalItemRepository;
 import com.coc.modi.rental.rental.infrastructure.client.SellerFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +21,13 @@ public class RentalDecisionService {
     private final SellerFeignClient sellerFeignClient;
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> approveRentalItem(Long rentalItemId, Long memberId) {
+    public ResponseEntity<ApiResponse<Void>> acceptRentalItem(Long rentalItemId, Long memberId) {
 
         return decideRentalItem(rentalItemId, memberId, RentalItemStatus.ACCEPTED);
     }
 
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> declineRentalItem(Long rentalItemId, Long memberId) {
+    public ResponseEntity<ApiResponse<Void>> rejectRentalItem(Long rentalItemId, Long memberId) {
 
         return decideRentalItem(rentalItemId, memberId, RentalItemStatus.REJECTED);
     }
@@ -51,12 +51,18 @@ public class RentalDecisionService {
             throw new IllegalStateException("대여 정보가 존재하지 않습니다. rentalItemId: " + rentalItemId);
         }
 
-        if (rental.getStatus() != RentalStatus.REQUESTED) {
+        RentalStatus rentalStatus = rental.getStatus();
 
-            throw new IllegalArgumentException("현재 대여 정보의 상태가 REQUESTED가 아닙니다. rentalStatus: " + rental.getStatus());
+        if (rentalStatus == RentalStatus.PAID
+                || rentalStatus == RentalStatus.IN_PROGRESS
+                || rentalStatus == RentalStatus.COMPLETED
+                || rentalStatus == RentalStatus.CANCELED) {
+
+            throw new IllegalArgumentException("현재 대여 정보의 상태에서 승인/거절이 불가능합니다. rentalStatus: " + rentalStatus);
         }
 
         rentalItem.decide(targetStatus);
+        rental.updateStatusFromItems();
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

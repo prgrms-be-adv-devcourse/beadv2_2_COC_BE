@@ -1,6 +1,7 @@
 package com.coc.modi.rental.rental.infrastructure;
 
 import com.coc.modi.rental.rental.domain.Rental;
+import com.coc.modi.rental.rental.domain.RentalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

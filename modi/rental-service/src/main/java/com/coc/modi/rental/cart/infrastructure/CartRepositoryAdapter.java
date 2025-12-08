@@ -1,5 +1,6 @@
 package com.coc.modi.rental.cart.infrastructure;
 
+import com.coc.modi.rental.cart.domain.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

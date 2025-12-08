@@ -1,6 +1,4 @@
-package com.coc.modi.rental.rental.infrastructure;
-
-import com.coc.modi.rental.rental.domain.Rental;
+package com.coc.modi.rental.rental.domain;
 
 import java.util.Optional;
 

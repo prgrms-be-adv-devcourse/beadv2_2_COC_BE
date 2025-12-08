@@ -3,7 +3,7 @@ package com.coc.modi.rental.rental.application;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalEventLog;
 import com.coc.modi.rental.rental.domain.RentalEventType;
-import com.coc.modi.rental.rental.infrastructure.RentalEventLogRepository;
+import com.coc.modi.rental.rental.domain.RentalEventLogRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

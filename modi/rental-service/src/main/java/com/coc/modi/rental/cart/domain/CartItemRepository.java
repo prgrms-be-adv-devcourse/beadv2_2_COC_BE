@@ -1,6 +1,4 @@
-package com.coc.modi.rental.cart.infrastructure;
-
-import com.coc.modi.rental.cart.domain.CartItem;
+package com.coc.modi.rental.cart.domain;
 
 import java.util.List;
 

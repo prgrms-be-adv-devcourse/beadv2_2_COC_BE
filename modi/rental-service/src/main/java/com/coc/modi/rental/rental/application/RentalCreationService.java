@@ -1,14 +1,14 @@
 package com.coc.modi.rental.rental.application;
 
 import com.coc.modi.rental.cart.domain.CartItem;
-import com.coc.modi.rental.cart.infrastructure.CartItemRepository;
+import com.coc.modi.rental.cart.domain.CartItemRepository;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalEventType;
-import com.coc.modi.rental.rental.infrastructure.RentalRepository;
+import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +95,7 @@ public class RentalCreationService {
 
             rental.addItem(rentalItem);
 
-            rentalTotalAmount = rentalTotalAmount.add(unitPrice.multiply(BigDecimal.valueOf(rentalDays))
-                    .setScale(2, RoundingMode.HALF_UP));
+            rentalTotalAmount = rentalTotalAmount.add(rentalItem.calculateRentalAmount());
         }
 
         rental.updateTotalAmount(rentalTotalAmount);
@@ -145,8 +143,7 @@ public class RentalCreationService {
 
         rental.addItem(rentalItem);
 
-        rentalTotalAmount = rentalTotalAmount.add(unitPrice.multiply(BigDecimal.valueOf(rentalDays))
-                .setScale(2, RoundingMode.HALF_UP));
+        rentalTotalAmount = rentalTotalAmount.add(rentalItem.calculateRentalAmount());
 
         rental.updateTotalAmount(rentalTotalAmount);
         logCreatedEvent(rental);

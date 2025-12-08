@@ -63,8 +63,8 @@ public class Rental extends BaseEntity {
 
     public void markPaid(LocalDateTime paidAt) {
 
-        this.status = RentalStatus.PAID;
         this.paidAt = paidAt;
+        updateStatusFromItems();
     }
 
     public void markCanceled() {
@@ -77,6 +77,28 @@ public class Rental extends BaseEntity {
         this.status = RentalStatus.COMPLETED;
     }
 
+    public void cancelByMemberRequest() {
+
+        if (this.status == RentalStatus.CANCELED || this.status == RentalStatus.COMPLETED) {
+
+            throw new IllegalStateException("이미 취소되었거나 완료된 대여입니다. rentalStatus: " + this.status);
+        }
+
+        if (items != null) {
+
+            boolean hasInProgressItem = items.stream().anyMatch(item -> !item.canCancelByRental());
+
+            if (hasInProgressItem) {
+
+                throw new IllegalStateException("이미 결제되었거나 진행 중인 상품이 있어 취소할 수 없습니다. rentalId: " + this.id);
+            }
+
+            items.forEach(RentalItem::cancelByRentalRequest);
+        }
+
+        markCanceled();
+    }
+
     public void updateTotalAmount(BigDecimal totalAmount) {
 
         this.totalAmount = totalAmount;
@@ -84,31 +106,76 @@ public class Rental extends BaseEntity {
 
     public RentalStatus calculateStatus() {
 
-        List<RentalItemStatus> statuses = items.stream()
-                .map(RentalItem :: getStatus)
-                .toList();
+        if (this.status == RentalStatus.CANCELED) {
 
-        boolean allCanceledOrRejectedOrReturned = statuses.stream()
-                .allMatch(status -> status == RentalItemStatus.CANCELED
-                || status == RentalItemStatus.REJECTED
-                || status == RentalItemStatus.RETURNED);
+            return RentalStatus.CANCELED;
+        }
 
-        boolean anyRentingOrAcceptedOrRequested = statuses.stream()
-                .anyMatch(status -> status == RentalItemStatus.RENTING
-                || status == RentalItemStatus.ACCEPTED
-                || status == RentalItemStatus.REQUESTED);
+        if (items == null || items.isEmpty()) {
 
-        if (allCanceledOrRejectedOrReturned) {
+            return RentalStatus.REQUESTED;
+        }
+
+        long totalCount = items.size();
+        long requestedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.REQUESTED).count();
+        long acceptedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.ACCEPTED).count();
+        long rentingCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.RENTING).count();
+        long returnedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.RETURNED).count();
+        long canceledCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.CANCELED).count();
+        long rejectedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.REJECTED).count();
+        long finishedCount = returnedCount + canceledCount + rejectedCount;
+
+        if (returnedCount == totalCount) {
 
             return RentalStatus.COMPLETED;
         }
 
-        if (anyRentingOrAcceptedOrRequested) {
+        if (finishedCount == totalCount && returnedCount > 0) {
+
+            return RentalStatus.COMPLETED;
+        }
+
+        if (rentingCount > 0) {
 
             return RentalStatus.IN_PROGRESS;
         }
 
-        return RentalStatus.REQUESTED;
+        if (canceledCount + rejectedCount == totalCount) {
+
+            return RentalStatus.CANCELED;
+        }
+
+        if (this.paidAt != null) {
+
+            return RentalStatus.PAID;
+        }
+
+        if (acceptedCount == totalCount && totalCount > 0) {
+
+            return RentalStatus.ACCEPTED;
+        }
+
+        if (acceptedCount > 0 && acceptedCount < totalCount) {
+
+            return RentalStatus.PARTIALLY_ACCEPTED;
+        }
+
+        if (requestedCount == totalCount) {
+
+            return RentalStatus.REQUESTED;
+        }
+
+        return RentalStatus.PARTIALLY_ACCEPTED;
+    }
+
+    public void updateStatusFromItems() {
+
+        this.status = calculateStatus();
+    }
+
+    public void updatePaidAt(LocalDateTime paidAt) {
+
+        markPaid(paidAt);
     }
 
 }

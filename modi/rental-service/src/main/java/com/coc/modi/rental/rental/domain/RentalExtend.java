@@ -2,7 +2,9 @@ package com.coc.modi.rental.rental.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,6 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Entity
 @Table(name = "rental_extend", schema = "public")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RentalExtend extends BaseEntity {
 
     @Id
@@ -31,4 +34,26 @@ public class RentalExtend extends BaseEntity {
 
     @Column(name = "extra_amount", precision = 18, scale = 2, nullable = false)
     private BigDecimal extraAmount;
+
+    private RentalExtend(RentalItem rentalItem,
+                         LocalDate oldEndDate,
+                         LocalDate newEndDate,
+                         int extraDays,
+                         BigDecimal extraAmount) {
+
+        this.rentalItem = rentalItem;
+        this.oldEndDate = oldEndDate;
+        this.newEndDate = newEndDate;
+        this.extraDays = extraDays;
+        this.extraAmount = extraAmount;
+    }
+
+    public static RentalExtend create(RentalItem rentalItem,
+                                      LocalDate oldEndDate,
+                                      LocalDate newEndDate,
+                                      int extraDays,
+                                      BigDecimal extraAmount) {
+
+        return new RentalExtend(rentalItem, oldEndDate, newEndDate, extraDays, extraAmount);
+    }
 }
