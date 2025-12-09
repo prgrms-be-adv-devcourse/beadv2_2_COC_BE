@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class CartRedisRepository {
 
     private static final String CART_KEY_PREFIX = "cart:";
+    private static final String CART_SEQ_KEY_PREFIX = "cart:seq:";
     private static final Duration TTL = Duration.ofHours(24);
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -43,18 +44,6 @@ public class CartRedisRepository {
     public void deleteByMemberId(Long memberId) {
 
         redisTemplate.delete(key(memberId));
-    }
-
-    public List<CartItem> findAllByIdIn(List<Long> ids) {
-
-        // NOTE: 단건 조회가 필요하면 별도 색인 구조를 둘 수 있지만, 여기서는 전체 카트에서 필터.
-        throw new UnsupportedOperationException("Use findByMemberId and filter items by caller's context.");
-    }
-
-    public Optional<CartItem> findById(Long id) {
-
-        // NOTE: 단건 조회가 필요하면 별도 색인 구조를 둘 수 있지만, 여기서는 전체 카트에서 필터.
-        throw new UnsupportedOperationException("Use findByMemberId and filter items by caller's context.");
     }
 
     public Cart upsertItem(Long memberId, CartItem newItem) {
@@ -86,9 +75,23 @@ public class CartRedisRepository {
         return cart;
     }
 
+    public Long nextItemId(Long memberId) {
+
+        String seqKey = seqKey(memberId);
+        Long next = redisTemplate.opsForValue().increment(seqKey);
+
+        redisTemplate.expire(seqKey, TTL);
+        return next;
+    }
+
     private String key(Long memberId) {
 
         return CART_KEY_PREFIX + memberId;
+    }
+
+    private String seqKey(Long memberId) {
+
+        return CART_SEQ_KEY_PREFIX + memberId;
     }
 
     private void refreshTtl(String key) {
