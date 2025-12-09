@@ -1,11 +1,14 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.settlement.application.SettlementAggregationService;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +23,8 @@ public class SettlementScheduler {
     private static final DateTimeFormatter PERIOD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final SettlementBatchService settlementBatchService;
-    private final SettlementAggregationService settlementAggregationService;
+    private final JobLauncher jobLauncher;
+    private final Job settlementAggregationJob;
 
     @Scheduled(cron = "0 5 0 1 * ?")
     public void runMonthlySettlement() {
@@ -28,9 +32,12 @@ public class SettlementScheduler {
         try {
             SettlementBatchResponse batch = settlementBatchService.createBatch(new SettlementBatchCreateCommand(periodYm));
             settlementBatchService.startBatch(batch.id());
-            // TODO: 외부 데이터 조회 후 aggregateFromRental 호출로 집계 실행
-            settlementBatchService.completeBatch(batch.id());
-            log.info("Settlement batch completed. periodYm={}", periodYm);
+            JobParameters params = new JobParametersBuilder()
+                    .addString("periodYm", periodYm)
+                    .addLong("timestamp", System.currentTimeMillis())
+                    .toJobParameters();
+            jobLauncher.run(settlementAggregationJob, params);
+            log.info("Settlement batch job triggered. periodYm={}", periodYm);
         } catch (Exception e) {
             log.error("Settlement batch failed. periodYm={}", periodYm, e);
         }
