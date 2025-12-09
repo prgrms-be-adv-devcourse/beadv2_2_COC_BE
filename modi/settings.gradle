@@ -6,5 +6,6 @@ include(
         'product-service',
         'rental-service',
         'seller-service',
-        'member-service'
+        'member-service',
+        'api-gateway'
 )
