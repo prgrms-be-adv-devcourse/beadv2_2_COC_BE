@@ -2,7 +2,9 @@ package com.coc.modi.rental.rental.infrastructure;
 
 import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalItemRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -10,12 +12,12 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class RentalItemRepositoryAdapter implements RentalItemRepository {
-
-    private final RentalItemJpaRepository rentalItemJpaRepository;
-
-    @Override
-    public Optional<RentalItem> findById(Long rentalItemId) {
-
-        return rentalItemJpaRepository.findById(rentalItemId);
-    }
+	
+	private final RentalItemJpaRepository rentalItemJpaRepository;
+	
+	@Override
+	public Optional<RentalItem> findById(Long rentalItemId) {
+		
+		return rentalItemJpaRepository.findById(rentalItemId);
+	}
 }
