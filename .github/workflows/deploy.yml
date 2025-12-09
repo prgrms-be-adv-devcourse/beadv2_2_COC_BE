@@ -29,12 +29,12 @@ jobs:
       # 4. Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t product-service:latest ./modi/product-service
+          docker build -t product-service:latest /product-service
 
       # 5. Save image to tar
       - name: Save Docker image
         run: |
-          docker save product-service:latest > ./modi/product-service.tar
+          docker save product-service:latest > /product-service.tar
           ls -al
 
       # 6. Copy tar & compose to EC2
