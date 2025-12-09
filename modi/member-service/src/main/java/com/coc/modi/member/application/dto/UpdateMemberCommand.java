@@ -1,8 +1,6 @@
 package com.coc.modi.member.application.dto;
 
-public record CreateMemberCommand(
-		String email,
-		String password,
+public record UpdateMemberCommand(
 		String name,
 		String phone
 ) {

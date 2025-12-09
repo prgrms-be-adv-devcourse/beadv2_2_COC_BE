@@ -1,12 +1,16 @@
 package com.coc.modi.member.presentation;
 
 import com.coc.modi.member.application.MemberService;
-import com.coc.modi.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.presentation.dto.MemberSignupRequest;
+import com.coc.modi.member.presentation.dto.MemberUpdateRequest;
+import com.coc.modi.member.presentation.dto.MemberPasswordUpdateRequest;
 import com.coc.modi.common.ApiResponse;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,30 +18,54 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
 public class MemberController {
-
-    private final MemberService memberService;
-
-    @PostMapping
-    public ApiResponse<MemberSignupResponse> signup(@RequestBody MemberSignupRequest request){
-
-        CreateMemberCommand command = new CreateMemberCommand(
-                request.email(),
-                request.password(),
-                request.name(),
-                request.phone()
-        );
-
-        MemberSignupResponse response = memberService.signup(command);
-
-        return ApiResponse.ok(response);
-    }
-
-    @GetMapping("/profile")
-    public ApiResponse<MemberProfileResponse> getProfile(Authentication authentication){
-
-        MemberProfileResponse response = memberService.getProfile(authentication);
-
-        return ApiResponse.ok(response);
-    }
-
+	
+	private final MemberService memberService;
+	
+	// 회원가입
+	@PostMapping("/signup")
+	public ResponseEntity<ApiResponse<MemberSignupResponse>> signup(@RequestBody MemberSignupRequest request) {
+		
+		MemberSignupResponse response = memberService.signup(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 내 정보 조회
+	@GetMapping("/profile")
+	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(Authentication authentication) {
+		
+		MemberProfileResponse response = memberService.getProfile(authentication);
+		
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 내 정보 수정
+	@PutMapping("/profile")
+	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(Authentication authentication,
+																			@RequestBody MemberUpdateRequest request) {
+		
+		MemberProfileResponse response = memberService.updateProfile(authentication, request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 비밀번호 수정
+	@PatchMapping("/{memberId}/passwords")
+	public ResponseEntity<ApiResponse<?>> updatePassword(Authentication authentication,
+														 @PathVariable Long memberId,
+														 @RequestBody MemberPasswordUpdateRequest request) {
+		
+		memberService.updatePassword(authentication, memberId, request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok());
+	}
+	
+	// 회원 탈퇴
+	@DeleteMapping
+	public ResponseEntity<ApiResponse<?>> deleteMember(Authentication authentication) {
+		
+		memberService.deleteMember(authentication);
+		
+		return ResponseEntity.ok(ApiResponse.ok());
+	}
 }

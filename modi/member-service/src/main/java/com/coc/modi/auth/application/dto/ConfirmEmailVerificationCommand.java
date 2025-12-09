@@ -1,7 +1,7 @@
 package com.coc.modi.auth.application.dto;
 
-public record MemberLoginCommand(
+public record ConfirmEmailVerificationCommand(
 		String email,
-		String password
+		String code
 ) {
 }
