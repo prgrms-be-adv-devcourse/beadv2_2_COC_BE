@@ -8,9 +8,11 @@ import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
+import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsRequest;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfo;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfoListResponse;
+import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -130,5 +132,18 @@ public class RentalQueryService {
 				rentalItem.getEndDate(),
 				rental != null ? rental.getPaidAt() : null
 		);
+	}
+	
+	public UnavailableProductsResponse getUnavailableProducts(UnavailableProductsRequest unavailableProductsRequest) {
+		
+		unavailableProductsRequest.vaildate();
+		
+		List<Long> unavailableProductIds = rentalQueryRepository.findUnavailableProductIds(
+				unavailableProductsRequest.startDate(),
+				unavailableProductsRequest.endDate(),
+				unavailableProductsRequest.productIds()
+		);
+		
+		return new UnavailableProductsResponse(unavailableProductIds);
 	}
 }

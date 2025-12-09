@@ -7,6 +7,7 @@ import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.domain.QRental;
 import com.coc.modi.rental.rental.domain.QRentalItem;
+import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -148,5 +149,29 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 		long totalCount = (total != null) ? total : 0L;
 		
 		return new PageImpl<>(rentalItems, pageable, totalCount);
+	}
+	
+	@Override
+	public List<Long> findUnavailableProductIds(LocalDate startDate, LocalDate endDate, List<Long> productIds) {
+	
+		QRentalItem rentalItem = QRentalItem.rentalItem;
+		
+		List<RentalItemStatus> unavailableStatuses = List.of(
+				RentalItemStatus.REQUESTED,
+				RentalItemStatus.ACCEPTED,
+				RentalItemStatus.RENTING
+		);
+		
+		return queryFactory
+				.select(rentalItem.productId)
+				.from(rentalItem)
+				.where(
+						rentalItem.productId.in(productIds),
+						rentalItem.status.in(unavailableStatuses),
+						rentalItem.startDate.loe(endDate),
+						rentalItem.endDate.goe(startDate)
+				)
+				.distinct()
+				.fetch();
 	}
 }
