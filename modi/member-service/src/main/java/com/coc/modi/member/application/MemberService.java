@@ -89,6 +89,7 @@ public class MemberService {
 		if (command.phone() != null && !command.phone().isBlank()) {
 			
 			memberValidationService.validatePhone(command.phone());
+			
 			member.changePhone(command.phone());
 		}
 		
@@ -122,7 +123,9 @@ public class MemberService {
 		}
 		
 		memberValidationService.validatePassword(command.password());
+		
 		String encodedPassword = passwordEncoder.encode(command.password());
+		
 		member.changePassword(encodedPassword);
 	}
 	
