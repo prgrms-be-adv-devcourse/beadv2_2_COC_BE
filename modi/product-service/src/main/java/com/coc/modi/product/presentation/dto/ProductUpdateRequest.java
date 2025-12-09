@@ -5,7 +5,7 @@ import com.coc.modi.product.application.dto.ProductResponse;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record ProductUpdateRequestDto(
+public record ProductUpdateRequest(
         String name,
         String description,
         BigDecimal pricePerDay,
