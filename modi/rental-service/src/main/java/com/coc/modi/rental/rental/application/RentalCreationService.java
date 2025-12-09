@@ -1,20 +1,20 @@
 package com.coc.modi.rental.rental.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartItemRepository;
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.rental.domain.Rental;
-import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalEventType;
+import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalRepository;
+import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +40,7 @@ public class RentalCreationService {
 		
 		if (cartItems.isEmpty()) {
 			
-			throw new IllegalArgumentException("장바구니 항목이 존재하지 않습니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "장바구니 항목이 존재하지 않습니다.");
 		}
 		
 		boolean hasDifferentMember = cartItems.stream()
@@ -48,7 +48,7 @@ public class RentalCreationService {
 		
 		if (hasDifferentMember) {
 			
-			throw new IllegalArgumentException("다른 회원의 장바구니 항목이 포함되어 있습니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "다른 회원의 장바구니 항목이 포함되어 있습니다.");
 		}
 		
 		List<Long> productIds = cartItems.stream().map(CartItem::getProductId).distinct().toList();
@@ -67,12 +67,12 @@ public class RentalCreationService {
 			
 			if (productResponseDto == null) {
 				
-				throw new IllegalArgumentException("상품 가격 정보를 찾을 수 없습니다. productId: " + cartItem.getProductId());
+				throw new RentalException(ErrorCode.NOT_FOUND, "상품 가격 정보를 찾을 수 없습니다. productId: " + cartItem.getProductId());
 			}
 			
 			if (!"ACTIVE".equals(productResponseDto.status())) {
 				
-				throw new IllegalArgumentException("현재 판매중인 상품이 아닙니다. productId: " + cartItem.getProductId());
+				throw new RentalException(ErrorCode.CONFLICT, "현재 판매중인 상품이 아닙니다. productId: " + cartItem.getProductId());
 			}
 			
 			BigDecimal unitPrice = productResponseDto.price();
@@ -81,7 +81,7 @@ public class RentalCreationService {
 			
 			if (rentalDays <= 0) {
 				
-				throw new IllegalArgumentException("대여 종료일이 시작일보다 빠릅니다. cartItemId: " + cartItem.getId());
+				throw new RentalException(ErrorCode.INVALID_INPUT, "대여 종료일이 시작일보다 빠릅니다. cartItemId: " + cartItem.getId());
 			}
 			
 			RentalItem rentalItem = RentalItem.create(cartItem.getProductId(), productResponseDto.sellerId(),
@@ -105,12 +105,12 @@ public class RentalCreationService {
 		
 		if (productResponseDto == null) {
 			
-			throw new IllegalArgumentException("상품 가격 정보를 찾을 수 없습니다. productId: " + command.productId());
+			throw new RentalException(ErrorCode.NOT_FOUND, "상품 가격 정보를 찾을 수 없습니다. productId: " + command.productId());
 		}
 		
 		if (!"ACTIVE".equals(productResponseDto.status())) {
 			
-			throw new IllegalArgumentException("현재 판매중인 상품이 아닙니다. productId: " + command.productId());
+			throw new RentalException(ErrorCode.CONFLICT, "현재 판매중인 상품이 아닙니다. productId: " + command.productId());
 		}
 		
 		BigDecimal rentalTotalAmount = BigDecimal.ZERO;
@@ -122,7 +122,7 @@ public class RentalCreationService {
 		
 		if (rentalDays <= 0) {
 			
-			throw new IllegalArgumentException("대여 종료일이 시작일보다 빠릅니다. productId: " + command.productId());
+			throw new RentalException(ErrorCode.INVALID_INPUT, "대여 종료일이 시작일보다 빠릅니다. productId: " + command.productId());
 		}
 		
 		RentalItem rentalItem = RentalItem.create(command.productId(), productResponseDto.sellerId(),
