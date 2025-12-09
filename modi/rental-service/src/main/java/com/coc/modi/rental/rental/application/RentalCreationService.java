@@ -1,7 +1,8 @@
 package com.coc.modi.rental.rental.application;
 
+import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
-import com.coc.modi.rental.cart.domain.CartItemRepository;
+import com.coc.modi.rental.cart.domain.CartRepository;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
@@ -27,26 +28,28 @@ import java.util.stream.Collectors;
 public class RentalCreationService {
 
     private final RentalRepository rentalRepository;
-    private final CartItemRepository cartItemRepository;
+    private final CartRepository cartRepository;
     private final ProductFeignClient productFeignClient;
     private final RentalEventLogService rentalEventLogService;
 
     @Transactional
     public void createRentalFromCart(CreateRentalFromCartCommand command) {
 
-        List<CartItem> cartItems = cartItemRepository.findAllByIdIn(command.cartItemIds());
+        Cart cart = cartRepository.findByMemberId(command.memberId())
+                .orElseThrow(() -> new IllegalArgumentException("장바구니가 존재하지 않습니다."));
+
+        List<CartItem> cartItems = cart.getItems().stream()
+                .filter(item -> command.cartItemIds().contains(item.getId()))
+                .toList();
 
         if (cartItems.isEmpty()) {
 
-            throw new IllegalArgumentException("장바구니 항목이 존재하지 않습니다.");
+            throw new IllegalArgumentException("요청한 장바구니 항목이 존재하지 않습니다.");
         }
 
-        boolean hasDifferentMember = cartItems.stream()
-                .anyMatch(cartItem -> !cartItem.getCart().getMemberId().equals(command.memberId()));
+        if (cartItems.size() != command.cartItemIds().size()) {
 
-        if (hasDifferentMember) {
-
-            throw new IllegalArgumentException("다른 회원의 장바구니 항목이 포함되어 있습니다.");
+            throw new IllegalArgumentException("요청한 장바구니 항목 일부를 찾을 수 없습니다.");
         }
 
         List<Long> productIds = cartItems.stream()
