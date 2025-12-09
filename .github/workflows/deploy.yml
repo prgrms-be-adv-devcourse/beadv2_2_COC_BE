@@ -45,7 +45,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            product-service.tar
+            modi/product-service.tar
             docker-compose.yml
           target: /home/ec2-user/app/modi
 
