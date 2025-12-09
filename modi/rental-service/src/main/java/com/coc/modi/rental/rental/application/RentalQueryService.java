@@ -1,5 +1,6 @@
 package com.coc.modi.rental.rental.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.rental.application.dto.RentalItemResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.domain.Rental;
@@ -8,10 +9,12 @@ import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
-import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsRequest;
+import com.coc.modi.rental.rental.exception.RentalException;
+import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfo;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfoListResponse;
+import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsRequest;
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,7 @@ public class RentalQueryService {
 	public RentalResponse getRentalDetails(Long rentalId) {
 		
 		Rental rental = rentalRepository.findById(rentalId)
-				.orElseThrow(() -> new IllegalArgumentException("해당 렌탈 Id와 일치하는 정보가 없습니다."));
+				.orElseThrow(() -> new RentalNotFoundException(rentalId));
 		List<RentalItem> rentalItemList = rental.getItems();
 		
 		List<RentalItemResponse> rentalItemResponseList = rentalItemList.stream()
@@ -75,7 +78,7 @@ public class RentalQueryService {
 		
 		if (condition.status() != RentalItemStatus.RETURNED) {
 			
-			throw new IllegalArgumentException("productId 없이 조회할 때는 status는 RETURNED 이어야 합니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "productId 없이 조회할 때는 status는 RETURNED 이어야 합니다.");
 		}
 		
 		Page<RentalItem> rentalItems = rentalQueryRepository.findCompletedRentalItemsBySeller(
@@ -93,27 +96,27 @@ public class RentalQueryService {
 		
 		if (condition == null) {
 			
-			throw new IllegalArgumentException("검색 조건은 필수입니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "검색 조건은 필수입니다.");
 		}
 		
 		if (condition.sellerId() == null) {
 			
-			throw new IllegalArgumentException("sellerId는 필수입니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "sellerId는 필수입니다.");
 		}
 		
 		if (condition.status() == null) {
 			
-			throw new IllegalArgumentException("status는 필수입니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "status는 필수입니다.");
 		}
 		
 		if (condition.startDate() == null || condition.endDate() == null) {
 			
-			throw new IllegalArgumentException("startDate와 endDate는 필수입니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "startDate와 endDate는 필수입니다.");
 		}
 		
 		if (condition.startDate().isAfter(condition.endDate())) {
 			
-			throw new IllegalArgumentException("startDate는 endDate보다 이후일 수 없습니다.");
+			throw new RentalException(ErrorCode.INVALID_INPUT, "startDate는 endDate보다 이후일 수 없습니다.");
 		}
 	}
 	

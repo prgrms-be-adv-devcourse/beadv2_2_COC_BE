@@ -1,6 +1,5 @@
 package com.coc.modi.rental.rental.application;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.rental.rental.application.dto.RentalReturnCommand;
 import com.coc.modi.rental.rental.application.dto.RentalReturnResponse;
 import com.coc.modi.rental.rental.application.dto.ExtendRentalCommand;
@@ -15,6 +14,10 @@ import com.coc.modi.rental.rental.infrastructure.client.SellerFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
+import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
+import com.coc.modi.rental.rental.exception.RentalItemNotFoundException;
+import com.coc.modi.rental.rental.exception.RentalNotFoundException;
+import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,12 +44,11 @@ public class RentalLifecycleService {
 	public void cancelRentalItem(Long rentalItemId, Long memberId) {
 		
 		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
-				.orElseThrow(() -> new IllegalArgumentException(
-						"해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + rentalItemId));
+				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
 		
 		if (!rentalItem.getRental().getMemberId().equals(memberId)) {
 			
-			throw new IllegalArgumentException("대여 요청자와 취소 요청 멤버 정보가 일치하지 않습니다. rentalItemId: " + rentalItem);
+			throw RentalAccessDeniedException.memberMismatch(rentalItem.getRental().getId(), memberId);
 		}
 		
 		rentalItem.cancelByMemberRequest();
@@ -62,22 +64,20 @@ public class RentalLifecycleService {
 	public RentalReturnResponse completeReturn(RentalReturnCommand command) {
 		
 		RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
-				.orElseThrow(() -> new IllegalArgumentException(
-						"해당 대여 물품 정보를 찾을 수 없습니다. rentalItemId: " + command.rentalItemId()));
+				.orElseThrow(() -> new RentalItemNotFoundException(command.rentalItemId()));
 		
 		SellerInfoResponse sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
 		
 		if (!sellerInfoResponse.memberId().equals(command.memberId())) {
 			
-			throw new IllegalArgumentException(
-					"대여 물품 판매자와 현재 멤버 정보가 일치하지 않습니다. rentalItemId: " + command.rentalItemId());
+			throw RentalAccessDeniedException.sellerMismatch(rentalItem.getSellerId(), command.memberId());
 		}
 		
 		Rental rental = rentalItem.getRental();
 		
 		if (rental == null) {
 			
-			throw new IllegalStateException("대여 정보가 존재하지 않습니다. rentalItemId: " + command.rentalItemId());
+			throw new RentalNotFoundException(command.rentalItemId());
 		}
 		
 		rentalItem.processReturn();
@@ -98,23 +98,22 @@ public class RentalLifecycleService {
 	public void extendRentalItem(ExtendRentalCommand command) {
 		
 		RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
-				.orElseThrow(() -> new IllegalArgumentException(
-						"해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + command.rentalItemId()));
+				.orElseThrow(() -> new RentalItemNotFoundException(command.rentalItemId()));
 		Rental rental = rentalItem.getRental();
 		
 		if (rental == null) {
 			
-			throw new IllegalStateException("대여 정보가 존재하지 않습니다. rentalItemId: " + command.rentalItemId());
+			throw new RentalNotFoundException(command.rentalItemId());
 		}
 		
 		if (!rental.getMemberId().equals(command.memberId())) {
 			
-			throw new IllegalArgumentException("대여 요청자와 요청 멤버 정보가 일치하지 않습니다. rentalItemId: " + command.rentalItemId());
+			throw RentalAccessDeniedException.memberMismatch(rental.getId(), command.memberId());
 		}
 		
 		if (rentalItem.getStatus() != RentalItemStatus.RENTING && rentalItem.getStatus() != RentalItemStatus.ACCEPTED) {
 			
-			throw new IllegalStateException(
+			throw new RentalStatusInvalidException(
 					"진행 중이거나 승인된 상품만 연장할 수 있습니다. rentalItemId: " + command.rentalItemId() + ", status: "
 							+ rentalItem.getStatus());
 		}
@@ -137,18 +136,17 @@ public class RentalLifecycleService {
 	public void refundRentalItem(Long rentalItemId, Long memberId) {
 		
 		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
-				.orElseThrow(() -> new IllegalArgumentException(
-						"해당 대여 상품 정보를 찾을 수 없습니다. rentalItemId: " + rentalItemId));
+				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
 		Rental rental = rentalItem.getRental();
 		
 		if (rental == null) {
 			
-			throw new IllegalStateException("대여 정보가 존재하지 않습니다. rentalItemId: " + rentalItemId);
+			throw new RentalNotFoundException(rentalItemId);
 		}
 		
 		if (!rental.getMemberId().equals(memberId)) {
 			
-			throw new IllegalArgumentException("대여 요청자와 요청 멤버 정보가 일치하지 않습니다. rentalItemId: " + rentalItemId);
+			throw RentalAccessDeniedException.memberMismatch(rental.getId(), memberId);
 		}
 		
 		BigDecimal refundAmount = rentalItem.processRefund();

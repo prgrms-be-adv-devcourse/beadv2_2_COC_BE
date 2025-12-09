@@ -1,5 +1,7 @@
 package com.coc.modi.rental.rental.infrastructure.client;
 
+import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
 import org.springframework.cloud.openfeign.FeignClient;
@@ -24,7 +26,7 @@ public interface ProductFeignClient {
 		
 		if (products.isEmpty()) {
 			
-			throw new IllegalArgumentException("상품이 존재하지 않음: " + products);
+			throw new RentalException(ErrorCode.NOT_FOUND, "상품이 존재하지 않습니다. productId: " + productId);
 		}
 		
 		return products.get(0);

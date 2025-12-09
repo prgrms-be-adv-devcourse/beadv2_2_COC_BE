@@ -1,9 +1,11 @@
 package com.coc.modi.rental.rental.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalEventLog;
-import com.coc.modi.rental.rental.domain.RentalEventType;
 import com.coc.modi.rental.rental.domain.RentalEventLogRepository;
+import com.coc.modi.rental.rental.domain.RentalEventType;
+import com.coc.modi.rental.rental.exception.RentalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,7 +34,8 @@ public class RentalEventLogService {
 		} catch (JsonProcessingException e) {
 			
 			log.error("렌탈 이벤트 로그 저장에 실패했습니다. rentalId={}, eventType={}", rental.getId(), eventType, e);
-			throw new IllegalStateException("렌탈 이벤트 로그 저장에 실패했습니다. rentalId: " + rental.getId(), e);
+			throw new RentalException(ErrorCode.INTERNAL_ERROR,
+					"렌탈 이벤트 로그 저장에 실패했습니다. rentalId: " + rental.getId());
 		}
 	}
 }
