@@ -21,4 +21,6 @@ public interface RentalQueryRepository {
 													  LocalDate startDate,
 													  LocalDate endDate,
 													  Pageable pageable);
+	
+	List<Long> findUnavailableProductIds(LocalDate startDate, LocalDate endDate, List<Long> productIds);
 }
