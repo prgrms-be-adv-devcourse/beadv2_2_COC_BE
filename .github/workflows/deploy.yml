@@ -48,6 +48,7 @@ jobs:
             product-service.tar
             docker-compose.yml
           target: /home/ec2-user/app/modi
+          use_insecure_cipher: true
 
       # 7. Run on EC2
       - name: Run containers on EC2
