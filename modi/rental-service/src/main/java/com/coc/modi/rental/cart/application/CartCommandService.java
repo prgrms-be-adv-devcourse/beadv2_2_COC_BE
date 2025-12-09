@@ -61,12 +61,7 @@ public class CartCommandService {
 
         cartRepository.removeItems(memberId, List.of(cartItemId));
     }
-
-    @Transactional
-    public void deleteItems(RemoveCartItemsCommand command) {
-
-        cartRepository.removeItems(command.memberId(), command.cartItemIds());
-    }
+	
 
     private void validateDate(LocalDate startDate, LocalDate endDate) {
 

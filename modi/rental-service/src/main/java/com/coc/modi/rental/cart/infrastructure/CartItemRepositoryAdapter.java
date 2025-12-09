@@ -18,12 +18,12 @@ public class CartItemRepositoryAdapter implements CartItemRepository {
     public List<CartItem> findAllByIdIn(List<Long> ids) {
 
         // CartItem 단건 조회는 Cart를 불러와서 필터링하는 상위 서비스에서 처리하도록 위임.
-        throw new UnsupportedOperationException("Use CartRepository to fetch cart then filter items.");
+        throw new UnsupportedOperationException("CartItem 단독 조회가 아닌, CartRepository를 통한 장바구니 객체 기반의 항목 필터링을 사용해야 합니다.");
     }
 
     @Override
 	public Optional<CartItem> findById(Long id) {
 
-        throw new UnsupportedOperationException("Use CartRepository to fetch cart then filter items.");
+        throw new UnsupportedOperationException("CartItem 단독 조회가 아닌, CartRepository를 통한 장바구니 객체 기반의 항목 필터링을 사용해야 합니다.");
     }
 }
