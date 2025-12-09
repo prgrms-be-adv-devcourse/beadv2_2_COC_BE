@@ -10,7 +10,6 @@ import com.coc.modi.member.domain.Member;
 import com.coc.modi.member.domain.MemberRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +22,7 @@ public class AddressService {
 
 	// 내 주소 조회
     @Transactional(readOnly = true)
-    public AddressListResponse getProfileAddresses(Authentication authentication) {
-
-        Long memberId = (Long)authentication.getPrincipal();
+    public AddressListResponse getProfileAddresses(Long memberId) {
 
         List<AddressResponse> addressResponses = addressRepository.findByMemberId(memberId)
                 .stream()

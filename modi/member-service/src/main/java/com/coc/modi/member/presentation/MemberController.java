@@ -34,7 +34,8 @@ public class MemberController {
 	@GetMapping("/profile")
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(Authentication authentication) {
 		
-		MemberProfileResponse response = memberService.getProfile(authentication);
+		Long memberId = (Long)authentication.getPrincipal();
+		MemberProfileResponse response = memberService.getProfile(memberId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
@@ -44,7 +45,8 @@ public class MemberController {
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(Authentication authentication,
 																			@RequestBody MemberUpdateRequest request) {
 		
-		MemberProfileResponse response = memberService.updateProfile(authentication, request.toCommand());
+		Long memberId = (Long)authentication.getPrincipal();
+		MemberProfileResponse response = memberService.updateProfile(memberId, request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
@@ -55,7 +57,8 @@ public class MemberController {
 														 @PathVariable Long memberId,
 														 @RequestBody MemberPasswordUpdateRequest request) {
 		
-		memberService.updatePassword(authentication, memberId, request.toCommand());
+		Long authenticatedMemberId = (Long)authentication.getPrincipal();
+		memberService.updatePassword(authenticatedMemberId, memberId, request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok());
 	}
@@ -64,7 +67,8 @@ public class MemberController {
 	@DeleteMapping
 	public ResponseEntity<ApiResponse<?>> deleteMember(Authentication authentication) {
 		
-		memberService.deleteMember(authentication);
+		Long memberId = (Long)authentication.getPrincipal();
+		memberService.deleteMember(memberId);
 		
 		return ResponseEntity.ok(ApiResponse.ok());
 	}

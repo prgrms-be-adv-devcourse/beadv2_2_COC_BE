@@ -22,7 +22,8 @@ public class AddressController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<AddressListResponse>> getProfileAddresses(Authentication authentication) {
 
-        AddressListResponse response = addressService.getProfileAddresses(authentication);
+        Long memberId = (Long)authentication.getPrincipal();
+        AddressListResponse response = addressService.getProfileAddresses(memberId);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
