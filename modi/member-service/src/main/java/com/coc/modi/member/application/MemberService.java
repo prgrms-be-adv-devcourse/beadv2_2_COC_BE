@@ -34,7 +34,7 @@ public class MemberService {
 		
 		if (memberRepository.existsByEmail(command.email())) {
 			
-			throw new IllegalArgumentException("Email already exists");
+			throw new IllegalArgumentException("이메일이 이미 존재합니다.");
 		}
 		
 		memberValidationService.validatePassword(command.password());

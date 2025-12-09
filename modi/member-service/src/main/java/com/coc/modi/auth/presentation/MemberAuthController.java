@@ -33,19 +33,19 @@ public class MemberAuthController {
 	
 	// 이메일 인증 코드 발송
 	@PostMapping("/email/verify/send")
-	public ResponseEntity<EmailVerificationSendResponse> sendEmailVerification(@RequestBody EmailVerificationSendRequest request) {
+	public ResponseEntity<ApiResponse<EmailVerificationSendResponse>> sendEmailVerification(@RequestBody EmailVerificationSendRequest request) {
 		
-		emailVerificationService.sendVerificationEmail(request.toCommand());
+		EmailVerificationSendResponse response = emailVerificationService.sendVerificationEmail(request.toCommand());
 		
-		return ResponseEntity.ok(EmailVerificationSendResponse.success());
+		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 	
 	// 이메일 인증 코드 검증
 	@PostMapping("/email/verify/confirm")
-	public ResponseEntity<EmailVerificationConfirmResponse> confirmEmailVerification(@RequestBody EmailVerificationConfirmRequest request) {
+	public ResponseEntity<ApiResponse<EmailVerificationConfirmResponse>> confirmEmailVerification(@RequestBody EmailVerificationConfirmRequest request) {
 		
-		emailVerificationService.confirmVerification(request.toCommand());
+		EmailVerificationConfirmResponse response = emailVerificationService.confirmVerification(request.toCommand());
 		
-		return ResponseEntity.ok(EmailVerificationConfirmResponse.success());
+		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 }

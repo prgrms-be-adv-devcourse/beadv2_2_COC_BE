@@ -5,6 +5,8 @@ import com.coc.modi.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.auth.domain.EmailVerification;
 import com.coc.modi.auth.domain.EmailVerificationRepository;
 import com.coc.modi.auth.infrastructure.mail.EmailSender;
+import com.coc.modi.auth.presentation.dto.EmailVerificationSendResponse;
+import com.coc.modi.auth.presentation.dto.EmailVerificationConfirmResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,12 +27,12 @@ public class EmailVerificationService {
 	private static final long EXPIRATION_MINUTES = 5L;
 	
 	private final EmailVerificationRepository emailVerificationRepository;
-	private final EmailSender emailSender;
 	private final SecureRandom secureRandom = new SecureRandom();
+	private final EmailSender emailSender;
 	
 	// 이메일 인증 코드 발송
 	@Transactional
-	public void sendVerificationEmail(SendEmailVerificationCommand command) {
+	public EmailVerificationSendResponse sendVerificationEmail(SendEmailVerificationCommand command) {
 		
 		validateEmail(command.email());
 		
@@ -44,11 +46,13 @@ public class EmailVerificationService {
 						));
 		
 		emailSender.sendVerificationCode(command.email(), code);
+		
+		return EmailVerificationSendResponse.success();
 	}
 	
 	// 이메일 인증 코드 검증
 	@Transactional
-	public boolean confirmVerification(ConfirmEmailVerificationCommand command) {
+	public EmailVerificationConfirmResponse confirmVerification(ConfirmEmailVerificationCommand command) {
 		
 		validateEmail(command.email());
 		validateCode(command.code());
@@ -58,7 +62,7 @@ public class EmailVerificationService {
 		
 		emailVerification.verify(command.code(), LocalDateTime.now());
 		
-		return true;
+		return EmailVerificationConfirmResponse.success();
 	}
 	
 	private String generateCode() {

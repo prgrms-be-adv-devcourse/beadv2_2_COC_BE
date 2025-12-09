@@ -27,6 +27,7 @@ public class MemberAuthService {
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 		
 		if (!passwordEncoder.matches(command.password(), member.getPassword())) {
+			
 			throw new IllegalArgumentException("비밀번호 불일치입니다.");
 		}
 		

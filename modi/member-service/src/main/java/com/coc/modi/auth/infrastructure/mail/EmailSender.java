@@ -25,6 +25,7 @@ public class EmailSender {
 		}
 		
 		SimpleMailMessage message = new SimpleMailMessage();
+		
 		message.setTo(to);
 		message.setFrom(fromAddress);
 		message.setSubject("MODI 이메일 인증 코드");
