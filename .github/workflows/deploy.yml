@@ -38,30 +38,21 @@ jobs:
           ls -al
 
       # 6. Copy tar & compose to EC2
-      - name: Copy files to EC2 (rsync)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rsync
-
-          rsync -avz \
-            product-service.tar \
-            docker-compose.yml \
-            ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/app/modi
-#      - name: Copy files to EC2
-#        uses: appleboy/scp-action@v0.1.7
-#        with:
-#          host: ${{ secrets.EC2_HOST }}
-#          username: ec2-user
-#          key: ${{ secrets.EC2_SSH_KEY }}
-#          source: "product-service.tar docker-compose.yml"
-#          target: /home/ec2-user/app/modi
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "product-service.tar docker-compose.yml"
+          target: /home/ec2-user/app/modi
 
       # 7. Run on EC2
       - name: Run containers on EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/app/modi
