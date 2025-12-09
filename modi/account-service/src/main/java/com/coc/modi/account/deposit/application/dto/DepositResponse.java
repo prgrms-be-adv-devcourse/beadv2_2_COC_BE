@@ -6,7 +6,7 @@ import com.coc.modi.account.deposit.domain.PgDepositStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record DepositResponse (
+public record DepositResponse(
         Long id,
         Long memberId,
         BigDecimal amount,
@@ -17,7 +17,9 @@ public record DepositResponse (
         LocalDateTime approvedAt,
         String failedReason
 ) {
+
     public static DepositResponse from(PgDeposit pgDeposit) {
+
         return new DepositResponse(
                 pgDeposit.getId(),
                 pgDeposit.getMemberId(),

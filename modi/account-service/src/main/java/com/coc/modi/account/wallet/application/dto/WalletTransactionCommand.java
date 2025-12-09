@@ -10,19 +10,23 @@ public record WalletTransactionCommand(
         BigDecimal amount,
         Long relatedPgDepositId,
         Long relatedRentalId,
+        Long relatedRentalItemId,
         Long relatedSettlementId,
         String description
 ) {
+
     public static WalletTransactionCommand forDepositCharge(
             Long memberId,
             Long pgDepositId,
             BigDecimal amount
     ) {
+
         return new WalletTransactionCommand(
                 memberId,
                 WalletTransactionType.DEPOSIT_CHARGE,
                 amount,
                 pgDepositId,
+                null,
                 null,
                 null,
                 "예치금 충전"
@@ -42,7 +46,28 @@ public record WalletTransactionCommand(
                 null,
                 rentalId,
                 null,
+                null,
                 "렌탈결제"
+        );
+    }
+
+    public static WalletTransactionCommand forRentalRefund(
+            Long memberId,
+            Long rentalId,
+            Long rentalItemId,
+            BigDecimal amount,
+            String description
+    ) {
+
+        return new WalletTransactionCommand(
+                memberId,
+                WalletTransactionType.RENTAL_REFUND,
+                amount,
+                null,
+                rentalId,
+                rentalItemId,
+                null,
+                description
         );
     }
 
@@ -57,6 +82,7 @@ public record WalletTransactionCommand(
                 WalletTransactionType.DEPOSIT_CANCEL,
                 amount,
                 depositId,
+                null,
                 null,
                 null,
                 "예치금 충전 취소"

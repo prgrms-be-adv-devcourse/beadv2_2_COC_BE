@@ -33,6 +33,7 @@ public class DepositService {
     private static final String PG_PROVIDER = "TOSS_PAYMENTS";
 
     // 예치금 충전 요청
+    @Transactional
     public DepositResponse requestDeposit(DepositCommand command) {
 
         String orderId = generateOrderId();
@@ -60,7 +61,8 @@ public class DepositService {
         // 2. 금액 검증
         BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal approvedAmount = command.amount();
-        if(approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0){
+
+        if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
 
             deposit.fail("금액 불일치");
 
@@ -75,7 +77,7 @@ public class DepositService {
         );
 
         // 4. Toss 결제 승인 결과 확인
-        if(!"DONE".equals(tossResponse.status())){
+        if (!"DONE".equals(tossResponse.status())) {
 
             deposit.fail("Toss 결제 승인 실패 : " + tossResponse.status());
 
@@ -95,6 +97,7 @@ public class DepositService {
 
     // 주문번호 생성
     public String generateOrderId() {
+
         return "ORDER_" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
     }
 
@@ -106,13 +109,13 @@ public class DepositService {
         PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 요청입니다."));
 
-        if(!deposit.getMemberId().equals(command.memberId())){
+        if (!deposit.getMemberId().equals(command.memberId())) {
 
             throw new IllegalArgumentException("본인 요청만 취소할 수 있습니다.");
         }
 
         // 2. 취소 가능한지 확인
-        if(!deposit.isCancelable()){
+        if (!deposit.isCancelable()) {
 
             throw new IllegalStateException("취소할 수 없는 상태입니다. : " + deposit.getStatus());
         }
@@ -121,7 +124,7 @@ public class DepositService {
         BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
-        if(cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0){
+        if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
 
             throw new IllegalArgumentException("요청 금액과 실제 금액이 일치하지 않습니다.");
         }
@@ -129,13 +132,14 @@ public class DepositService {
         // 4. Toss 취소 API 호출
         TossPaymentCancelResponse tossResponse = tossPaymentsClient.cancelPayment(
                 command.paymentKey(),
-                command.orderId(),
                 cancelAmount,
                 command.cancelReason()
         );
 
-        if(!"CANCELED".equalsIgnoreCase(tossResponse.status())){
+        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
+
             deposit.fail("Toss 결제 취소 실패 : " + tossResponse.status());
+
             throw new IllegalStateException("결제 취소에 실패했습니다.");
         }
 

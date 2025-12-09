@@ -5,6 +5,8 @@ import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 public class WalletTransactionRepositoryAdapter implements WalletTransactionRepository {
@@ -15,5 +17,11 @@ public class WalletTransactionRepositoryAdapter implements WalletTransactionRepo
     public WalletTransaction save(WalletTransaction tx) {
 
         return jpaRepository.save(tx);
+    }
+
+    @Override
+    public List<WalletTransaction> findByMemberId(Long memberId) {
+
+        return jpaRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
     }
 }

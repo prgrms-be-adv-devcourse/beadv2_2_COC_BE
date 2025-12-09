@@ -2,6 +2,7 @@ package com.coc.modi.account.wallet.application;
 
 import com.coc.modi.account.wallet.application.dto.RentalPaymentCommand;
 import com.coc.modi.account.wallet.application.dto.RentalPaymentResponse;
+import com.coc.modi.account.wallet.application.dto.RentalRefundCommand;
 import com.coc.modi.account.wallet.application.dto.WalletTransactionCommand;
 import com.coc.modi.account.wallet.domain.MemberWallet;
 import com.coc.modi.account.wallet.domain.WalletTransaction;
@@ -23,7 +24,7 @@ public class WalletCommandService {
 
     // 회원 지갑 생성
     @Transactional
-    public void createWalletForMember(Long memberId){
+    public void createWalletForMember(Long memberId) {
 
         memberWalletRepository.findByMemberId(memberId)
                 .ifPresent(memberWallet -> {
@@ -40,7 +41,7 @@ public class WalletCommandService {
 
     // 예치금 잔액 변경 및 트랜잭션 생성
     @Transactional
-    public void createTransactionAndUpdateBalance(WalletTransactionCommand command){
+    public void createTransactionAndUpdateBalance(WalletTransactionCommand command) {
 
         // 1. 예치금 조회
         MemberWallet wallet = memberWalletRepository.findByMemberId(command.memberId())
@@ -48,6 +49,7 @@ public class WalletCommandService {
 
         // 2. txType에 따라 예치금 입금, 차감 결정
         BigDecimal signedAmount = switch (command.txType()) {
+
             case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST -> command.amount();
             case DEPOSIT_CANCEL, RENTAL_PAYMENT -> command.amount().negate();
         };
@@ -68,6 +70,7 @@ public class WalletCommandService {
                 balanceAfter,
                 command.relatedPgDepositId(),
                 command.relatedRentalId(),
+                command.relatedRentalItemId(),
                 command.relatedSettlementId(),
                 command.description()
         );
@@ -83,7 +86,7 @@ public class WalletCommandService {
 
     // Rental 결제 전용
     @Transactional
-    public RentalPaymentResponse payForRental(RentalPaymentCommand command){
+    public RentalPaymentResponse payForRental(RentalPaymentCommand command) {
 
         Long memberId = command.memberId();
         Long rentalId = command.rentalId();
@@ -97,6 +100,27 @@ public class WalletCommandService {
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("지갑 없음"));
 
-        return RentalPaymentResponse.from(wallet, amount);
+        return RentalPaymentResponse.from(wallet);
+    }
+
+    @Transactional
+    public RentalPaymentResponse refundForRental(RentalRefundCommand command) {
+
+        Long memberId = command.memberId();
+
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalRefund(
+                memberId,
+                command.rentalId(),
+                command.rentalItemId(),
+                command.amount(),
+                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId())
+        );
+
+        createTransactionAndUpdateBalance(txCommand);
+
+        MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("지갑 없음"));
+
+        return RentalPaymentResponse.from(wallet);
     }
 }

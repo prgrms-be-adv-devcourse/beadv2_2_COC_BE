@@ -35,27 +35,30 @@ public class DepositController {
 
     // 예치금 충전 승인
     @PostMapping("/approve")
-    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@RequestBody DepositApprovalRequest request){
+    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@RequestBody DepositApprovalRequest request) {
 
         DepositResponse response = depositService.approveDeposit(request.toCommand());
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    // 프론트용 결제 위젯 초기화
     @GetMapping("/config")
     public ResponseEntity<ApiResponse<TossConfigResponse>> tossConfig() {
+
         TossConfigResponse response = new TossConfigResponse(
                 tossPaymentsConfig.getClientKey(),
                 tossPaymentsConfig.getSuccessUrl(),
                 tossPaymentsConfig.getFailUrl()
         );
+
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     // 예치금 충전 취소(환불)
     @PostMapping("/cancel")
     public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@RequestBody DepositCancelRequest request,
-                                                                      Authentication authentication){
+                                                                      Authentication authentication) {
 
         Long memberId = (Long) authentication.getPrincipal();
 

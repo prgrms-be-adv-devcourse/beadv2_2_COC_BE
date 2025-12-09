@@ -37,6 +37,9 @@ public class WalletTransaction extends BaseEntity {
     @Column(name = "related_rental_id")
     private Long relatedRentalId;
 
+    @Column(name = "related_rental_item_id")
+    private Long relatedRentalItemId;
+
     @Column(name = "related_settlement_id")
     private Long relatedSettlementId;
 
@@ -50,9 +53,11 @@ public class WalletTransaction extends BaseEntity {
             BigDecimal balanceAfter,
             Long relatedPgDepositId,
             Long relatedRentalId,
+            Long relatedRentalItemId,
             Long relatedSettlementId,
             String description
     ) {
+
         WalletTransaction tx = new WalletTransaction();
 
         tx.walletId = wallet.getId();
@@ -62,6 +67,7 @@ public class WalletTransaction extends BaseEntity {
         tx.balanceAfter = balanceAfter;
         tx.relatedPgDepositId = relatedPgDepositId;
         tx.relatedRentalId = relatedRentalId;
+        tx.relatedRentalItemId = relatedRentalItemId;
         tx.relatedSettlementId = relatedSettlementId;
         tx.description = description;
 
