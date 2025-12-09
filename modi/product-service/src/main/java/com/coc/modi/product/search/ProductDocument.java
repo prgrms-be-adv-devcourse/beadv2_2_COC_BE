@@ -1,14 +1,14 @@
 package com.coc.modi.product.search;
 
 import com.coc.modi.product.domain.Product;
-import com.coc.modi.product.domain.ProductStatus;
-import com.coc.modi.product.domain.ProductCategory;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Getter
 @NoArgsConstructor
@@ -43,6 +43,9 @@ public class ProductDocument {
 
     @Field(type = FieldType.Keyword)
     private String thumbnailUrl;
+	
+	@Field(type = FieldType.Date, format = DateFormat.date_time)
+	private OffsetDateTime createdAt;
 
     public ProductDocument(Long id,
                            String name,
@@ -51,7 +54,8 @@ public class ProductDocument {
                            String status,
                            Long sellerId,
                            String category,
-                           String thumbnailUrl) {
+                           String thumbnailUrl,
+						   OffsetDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -60,9 +64,16 @@ public class ProductDocument {
         this.sellerId = sellerId;
         this.category = category;
         this.thumbnailUrl = thumbnailUrl;
+		this.createdAt = createdAt;
     }
 
     public static ProductDocument from(Product product, String thumbnailUrl) {
+		
+		OffsetDateTime createdAt = null;
+		if (product.getCreatedAt() != null) {
+			createdAt = product.getCreatedAt().atOffset(ZoneOffset.of("+09:00"));
+		}
+		
         return new ProductDocument(
                 product.getId(),
                 product.getName(),
@@ -71,15 +82,8 @@ public class ProductDocument {
                 product.getStatus().name(),
                 product.getSellerId(),
                 product.getCategory().name(),
-                thumbnailUrl
+                thumbnailUrl,
+				createdAt
         );
-    }
-
-    public ProductStatus toStatusEnum() {
-        return ProductStatus.valueOf(this.status);
-    }
-
-    public ProductCategory toCategoryEnum() {
-        return ProductCategory.valueOf(this.category);
     }
 }

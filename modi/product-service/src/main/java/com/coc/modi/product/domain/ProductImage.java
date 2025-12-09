@@ -5,10 +5,12 @@ import lombok.Getter;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+import com.coc.modi.common.BaseEntity;
+
 @Getter
 @Entity
 @Table(name = "product_image", schema = "public")
-public class ProductImage {
+public class ProductImage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)

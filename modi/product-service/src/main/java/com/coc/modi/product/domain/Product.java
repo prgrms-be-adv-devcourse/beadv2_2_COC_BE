@@ -12,10 +12,12 @@ import java.util.stream.Collectors;
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+import com.coc.modi.common.BaseEntity;
+
 @Getter
 @Entity
 @Table(name = "product", schema = "public")
-public class Product {
+public class Product extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
