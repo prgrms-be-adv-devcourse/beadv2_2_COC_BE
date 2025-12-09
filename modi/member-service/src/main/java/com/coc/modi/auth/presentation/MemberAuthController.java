@@ -1,11 +1,13 @@
 package com.coc.modi.auth.presentation;
 
 import com.coc.modi.auth.application.MemberAuthService;
-import com.coc.modi.auth.application.dto.MemberLoginCommand;
+import com.coc.modi.auth.application.EmailVerificationService;
 import com.coc.modi.auth.application.dto.MemberLoginResponse;
-import com.coc.modi.auth.presentation.dto.MemberLoginRequest;
+import com.coc.modi.auth.presentation.dto.*;
 import com.coc.modi.common.ApiResponse;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,14 +18,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class MemberAuthController {
-
-    private final MemberAuthService memberAuthService;
-
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<MemberLoginResponse>> login(@RequestBody MemberLoginRequest request){
-
-        MemberLoginResponse response = memberAuthService.login(request.toCommand());
-
-        return ResponseEntity.ok(ApiResponse.ok(response));
-    }
+	
+	private final MemberAuthService memberAuthService;
+	private final EmailVerificationService emailVerificationService;
+	
+	// 로그인
+	@PostMapping("/login")
+	public ResponseEntity<ApiResponse<MemberLoginResponse>> login(@RequestBody MemberLoginRequest request) {
+		
+		MemberLoginResponse response = memberAuthService.login(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 이메일 인증 코드 발송
+	@PostMapping("/email/verify/send")
+	public ResponseEntity<EmailVerificationSendResponse> sendEmailVerification(@RequestBody EmailVerificationSendRequest request) {
+		
+		emailVerificationService.sendVerificationEmail(request.toCommand());
+		
+		return ResponseEntity.ok(EmailVerificationSendResponse.success());
+	}
+	
+	// 이메일 인증 코드 검증
+	@PostMapping("/email/verify/confirm")
+	public ResponseEntity<EmailVerificationConfirmResponse> confirmEmailVerification(@RequestBody EmailVerificationConfirmRequest request) {
+		
+		emailVerificationService.confirmVerification(request.toCommand());
+		
+		return ResponseEntity.ok(EmailVerificationConfirmResponse.success());
+	}
 }
