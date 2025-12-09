@@ -1,4 +1,4 @@
-name: Deploy product-service to EC2
+name: Deploy product-service (Docker)
 
 on:
   push:
@@ -9,96 +9,49 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: modi
-
     steps:
-      # 1. 코드 체크아웃
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. JDK 17 설정
-      - name: Set up JDK 17 (Corretto)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'corretto'
-          java-version: '17'
+          distribution: corredo
+          java-version: 17
 
-      # 3. Gradle 실행 권한
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      # 4. application.yml 생성
-      - name: Create application.yml
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      - name: Build JAR
+        working-directory: modi
         run: |
-          mkdir -p product-service/src/main/resources
-          cat > product-service/src/main/resources/application.yml <<EOF
-          server:
-            port: 8082
-          
-          spring:
-            application:
-              name: product-service
-          
-            datasource:
-              url: ${DB_URL}
-              username: ${DB_USERNAME}
-              password: ${DB_PASSWORD}
-              driver-class-name: org.postgresql.Driver
-          
-            jpa:
-              open-in-view: false
-              hibernate:
-                ddl-auto: update
-              show-sql: true
-              properties:
-                hibernate:
-                  format_sql: true
-          
-          logging:
-            level:
-              org.hibernate.SQL: debug
-          EOF
+          chmod +x gradlew
+          ./gradlew :product-service:bootJar -x test
 
-      # 5. Build product-service (멀티모듈 방식)
-      - name: Build product-service
-        run: ./gradlew :product-service:bootJar -x test
+      - name: Build Docker image
+        working-directory: modi/product-service
+        run: |
+          docker build -t product-service:latest .
 
-      # 6. EC2로 JAR 파일 전송
-      - name: Copy JAR to EC2
+      - name: Save Docker image
+        run: |
+          docker save product-service:latest > product-service.tar
+
+      - name: Copy image & compose to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: modi/product-service/build/libs/*.jar
-          target: ${{ secrets.EC2_PRODUCT_PATH }}
-          strip_components: 4
+          source: |
+            product-service.tar
+            docker-compose.yml
+          target: /home/ec2-user/app/modi
 
-      # 7. EC2에서 애플리케이션 재시작
-      - name: Restart product-service on EC2
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "🚀 product-service 재시작"
-            
-            cd /home/ec2-user/app/modi/product-service
-            
-            chmod +x start.sh || true
-            ./start.sh
-            
-            echo "🔍 프로세스 확인"
-            ps -ef | grep product-service | grep -v grep || echo "프로세스 없음"
-            
-            echo "🔍 8082 포트 확인"
-            lsof -i:8082 || echo "8082 아직 미열림"
-            
-            echo "✅ 배포 완료"
+            cd /home/ec2-user/app/modi
+            docker load < product-service.tar
+            docker compose up -d
