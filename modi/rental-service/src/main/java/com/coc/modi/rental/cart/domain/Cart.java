@@ -1,25 +1,46 @@
 package com.coc.modi.rental.cart.domain;
 
-import com.coc.modi.common.BaseEntity;
-import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Entity
-@Table(name = "cart", schema = "public")
-public class Cart extends BaseEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Cart {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "member_id", nullable = false)
     private Long memberId;
-
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
+    private LocalDateTime updatedAt;
 
+    private Cart(Long memberId) {
+
+        this.memberId = memberId;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public static Cart create(Long memberId) {
+
+        return new Cart(memberId);
+    }
+
+    public void addItem(CartItem cartItem) {
+
+        this.items.add(cartItem);
+        touch();
+    }
+
+    public void replaceItems(List<CartItem> newItems) {
+
+        this.items = newItems;
+        touch();
+    }
+
+    public void touch() {
+
+        this.updatedAt = LocalDateTime.now();
+    }
 }
