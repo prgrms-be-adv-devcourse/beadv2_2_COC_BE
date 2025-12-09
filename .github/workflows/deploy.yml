@@ -44,9 +44,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: |
-            modi/product-service.tar
-            docker-compose.yml
+          source: "product-service.tar docker-compose.yml"
           target: /home/ec2-user/app/modi
 
       # 7. Run on EC2
