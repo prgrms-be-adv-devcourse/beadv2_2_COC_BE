@@ -29,12 +29,12 @@ jobs:
       # 4. Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t product-service:latest product-service
+          docker build -t product-service:latest ./modi/product-service
 
       # 5. Save image to tar
       - name: Save Docker image
         run: |
-          docker save product-service:latest > product-service.tar
+          docker save -o product-service.tar product-service:latest
           ls -al
 
       # 6. Copy tar & compose to EC2
@@ -45,7 +45,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            modi/product-service.tar
+            product-service.tar
             docker-compose.yml
           target: /home/ec2-user/app/modi
 
