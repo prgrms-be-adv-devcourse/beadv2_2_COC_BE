@@ -1,4 +1,4 @@
-package com.coc.modi.member.domain;
+package com.coc.modi.account.member.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
@@ -41,6 +41,8 @@ public class Member extends BaseEntity {
 
     @Column(length = 100)
     private String providerId;
+<<<<<<<< HEAD:modi/account-service/src/main/java/com/coc/modi/account/member/domain/Member.java
+========
 
     private Member(String email,
                    String password,
@@ -62,4 +64,5 @@ public class Member extends BaseEntity {
                                 MemberRole role) {
         return new Member(email, password, name, phone, role);
     }
+>>>>>>>> dev:modi/member-service/src/main/java/com/coc/modi/member/domain/Member.java
 }
