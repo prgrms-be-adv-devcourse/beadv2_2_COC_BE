@@ -32,6 +32,9 @@ public class PgDeposit extends BaseEntity {
     @Column(name = "pg_tid", nullable = false, length = 100)
     private String pgTid;
 
+    @Column(name = "payment_key", length = 100)
+    private String paymentKey;
+
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
 
@@ -40,4 +43,68 @@ public class PgDeposit extends BaseEntity {
 
     @Column(name = "failed_reason", length = 255)
     private String failedReason;
+
+    // 충전 요청 생성
+    public static PgDeposit createRequest(
+            Long memberId,
+            BigDecimal amount,
+            String pgProvider,
+            String orderId
+    ) {
+
+        PgDeposit pgDeposit = new PgDeposit();
+
+        pgDeposit.memberId = memberId;
+        pgDeposit.amount = amount;
+        pgDeposit.pgProvider = pgProvider;
+        pgDeposit.pgTid = orderId;
+        pgDeposit.status = PgDepositStatus.REQUESTED;
+        pgDeposit.requestedAt = LocalDateTime.now();
+
+        return pgDeposit;
+    }
+
+    // 충전 승인 처리
+    public void approve(String paymentKey) {
+
+        if (this.status != PgDepositStatus.REQUESTED) {
+
+            throw new IllegalStateException("REQEUSTED 상태만 승인 가능합니다. 현재 : " + this.status);
+        }
+
+        this.paymentKey = paymentKey;
+        this.status = PgDepositStatus.SUCCESS;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    // 충전 실패 처리
+    public void fail(String failedReason) {
+
+        if (this.status != PgDepositStatus.REQUESTED) {
+
+            throw new IllegalStateException("REQUESTED 상태만 실패처리 가능합니다. 현재 : " + this.status);
+        }
+
+        this.status = PgDepositStatus.FAILED;
+        this.failedReason = failedReason;
+    }
+
+    // 취소 가능 여부
+    public boolean isCancelable() {
+
+        return this.status == PgDepositStatus.REQUESTED || this.status == PgDepositStatus.SUCCESS;
+    }
+
+    // 결제 취소(환불)
+    public void cancel(String reason) {
+
+        if (this.status != PgDepositStatus.SUCCESS && this.status != PgDepositStatus.REQUESTED) {
+
+            throw new IllegalStateException("SUCCESS 상태만 취소할 수 있습니다. : " + this.status);
+        }
+
+        this.status = PgDepositStatus.CANCELED;
+        this.failedReason = reason;
+    }
+
 }

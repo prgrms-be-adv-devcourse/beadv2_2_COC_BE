@@ -2,10 +2,9 @@ package com.coc.modi.auth.application;
 
 import com.coc.modi.auth.application.dto.MemberLoginCommand;
 import com.coc.modi.auth.application.dto.MemberLoginResponse;
-import com.coc.modi.auth.presentation.dto.MemberLoginInfo;
 import com.coc.modi.common.auth.JwtTokenProvider;
 import com.coc.modi.member.domain.Member;
-import com.coc.modi.member.infrastructure.MemberRepository;
+import com.coc.modi.member.domain.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ public class MemberAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-
+    // 로그인
     public MemberLoginResponse login(MemberLoginCommand command) {
 
         // TODO : 나중에 커스텀 예외로 변경
@@ -32,13 +31,6 @@ public class MemberAuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name());
 
-        MemberLoginInfo memberInfo = new MemberLoginInfo(
-                member.getId(),
-                member.getEmail(),
-                member.getName(),
-                member.getRole().name()
-        );
-
-        return new MemberLoginResponse(accessToken, refreshToken, memberInfo);
+        return MemberLoginResponse.of(accessToken, refreshToken, member);
     }
 }
