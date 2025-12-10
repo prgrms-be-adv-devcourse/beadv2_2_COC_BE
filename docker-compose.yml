@@ -1,11 +1,31 @@
 services:
+  postgres:
+    image: postgres:15
+    container_name: modi-postgres
+    restart: always
+    ports:
+      - "5432:5432"   # 추후 외부 접근 막아도 됨
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   product-service:
     image: product-service:latest
     container_name: product-service
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8082:8082"
     env_file:
       - .env
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: always
+
+volumes:
+  pgdata:
