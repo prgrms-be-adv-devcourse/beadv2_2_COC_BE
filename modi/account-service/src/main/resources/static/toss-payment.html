@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Toss Payment Demo</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+        }
+        #payment-method {
+            margin-top: 1rem;
+            border: 1px solid #e0e0e0;
+            padding: 1rem;
+        }
+        button {
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #3182f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Toss 결제 테스트</h1>
+<p>아래 버튼을 클릭하면 Toss Payment Widget이 실행됩니다.</p>
+
+<button id="pay-button">결제하기</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            if (typeof window.TossPayments !== 'function') {
+                throw new Error('TossPayments is not defined.');
+            }
+
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('로그인이 필요합니다. 토큰을 확인하세요.');
+                return;
+            }
+            const authorization = token.startsWith('Bearer ')
+                ? token
+                : `Bearer ${token}`;
+
+            // 서버에서 설정값 가져오기
+            const configRes = await fetch('/api/deposits/pg/config', {
+                headers: {
+                    'Authorization': authorization
+                }
+            });
+            const configBody = await configRes.json();
+            const config = configBody.data;
+            const tossPayments = window.TossPayments(config.clientKey);
+
+            document.getElementById('pay-button').addEventListener('click', async function () {
+                try {
+                    // 서버에 결제 요청 생성
+                    const requestRes = await fetch('/api/deposits/pg/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': authorization
+                        },
+                        body: JSON.stringify({ amount: 1000 })
+                    });
+                    const requestBody = await requestRes.json();
+                    const order = requestBody.data; // orderId, amount 포함
+
+                    await tossPayments.requestPayment('간편결제', {
+                        amount: order.amount,
+                        orderId: order.orderId,
+                        orderName: '예치금 충전',
+                        successUrl: config.successUrl,
+                        failUrl: config.failUrl
+                    });
+                } catch (e) {
+                    console.error('결제 요청 준비 실패:', e);
+                    alert('결제 요청 생성에 실패했습니다.');
+                }
+            });
+        } catch (error) {
+            console.error('Toss 위젯 초기화 실패:', error);
+            alert('Toss 위젯을 불러오지 못했습니다.');
+        }
+    });
+</script>
+</body>
+</html>
