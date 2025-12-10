@@ -1,11 +1,14 @@
 package com.coc.modi.member.auth.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.dto.ConfirmEmailVerificationCommand;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.auth.infrastructure.mail.EmailSender;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmResponse;
+import com.coc.modi.member.member.exception.AuthCodeInvalidException;
+import com.coc.modi.member.member.exception.MemberException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,12 +58,12 @@ public class EmailVerificationService {
 		
 		if (storedCode == null) {
 			
-			throw new IllegalArgumentException("이메일 인증 요청이 존재하지 않습니다.");
+			throw new AuthCodeInvalidException("이메일 인증 요청이 존재하지 않습니다.");
 		}
 		
 		if (!storedCode.equals(command.code())) {
 			
-			throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+			throw new AuthCodeInvalidException("인증 코드가 일치하지 않습니다.");
 		}
 		
 		emailVerificationCodeStore.deleteCode(command.email());
@@ -79,12 +82,12 @@ public class EmailVerificationService {
 		
 		if (email == null || email.isBlank()) {
 			
-			throw new IllegalArgumentException("이메일을 입력해주세요.");
+			throw new MemberException(ErrorCode.INVALID_INPUT, "이메일을 입력해주세요.");
 		}
 		
 		if (!EMAIL_PATTERN.matcher(email).matches()) {
 			
-			throw new IllegalArgumentException("이메일 형식이 올바르지 않습니다.");
+			throw new MemberException(ErrorCode.INVALID_INPUT, "이메일 형식이 올바르지 않습니다.");
 		}
 	}
 	
@@ -93,12 +96,12 @@ public class EmailVerificationService {
 		
 		if (code == null || code.isBlank()) {
 			
-			throw new IllegalArgumentException("인증 코드를 입력해주세요.");
+			throw new AuthCodeInvalidException("인증 코드를 입력해주세요.");
 		}
 		
 		if (!CODE_PATTERN.matcher(code).matches()) {
 			
-			throw new IllegalArgumentException("인증 코드는 6자리 숫자입니다.");
+			throw new AuthCodeInvalidException("인증 코드는 6자리 숫자입니다.");
 		}
 	}
 }

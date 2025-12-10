@@ -3,11 +3,14 @@ package com.coc.modi.member.member.application;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
+import com.coc.modi.member.member.application.dto.UpdateMemberCommand;
+import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
-import com.coc.modi.member.member.application.dto.UpdateMemberCommand;
-import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
+import com.coc.modi.member.member.exception.EmailDuplicatedException;
+import com.coc.modi.member.member.exception.MemberNotFoundException;
+import com.coc.modi.member.member.exception.PasswordMismatchException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +35,7 @@ public class MemberService {
 		
 		if (memberRepository.existsByEmail(command.email())) {
 			
-			throw new IllegalArgumentException("이메일이 이미 존재합니다.");
+			throw new EmailDuplicatedException(command.email());
 		}
 		
 		memberValidationService.validatePassword(command.password());
@@ -61,8 +64,7 @@ public class MemberService {
 	@Transactional(readOnly = true)
 	public MemberProfileResponse getProfile(Long memberId) {
 		
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+		Member member = getMemberOrThrow(memberId);
 		
 		return MemberProfileResponse.from(member);
 	}
@@ -72,8 +74,7 @@ public class MemberService {
 	public MemberProfileResponse updateProfile(Long memberId,
 											   UpdateMemberCommand command) {
 		
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+		Member member = getMemberOrThrow(memberId);
 		
 		if (command.name() != null && !command.name().isBlank()) {
 			
@@ -98,20 +99,19 @@ public class MemberService {
 		
 		if (!authenticatedMemberId.equals(memberId)) {
 			
-			throw new IllegalArgumentException("본인만 비밀번호를 변경할 수 있습니다.");
+			throw new PasswordMismatchException("본인만 비밀번호를 변경할 수 있습니다.");
 		}
 		
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+		Member member = getMemberOrThrow(memberId);
 		
 		if (command.name() == null || command.name().isBlank()) {
 			
-			throw new IllegalArgumentException("이름을 입력해주세요.");
+			throw new PasswordMismatchException("이름을 입력해주세요.");
 		}
 		
 		if (!member.getName().equals(command.name())) {
 			
-			throw new IllegalArgumentException("이름이 일치하지 않습니다.");
+			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
 		}
 		
 		memberValidationService.validatePassword(command.password());
@@ -125,10 +125,15 @@ public class MemberService {
 	@Transactional
 	public void deleteMember(Long memberId) {
 		
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+		Member member = getMemberOrThrow(memberId);
 		
 		member.withdraw();
+	}
+	
+	private Member getMemberOrThrow(Long memberId) {
+		
+		return memberRepository.findById(memberId)
+				.orElseThrow(() -> new MemberNotFoundException(memberId));
 	}
 	
 }

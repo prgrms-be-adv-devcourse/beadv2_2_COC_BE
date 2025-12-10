@@ -8,7 +8,11 @@ import com.coc.modi.member.member.domain.Address;
 import com.coc.modi.member.member.domain.AddressRepository;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.exception.AddressNotFoundException;
+import com.coc.modi.member.member.exception.MemberNotFoundException;
+
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +41,7 @@ public class AddressService {
     public void createAddress(AddressCreateCommand command) {
 
         Member member = memberRepository.findById(command.memberId())
-                .orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
+                .orElseThrow(() -> new MemberNotFoundException(command.memberId()));
 
         if (command.isDefault()) {
 
@@ -102,6 +106,6 @@ public class AddressService {
 
         return addressRepository.findById(addressId)
                 .filter(address -> address.getMember().getId().equals(memberId))
-                .orElseThrow(() -> new IllegalArgumentException("주소를 찾을 수 없거나 접근 권한이 없습니다."));
+                .orElseThrow(() -> new AddressNotFoundException(addressId));
     }
 }

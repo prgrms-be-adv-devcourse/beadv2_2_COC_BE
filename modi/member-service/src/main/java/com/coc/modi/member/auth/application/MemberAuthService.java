@@ -5,6 +5,8 @@ import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.common.auth.JwtTokenProvider;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.exception.MemberNotFoundException;
+import com.coc.modi.member.member.exception.PasswordMismatchException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,13 +24,12 @@ public class MemberAuthService {
 	// 로그인
 	public MemberLoginResponse login(MemberLoginCommand command) {
 		
-		// TODO : 나중에 커스텀 예외로 변경
 		Member member = memberRepository.findByEmail(command.email())
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+				.orElseThrow(() -> new MemberNotFoundException(command.email()));
 		
 		if (!passwordEncoder.matches(command.password(), member.getPassword())) {
 			
-			throw new IllegalArgumentException("비밀번호 불일치입니다.");
+			throw new PasswordMismatchException("비밀번호가 일치하지 않습니다.");
 		}
 		
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name());
