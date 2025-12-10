@@ -8,7 +8,15 @@ public enum ProductCategory {
     MOBILE,
     MONITOR,
     ACCESSORY,
-    DRON,
+    DRONE,
     AUDIO,
-    PROJECTOR
+    PROJECTOR;
+
+    public static ProductCategory from(String value) {
+        try {
+            return ProductCategory.valueOf(value.toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리: " + value);
+        }
+    }
 }
