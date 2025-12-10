@@ -4,12 +4,10 @@ import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 
 import java.util.List;
 
-public record RentalFromCartRequest(
-        List<Long> cartItemIds
-) {
-
-    public CreateRentalFromCartCommand toCommand(Long memberId) {
-
-        return new CreateRentalFromCartCommand(memberId, cartItemIds);
-    }
+public record RentalFromCartRequest(List<Long> cartItemIds) {
+	
+	public CreateRentalFromCartCommand toCommand(Long memberId) {
+		
+		return new CreateRentalFromCartCommand(memberId, cartItemIds);
+	}
 }
