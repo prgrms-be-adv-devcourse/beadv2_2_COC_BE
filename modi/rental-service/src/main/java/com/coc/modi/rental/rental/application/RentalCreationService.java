@@ -1,8 +1,11 @@
 package com.coc.modi.rental.rental.application;
 
-import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
-import com.coc.modi.rental.cart.domain.CartItemRepository;
+import com.coc.modi.rental.cart.domain.CartRepository;
+import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.ErrorCode;
+
 import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.rental.domain.Rental;
@@ -27,78 +30,88 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RentalCreationService {
-	
-	private final RentalRepository rentalRepository;
-	private final CartItemRepository cartItemRepository;
-	private final ProductFeignClient productFeignClient;
-	private final RentalEventLogService rentalEventLogService;
-	
-	@Transactional
-	public void createRentalFromCart(CreateRentalFromCartCommand command) {
-		
-		List<CartItem> cartItems = cartItemRepository.findAllByIdIn(command.cartItemIds());
-		
-		if (cartItems.isEmpty()) {
-			
-			throw new RentalException(ErrorCode.INVALID_INPUT, "장바구니 항목이 존재하지 않습니다.");
-		}
-		
-		boolean hasDifferentMember = cartItems.stream()
-				.anyMatch(cartItem -> !cartItem.getCart().getMemberId().equals(command.memberId()));
-		
-		if (hasDifferentMember) {
-			
-			throw new RentalException(ErrorCode.INVALID_INPUT, "다른 회원의 장바구니 항목이 포함되어 있습니다.");
-		}
-		
-		List<Long> productIds = cartItems.stream().map(CartItem::getProductId).distinct().toList();
-		
-		List<ProductResponseDto> products = productFeignClient.getProducts(productIds);
-		
-		Map<Long, ProductResponseDto> productMap = products.stream()
-				.collect(Collectors.toMap(ProductResponseDto::productId, dto -> dto));
-		
-		BigDecimal rentalTotalAmount = BigDecimal.ZERO;
-		Rental rental = Rental.create(command.memberId(), rentalTotalAmount);
-		
-		for (CartItem cartItem : cartItems) {
-			
-			ProductResponseDto productResponseDto = productMap.get(cartItem.getProductId());
-			
-			if (productResponseDto == null) {
-				
-				throw new RentalException(ErrorCode.NOT_FOUND, "상품 가격 정보를 찾을 수 없습니다. productId: " + cartItem.getProductId());
-			}
-			
-			if (!"ACTIVE".equals(productResponseDto.status())) {
-				
-				throw new RentalException(ErrorCode.CONFLICT, "현재 판매중인 상품이 아닙니다. productId: " + cartItem.getProductId());
-			}
-			
-			BigDecimal unitPrice = productResponseDto.price();
-			
-			long rentalDays = ChronoUnit.DAYS.between(cartItem.getStartDate(), cartItem.getEndDate()) + 1;
-			
-			if (rentalDays <= 0) {
-				
-				throw new RentalException(ErrorCode.INVALID_INPUT, "대여 종료일이 시작일보다 빠릅니다. cartItemId: " + cartItem.getId());
-			}
-			
-			RentalItem rentalItem = RentalItem.create(cartItem.getProductId(), productResponseDto.sellerId(),
-					cartItem.getStartDate(), cartItem.getEndDate(), unitPrice);
-			
-			rental.addItem(rentalItem);
-			
-			rentalTotalAmount = rentalTotalAmount.add(rentalItem.calculateRentalAmount());
-		}
-		
-		rental.updateTotalAmount(rentalTotalAmount);
-		
-		rentalRepository.save(rental);
-		logCreatedEvent(rental);
-	}
-	
-	@Transactional
+
+    private final RentalRepository rentalRepository;
+    private final CartRepository cartRepository;
+    private final ProductFeignClient productFeignClient;
+    private final RentalEventLogService rentalEventLogService;
+
+    @Transactional
+    public void createRentalFromCart(CreateRentalFromCartCommand command) {
+
+        Cart cart = cartRepository.findByMemberId(command.memberId())
+                .orElseThrow(() -> new RentalException("장바구니가 존재하지 않습니다."));
+
+        List<CartItem> cartItems = cart.getItems().stream()
+                .filter(item -> command.cartItemIds().contains(item.getId()))
+                .toList();
+
+        if (cartItems.isEmpty()) {
+
+            throw new RentalException(ErrorCode.INVALID_INPUT, "요청한 장바구니 항목이 존재하지 않습니다.");
+        }
+
+        if (cartItems.size() != command.cartItemIds().size()) {
+
+            throw new RentalException(ErrorCode.INVALID_INPUT, "요청한 장바구니 항목 일부를 찾을 수 없습니다.");
+        }
+
+        List<Long> productIds = cartItems.stream()
+                .map(CartItem::getProductId)
+                .distinct()
+                .toList();
+
+        List<ProductResponseDto> products = productFeignClient.getProducts(productIds);
+
+        Map<Long, ProductResponseDto> productMap = products.stream()
+                .collect(Collectors.toMap(ProductResponseDto::productId, dto -> dto));
+
+        BigDecimal rentalTotalAmount = BigDecimal.ZERO;
+        Rental rental = Rental.create(command.memberId(), rentalTotalAmount);
+
+        for (CartItem cartItem : cartItems) {
+
+            ProductResponseDto productResponseDto = productMap.get(cartItem.getProductId());
+
+            if (productResponseDto == null) {
+
+                throw new RentalException(ErrorCode.NOT_FOUND, "상품 가격 정보를 찾을 수 없습니다. productId: " + cartItem.getProductId());
+            }
+
+            if (!"ACTIVE".equals(productResponseDto.status())) {
+
+                throw new RentalException(ErrorCode.CONFLICT, "현재 판매중인 상품이 아닙니다. productId: " + cartItem.getProductId());
+            }
+
+            BigDecimal unitPrice = productResponseDto.price();
+
+            long rentalDays = ChronoUnit.DAYS.between(cartItem.getStartDate(), cartItem.getEndDate()) + 1;
+
+            if (rentalDays <= 0) {
+
+                throw new RentalException(ErrorCode.INVALID_INPUT, "대여 종료일이 시작일보다 빠릅니다. cartItemId: " + cartItem.getId());
+            }
+
+            RentalItem rentalItem = RentalItem.create(
+                    cartItem.getProductId(),
+                    productResponseDto.sellerId(),
+                    cartItem.getStartDate(),
+                    cartItem.getEndDate(),
+                    unitPrice
+            );
+
+            rental.addItem(rentalItem);
+
+            rentalTotalAmount = rentalTotalAmount.add(rentalItem.calculateRentalAmount());
+        }
+
+        rental.updateTotalAmount(rentalTotalAmount);
+
+        rentalRepository.save(rental);
+        logCreatedEvent(rental);
+    }
+
+    @Transactional
 	public void createRental(RentalCreateCommand command) {
 		
 		ProductResponseDto productResponseDto = productFeignClient.getProducts(command.productId());
