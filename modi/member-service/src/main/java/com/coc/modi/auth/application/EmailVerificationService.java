@@ -2,8 +2,7 @@ package com.coc.modi.auth.application;
 
 import com.coc.modi.auth.application.dto.ConfirmEmailVerificationCommand;
 import com.coc.modi.auth.application.dto.SendEmailVerificationCommand;
-import com.coc.modi.auth.domain.EmailVerification;
-import com.coc.modi.auth.domain.EmailVerificationRepository;
+import com.coc.modi.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.auth.infrastructure.mail.EmailSender;
 import com.coc.modi.auth.presentation.dto.EmailVerificationSendResponse;
 import com.coc.modi.auth.presentation.dto.EmailVerificationConfirmResponse;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 @Service
@@ -26,7 +25,7 @@ public class EmailVerificationService {
 	private static final int CODE_BOUND = 1_000_000;
 	private static final long EXPIRATION_MINUTES = 5L;
 	
-	private final EmailVerificationRepository emailVerificationRepository;
+	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final SecureRandom secureRandom = new SecureRandom();
 	private final EmailSender emailSender;
 	
@@ -37,13 +36,8 @@ public class EmailVerificationService {
 		validateEmail(command.email());
 		
 		String code = generateCode();
-		LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
 		
-		emailVerificationRepository.findByEmail(command.email())
-				.ifPresentOrElse(existing -> existing.regenerate(code, expiresAt),
-						() -> emailVerificationRepository.save(
-								EmailVerification.create(command.email(), code, expiresAt)
-						));
+		emailVerificationCodeStore.saveCode(command.email(), code, Duration.ofMinutes(EXPIRATION_MINUTES));
 		
 		emailSender.sendVerificationCode(command.email(), code);
 		
@@ -57,19 +51,30 @@ public class EmailVerificationService {
 		validateEmail(command.email());
 		validateCode(command.code());
 		
-		EmailVerification emailVerification = emailVerificationRepository.findByEmail(command.email())
-				.orElseThrow(() -> new IllegalArgumentException("이메일 인증 요청이 존재하지 않습니다."));
+		String storedCode = emailVerificationCodeStore.getCode(command.email());
 		
-		emailVerification.verify(command.code(), LocalDateTime.now());
+		if (storedCode == null) {
+			
+			throw new IllegalArgumentException("이메일 인증 요청이 존재하지 않습니다.");
+		}
+		
+		if (!storedCode.equals(command.code())) {
+			
+			throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+		}
+		
+		emailVerificationCodeStore.deleteCode(command.email());
 		
 		return EmailVerificationConfirmResponse.success();
 	}
 	
+	// 이메일 인증 코드 생성
 	private String generateCode() {
 		
 		return String.format("%06d", secureRandom.nextInt(CODE_BOUND));
 	}
 	
+	// 이메일 유효성 검사
 	private void validateEmail(String email) {
 		
 		if (email == null || email.isBlank()) {
@@ -83,6 +88,7 @@ public class EmailVerificationService {
 		}
 	}
 	
+	// 인증 코드 유효성 검사
 	private void validateCode(String code) {
 		
 		if (code == null || code.isBlank()) {

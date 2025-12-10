@@ -11,8 +11,6 @@ import com.coc.modi.member.application.dto.UpdateMemberPasswordCommand;
 import com.coc.modi.member.infrastructure.client.AccountFeignClient;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,9 +59,7 @@ public class MemberService {
 	
 	// 내 정보 조회
 	@Transactional(readOnly = true)
-	public MemberProfileResponse getProfile(Authentication authentication) {
-		
-		Long memberId = (Long)authentication.getPrincipal();
+	public MemberProfileResponse getProfile(Long memberId) {
 		
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
@@ -73,10 +69,8 @@ public class MemberService {
 	
 	// 회원 정보 수정
 	@Transactional
-	public MemberProfileResponse updateProfile(Authentication authentication,
+	public MemberProfileResponse updateProfile(Long memberId,
 											   UpdateMemberCommand command) {
-		
-		Long memberId = (Long)authentication.getPrincipal();
 		
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
@@ -89,6 +83,7 @@ public class MemberService {
 		if (command.phone() != null && !command.phone().isBlank()) {
 			
 			memberValidationService.validatePhone(command.phone());
+			
 			member.changePhone(command.phone());
 		}
 		
@@ -97,11 +92,9 @@ public class MemberService {
 	
 	// 비밀번호 수정
 	@Transactional
-	public void updatePassword(Authentication authentication,
+	public void updatePassword(Long authenticatedMemberId,
 							   Long memberId,
 							   UpdateMemberPasswordCommand command) {
-		
-		Long authenticatedMemberId = (Long)authentication.getPrincipal();
 		
 		if (!authenticatedMemberId.equals(memberId)) {
 			
@@ -122,15 +115,15 @@ public class MemberService {
 		}
 		
 		memberValidationService.validatePassword(command.password());
+		
 		String encodedPassword = passwordEncoder.encode(command.password());
+		
 		member.changePassword(encodedPassword);
 	}
 	
 	// 회원 탈퇴
 	@Transactional
-	public void deleteMember(Authentication authentication) {
-		
-		Long memberId = (Long)authentication.getPrincipal();
+	public void deleteMember(Long memberId) {
 		
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new IllegalArgumentException("회원이 없습니다."));
