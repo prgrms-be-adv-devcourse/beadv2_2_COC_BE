@@ -1,9 +1,9 @@
 package com.coc.modi.common;
 
 public record ApiResponse<T>(boolean success,
-                          String code,
-                          String message,
-                          T data) {
+							 String code,
+							 String message,
+							 T data) {
 
     public static <T> ApiResponse<T> ok(T data) {
 
@@ -19,4 +19,18 @@ public record ApiResponse<T>(boolean success,
 
         return new ApiResponse<>(false, code, message, null);
     }
+	
+	public static ApiResponse<?> error(ErrorCode errorCode) {
+		
+		return new ApiResponse<>(false, errorCode.getCode(), errorCode.getDefaultMessage(), null);
+	}
+	
+	public static ApiResponse<?> error(ErrorCode errorCode, String message) {
+		
+		String resolvedMessage = message == null || message.isBlank()
+				? errorCode.getDefaultMessage()
+				: message;
+		
+		return new ApiResponse<>(false, errorCode.getCode(), resolvedMessage, null);
+	}
 }
