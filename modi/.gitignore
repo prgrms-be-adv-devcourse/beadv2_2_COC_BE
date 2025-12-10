@@ -10,7 +10,6 @@ HELP.md
 !**/src/test/**/build/
 **/src/main/generated/
 **/src/main/resources/application.yml
-.idea
 *.yml
 .env
 ### STS ###

@@ -3,6 +3,7 @@ package com.coc.modi.seller.seller.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
 import com.coc.modi.seller.seller.application.dto.SellerResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
 import com.coc.modi.seller.seller.presentation.dto.SellerUpdateRequest;
@@ -60,6 +61,12 @@ public class SellerController {
     @GetMapping("/internal/sellers/by-member/{memberId}")
     public SellerResponse getSellerByMemberId(@PathVariable Long memberId) {
         return sellerService.getSellerByMemberId(memberId);
+    }
+
+    @GetMapping("/internal/sellers/member/{memberId}/id")
+    public SellerIdResponse getSellerIdByMemberId(@PathVariable Long memberId) {
+        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+        return new SellerIdResponse(seller.id());
     }
 
     @GetMapping("/internal/sellers/{sellerId}")
