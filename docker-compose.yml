@@ -1,25 +1,10 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: modi-postgres
-    restart: always
-    ports:
-      - "5432:5432"
-    env_file:
-      - .env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
   product-service:
     image: product-service:latest
     container_name: product-service
-    depends_on:
-      - postgres
     ports:
       - "8082:8082"
     env_file:
       - .env
     restart: always
 
-volumes:
-  pgdata:
