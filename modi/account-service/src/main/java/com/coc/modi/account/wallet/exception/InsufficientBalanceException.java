@@ -1,4 +1,4 @@
-package com.coc.modi.account.exception;
+package com.coc.modi.account.wallet.exception;
 
 import com.coc.modi.common.ErrorCode;
 

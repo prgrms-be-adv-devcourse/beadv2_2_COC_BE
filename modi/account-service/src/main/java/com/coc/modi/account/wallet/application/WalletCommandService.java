@@ -1,8 +1,8 @@
 package com.coc.modi.account.wallet.application;
 
-import com.coc.modi.account.exception.AccountAlreadyExistsException;
-import com.coc.modi.account.exception.AccountNotFoundException;
-import com.coc.modi.account.exception.InsufficientBalanceException;
+import com.coc.modi.account.wallet.exception.AccountAlreadyExistsException;
+import com.coc.modi.account.wallet.exception.AccountNotFoundException;
+import com.coc.modi.account.wallet.exception.InsufficientBalanceException;
 import com.coc.modi.account.wallet.application.dto.RentalPaymentCommand;
 import com.coc.modi.account.wallet.application.dto.RentalPaymentResponse;
 import com.coc.modi.account.wallet.application.dto.RentalRefundCommand;

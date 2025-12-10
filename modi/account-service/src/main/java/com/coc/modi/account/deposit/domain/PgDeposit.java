@@ -1,6 +1,6 @@
 package com.coc.modi.account.deposit.domain;
 
-import com.coc.modi.account.exception.AccountException;
+import com.coc.modi.account.wallet.exception.AccountException;
 import com.coc.modi.common.BaseEntity;
 import com.coc.modi.common.ErrorCode;
 
