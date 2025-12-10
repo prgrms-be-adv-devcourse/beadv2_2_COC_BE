@@ -5,10 +5,12 @@ import lombok.Getter;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+import com.coc.modi.common.BaseEntity;
+
 @Getter
 @Entity
 @Table(name = "product_image", schema = "public")
-public class ProductImage {
+public class ProductImage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -24,15 +26,21 @@ public class ProductImage {
     @Column(nullable = false)
     private Integer ordering;
 
-    @Column(name = "is_thumbnail", nullable = false)
-    private Boolean isThumbnail = false;
+    protected ProductImage() {}
 
-    static ProductImage createProductImage(String url, Integer ordering, Boolean isThumbnail) {
-        ProductImage image = new ProductImage();
-        image.url = url;
-        image.ordering = ordering;
-        image.isThumbnail = isThumbnail;
-        return image;
+    public ProductImage(Product product, String url, Integer ordering) {
+        this.product = product;
+        this.url = url;
+        this.ordering = ordering;
+    }
+
+    public static ProductImage create(Product product, String url, Integer ordering) {
+        return new ProductImage(product, url, ordering);
+    }
+
+    public void update(String url, Integer ordering) {
+        this.url = url;
+        this.ordering = ordering;
     }
 
     void assignTo(Product product) {

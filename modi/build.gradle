@@ -41,7 +41,6 @@ subprojects {
         annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
         implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
         implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -53,6 +52,12 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
     dependencyManagement {
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
