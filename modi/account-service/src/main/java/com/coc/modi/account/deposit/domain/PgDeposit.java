@@ -1,7 +1,11 @@
 package com.coc.modi.account.deposit.domain;
 
+import com.coc.modi.account.exception.AccountException;
 import com.coc.modi.common.BaseEntity;
+import com.coc.modi.common.ErrorCode;
+
 import jakarta.persistence.*;
+
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -69,7 +73,7 @@ public class PgDeposit extends BaseEntity {
 
         if (this.status != PgDepositStatus.REQUESTED) {
 
-            throw new IllegalStateException("REQEUSTED 상태만 승인 가능합니다. 현재 : " + this.status);
+            throw new AccountException(ErrorCode.CONFLICT, "REQUESTED 상태만 승인 가능합니다. 현재 : " + this.status);
         }
 
         this.paymentKey = paymentKey;
@@ -82,7 +86,7 @@ public class PgDeposit extends BaseEntity {
 
         if (this.status != PgDepositStatus.REQUESTED) {
 
-            throw new IllegalStateException("REQUESTED 상태만 실패처리 가능합니다. 현재 : " + this.status);
+            throw new AccountException(ErrorCode.CONFLICT, "REQUESTED 상태만 실패처리 가능합니다. 현재 : " + this.status);
         }
 
         this.status = PgDepositStatus.FAILED;
@@ -100,7 +104,7 @@ public class PgDeposit extends BaseEntity {
 
         if (this.status != PgDepositStatus.SUCCESS && this.status != PgDepositStatus.REQUESTED) {
 
-            throw new IllegalStateException("SUCCESS 상태만 취소할 수 있습니다. : " + this.status);
+            throw new AccountException(ErrorCode.CONFLICT, "SUCCESS 상태만 취소할 수 있습니다. : " + this.status);
         }
 
         this.status = PgDepositStatus.CANCELED;
