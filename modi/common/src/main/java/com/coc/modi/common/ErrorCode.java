@@ -18,7 +18,10 @@ public enum ErrorCode {
 	RENTAL_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "RENTAL-ITEM-404", "대여 아이템 정보를 찾을 수 없습니다."),
 	RENTAL_STATUS_INVALID(HttpStatus.CONFLICT, "RENTAL-409", "허용되지 않은 대여 상태 변경입니다."),
 	RENTAL_MEMBER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-403", "대여 요청자와 요청 멤버가 일치하지 않습니다."),
-	RENTAL_SELLER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-SELLER-403", "판매자 정보가 일치하지 않습니다.");
+	RENTAL_SELLER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-SELLER-403", "판매자 정보가 일치하지 않습니다."),
+
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
+	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다.");
 	
 	private final HttpStatus status;
 	private final String code;
