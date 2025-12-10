@@ -1,15 +1,18 @@
 package com.coc.modi.seller.infrastructure.client.rental.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public record RentalSummary(
-        Long rentalId,
+public record RentalItemInfo(
+        Long rentalItemId,
         Long productId,
-        String productName,
         Long memberId,
         Long sellerId,
         String status,
         BigDecimal totalAmount,
-        String paidAt
+        LocalDate startDate,
+        LocalDate endDate,
+        LocalDateTime paidAt
 ) {
 }

@@ -59,7 +59,7 @@ public class SellerSettlementService {
 
         SellerSettlementLine line = SellerSettlementLine.of(
                 command.sellerId(),
-                command.rentalId(),
+                command.rentalItemId(),
                 command.memberId(),
                 command.productId(),
                 command.rentalAmount(),

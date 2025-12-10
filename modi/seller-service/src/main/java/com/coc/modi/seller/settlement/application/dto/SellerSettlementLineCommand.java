@@ -6,7 +6,7 @@ public record SellerSettlementLineCommand(
         Long batchId,
         Long sellerId,
         String periodYm,
-        Long rentalId,
+        Long rentalItemId,
         Long memberId,
         Long productId,
         BigDecimal rentalAmount,

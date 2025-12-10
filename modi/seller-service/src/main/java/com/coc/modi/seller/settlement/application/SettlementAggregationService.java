@@ -4,14 +4,16 @@ import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
+import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -26,19 +28,19 @@ public class SettlementAggregationService {
 
     public SellerSettlement aggregateLine(Long sellerId,
                                           String periodYm,
-                                          Long rentalId,
+                                          Long rentalItemId,
                                           Long memberId,
                                           Long productId,
                                           BigDecimal rentalAmount) {
         SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm)
                 .orElseGet(() -> SellerSettlement.create(null, sellerId, periodYm));
 
-        // TODO: rentalId 중복 방지 필요 시 체크
+        // TODO: rentalItemId 중복 방지 필요 시 체크
         BigDecimal feeAmount = rentalAmount.multiply(FEE_RATE).setScale(2, RoundingMode.HALF_UP);
 
         SellerSettlementLine line = SellerSettlementLine.of(
                 sellerId,
-                rentalId,
+                rentalItemId,
                 memberId,
                 productId,
                 rentalAmount,
@@ -66,24 +68,35 @@ public class SettlementAggregationService {
                 page != null ? page : 0,
                 size != null ? size : 100
         );
-        List<RentalSummary> rentals = response.content();
+        List<RentalItemInfo> rentals = response.content();
         if (rentals == null || rentals.isEmpty()) {
             return;
         }
         rentals.forEach(rental -> aggregateLine(
                 rental.sellerId(),
-                periodYm != null ? periodYm : extractPeriodYm(rental.paidAt()),
-                rental.rentalId(),
+                resolvePeriodYm(periodYm, rental.paidAt(), rental.startDate(), rental.endDate()),
+                rental.rentalItemId(),
                 rental.memberId(),
                 rental.productId(),
                 rental.totalAmount()
         ));
     }
 
-    private String extractPeriodYm(String paidAt) {
-        if (paidAt == null || paidAt.length() < 7) {
-            return null;
+    private String resolvePeriodYm(String requestedPeriodYm,
+                                   java.time.LocalDateTime paidAt,
+                                   java.time.LocalDate startDate,
+                                   java.time.LocalDate endDate) {
+        if (requestedPeriodYm != null && !requestedPeriodYm.isBlank()) {
+            return requestedPeriodYm;
         }
-        return paidAt.substring(0, 7);
+        if (paidAt != null) {
+            return YearMonth.from(paidAt.toLocalDate()).toString();
+        }
+        LocalDate fallback = startDate != null ? startDate : endDate;
+        if (fallback != null) {
+            return YearMonth.from(fallback).toString();
+        }
+        return null;
     }
 }
+

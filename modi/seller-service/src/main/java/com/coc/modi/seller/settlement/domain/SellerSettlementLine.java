@@ -34,8 +34,8 @@ public class SellerSettlementLine extends BaseEntity {
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
 
-    @Column(name = "rental_id", nullable = false)
-    private Long rentalId;
+    @Column(name = "rental_item_id", nullable = false)
+    private Long rentalItemId;
 
     @Column(name = "member_id", nullable = false)
     private Long memberId;
@@ -51,13 +51,13 @@ public class SellerSettlementLine extends BaseEntity {
 
     @Builder
     private SellerSettlementLine(Long sellerId,
-                                 Long rentalId,
+                                 Long rentalItemId,
                                  Long memberId,
                                  Long productId,
                                  BigDecimal rentalAmount,
                                  BigDecimal feeAmount) {
         this.sellerId = sellerId;
-        this.rentalId = rentalId;
+        this.rentalItemId = rentalItemId;
         this.memberId = memberId;
         this.productId = productId;
         this.rentalAmount = rentalAmount;
@@ -65,14 +65,14 @@ public class SellerSettlementLine extends BaseEntity {
     }
 
     public static SellerSettlementLine of(Long sellerId,
-                                          Long rentalId,
+                                          Long rentalItemId,
                                           Long memberId,
                                           Long productId,
                                           BigDecimal rentalAmount,
                                           BigDecimal feeAmount) {
         return SellerSettlementLine.builder()
                 .sellerId(sellerId)
-                .rentalId(rentalId)
+                .rentalItemId(rentalItemId)
                 .memberId(memberId)
                 .productId(productId)
                 .rentalAmount(rentalAmount)

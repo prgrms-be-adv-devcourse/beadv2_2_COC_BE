@@ -11,6 +11,7 @@ HELP.md
 .gitignore
 **/src/main/resources/application.yml
 .idea
+*.yml
 
 ### STS ###
 .apt_generated/

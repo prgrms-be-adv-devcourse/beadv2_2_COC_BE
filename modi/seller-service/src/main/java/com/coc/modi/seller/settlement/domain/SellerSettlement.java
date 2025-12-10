@@ -98,9 +98,9 @@ public class SellerSettlement extends BaseEntity {
     }
 
     public void addLineWithAggregation(SellerSettlementLine line) {
-        // 멱등성: 동일 rentalId 중복 방지
+        // 멱등성: 동일 rentalItemId 중복 방지
         boolean exists = this.lines.stream()
-                .anyMatch(existing -> existing.getRentalId().equals(line.getRentalId()));
+                .anyMatch(existing -> existing.getRentalItemId().equals(line.getRentalItemId()));
         if (exists) {
             return;
         }
