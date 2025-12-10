@@ -2,11 +2,14 @@ package com.coc.modi.member.domain;
 
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "address", schema = "public")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Address extends BaseEntity {
 
     @Id
@@ -45,4 +48,59 @@ public class Address extends BaseEntity {
     @Column(name = "is_default", nullable = false)
     private boolean isDefault;
 
+    private Address(Member member,
+                    String addressLabel,
+                    String recipientName,
+                    String recipientPhone,
+                    AddressType type,
+                    String postcode,
+                    String roadAddress,
+                    String detailAddress,
+                    boolean isDefault) {
+
+        this.member = member;
+        this.addressLabel = addressLabel;
+        this.recipientName = recipientName;
+        this.recipientPhone = recipientPhone;
+        this.type = type;
+        this.postcode = postcode;
+        this.roadAddress = roadAddress;
+        this.detailAddress = detailAddress;
+        this.isDefault = isDefault;
+    }
+
+    public static Address create(Member member,
+                                 String addressLabel,
+                                 String recipientName,
+                                 String recipientPhone,
+                                 AddressType type,
+                                 String postcode,
+                                 String roadAddress,
+                                 String detailAddress,
+                                 boolean isDefault) {
+
+        return new Address(member, addressLabel, recipientName, recipientPhone, type, postcode, roadAddress, detailAddress, isDefault);
+    }
+
+    public void updateDefault(boolean isDefault) {
+
+        this.isDefault = isDefault;
+    }
+
+    public void update(String addressLabel,
+                       String recipientName,
+                       String recipientPhone,
+                       AddressType type,
+                       String postcode,
+                       String roadAddress,
+                       String detailAddress) {
+
+        this.addressLabel = addressLabel;
+        this.recipientName = recipientName;
+        this.recipientPhone = recipientPhone;
+        this.type = type;
+        this.postcode = postcode;
+        this.roadAddress = roadAddress;
+        this.detailAddress = detailAddress;
+    }
 }

@@ -5,12 +5,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(
-        name = "account-service",
-        url = "${account-service.url}",
-        path = "/internal/wallets"
+		name = "account-service",
+		url = "${account-service.url}",
+		path = "/internal/wallets"
 )
 public interface AccountFeignClient {
-
-    @PostMapping("/{memberId}")
-    void createWallet(@PathVariable Long memberId);
+	
+	@PostMapping("/{memberId}")
+	void createWallet(@PathVariable Long memberId);
 }
