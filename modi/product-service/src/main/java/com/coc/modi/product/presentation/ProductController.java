@@ -1,6 +1,5 @@
 package com.coc.modi.product.presentation;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ProductService;
 import com.coc.modi.product.application.dto.*;
 import com.coc.modi.product.presentation.dto.ProductRequest;

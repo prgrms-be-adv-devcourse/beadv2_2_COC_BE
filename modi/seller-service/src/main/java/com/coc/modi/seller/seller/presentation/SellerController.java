@@ -1,6 +1,5 @@
 package com.coc.modi.seller.seller.presentation;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerResponse;

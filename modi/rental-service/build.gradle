@@ -1,7 +1,8 @@
 
 dependencies {
     // 공통 모듈 공유
-    implementation project(':common')
     // Redis 캐시/세션
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 }
