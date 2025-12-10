@@ -1,11 +1,9 @@
 package com.coc.modi.rental.rental.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
-import com.coc.modi.common.ApiResponse;
-import com.coc.modi.common.ErrorCode;
-
 import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.rental.domain.Rental;
@@ -40,7 +38,7 @@ public class RentalCreationService {
     public void createRentalFromCart(CreateRentalFromCartCommand command) {
 
         Cart cart = cartRepository.findByMemberId(command.memberId())
-                .orElseThrow(() -> new RentalException("장바구니가 존재하지 않습니다."));
+                .orElseThrow(() -> new RentalException(ErrorCode.INVALID_INPUT, "장바구니가 존재하지 않습니다."));
 
         List<CartItem> cartItems = cart.getItems().stream()
                 .filter(item -> command.cartItemIds().contains(item.getId()))
