@@ -1,7 +1,9 @@
 bootJar {
+    // 실행 가능한 Spring Boot JAR 비활성화 (라이브러리 모듈)
     enabled = false
 }
 
 jar {
+    // 일반 JAR 생성만 활성화
     enabled = true
 }

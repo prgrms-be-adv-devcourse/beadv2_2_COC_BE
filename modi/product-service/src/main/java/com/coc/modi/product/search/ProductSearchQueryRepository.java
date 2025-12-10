@@ -1,8 +1,8 @@
 package com.coc.modi.product.search;
 
-import com.coc.modi.product.application.dto.ProductSearchCondition;
-import com.coc.modi.product.domain.ProductCategory;
-import com.coc.modi.product.domain.ProductStatus;
+import com.coc.modi.product.product.application.dto.ProductSearchCondition;
+import com.coc.modi.product.product.domain.ProductCategory;
+import com.coc.modi.product.product.domain.ProductStatus;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import lombok.RequiredArgsConstructor;

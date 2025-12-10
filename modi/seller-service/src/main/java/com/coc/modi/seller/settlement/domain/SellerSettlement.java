@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.math.BigDecimal.ZERO;
+
 @Getter
 @Entity
 @Table(name = "seller_settlement")
@@ -34,8 +36,14 @@ public class SellerSettlement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "batch_id")
+    private Long batchId;
+
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
+
+    @Column(name = "period_ym", length = 7)
+    private String periodYm;
 
     @Column(name = "total_rental_amount", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalRentalAmount;
@@ -57,38 +65,51 @@ public class SellerSettlement extends BaseEntity {
     private List<SellerSettlementLine> lines = new ArrayList<>();
 
     @Builder
-    private SellerSettlement(
+    private SellerSettlement(Long batchId,
                              Long sellerId,
+                             String periodYm,
                              BigDecimal totalRentalAmount,
                              BigDecimal totalFeeAmount,
                              BigDecimal settlementAmount,
                              SellerSettlementStatus status,
                              LocalDateTime paidAt) {
+        this.batchId = batchId;
         this.sellerId = sellerId;
-        this.totalRentalAmount = totalRentalAmount;
-        this.totalFeeAmount = totalFeeAmount;
-        this.settlementAmount = settlementAmount;
+        this.periodYm = periodYm;
+        this.totalRentalAmount = totalRentalAmount != null ? totalRentalAmount : ZERO;
+        this.totalFeeAmount = totalFeeAmount != null ? totalFeeAmount : ZERO;
+        this.settlementAmount = settlementAmount != null ? settlementAmount : ZERO;
         this.status = status != null ? status : SellerSettlementStatus.READY;
         this.paidAt = paidAt;
     }
 
-    public static SellerSettlement create(
+    public static SellerSettlement create(Long batchId,
                                           Long sellerId,
-                                          BigDecimal totalRentalAmount,
-                                          BigDecimal totalFeeAmount,
-                                          BigDecimal settlementAmount) {
+                                          String periodYm) {
         return SellerSettlement.builder()
+                .batchId(batchId)
                 .sellerId(sellerId)
-                .totalRentalAmount(totalRentalAmount)
-                .totalFeeAmount(totalFeeAmount)
-                .settlementAmount(settlementAmount)
+                .periodYm(periodYm)
+                .totalRentalAmount(ZERO)
+                .totalFeeAmount(ZERO)
+                .settlementAmount(ZERO)
                 .status(SellerSettlementStatus.READY)
                 .build();
     }
 
-    public void addLine(SellerSettlementLine line) {
+    public void addLineWithAggregation(SellerSettlementLine line) {
+        // 멱등성: 동일 rentalItemId 중복 방지
+        boolean exists = this.lines.stream()
+                .anyMatch(existing -> existing.getRentalItemId().equals(line.getRentalItemId()));
+        if (exists) {
+            return;
+        }
+
         line.assignSellerSettlement(this);
         this.lines.add(line);
+        this.totalRentalAmount = this.totalRentalAmount.add(line.getRentalAmount());
+        this.totalFeeAmount = this.totalFeeAmount.add(line.getFeeAmount());
+        this.settlementAmount = this.totalRentalAmount.subtract(this.totalFeeAmount);
     }
 
     public void markPaid(LocalDateTime paidAt) {
@@ -98,5 +119,11 @@ public class SellerSettlement extends BaseEntity {
 
     public void cancel() {
         this.status = SellerSettlementStatus.CANCELED;
+    }
+
+    public void assignBatchIfAbsent(Long batchId) {
+        if (this.batchId == null && batchId != null) {
+            this.batchId = batchId;
+        }
     }
 }

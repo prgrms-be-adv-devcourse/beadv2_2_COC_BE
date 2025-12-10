@@ -1,6 +1,6 @@
 package com.coc.modi.product.search;
 
-import com.coc.modi.product.domain.Product;
+import com.coc.modi.product.product.domain.Product;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;

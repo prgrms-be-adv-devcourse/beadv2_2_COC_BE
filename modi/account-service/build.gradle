@@ -1,3 +1,6 @@
 dependencies {
+    // 공통 모듈 공유
     implementation project(':common')
+
+
 }
