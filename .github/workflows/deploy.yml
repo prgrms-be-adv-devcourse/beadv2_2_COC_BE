@@ -37,6 +37,14 @@ jobs:
           docker save -o product-service.tar product-service:latest
           ls -al
 
+      # verify source files
+      - name: Verify source files
+        run: |
+          test -f product-service.tar && echo "tar exists"
+          test -f docker-compose.yml && echo "compose exists"
+          ls -lh product-service.tar
+
+
       # 6. Copy tar & compose to EC2
       - name: Copy files to EC2
         uses: appleboy/scp-action@master
