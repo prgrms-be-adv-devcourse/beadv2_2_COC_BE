@@ -1,5 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
+import com.coc.modi.common.BaseException;
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineCommand;
@@ -74,10 +76,10 @@ public class SellerSettlementService {
 
     private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {
         SellerSettlement settlement = sellerSettlementRepository.findById(sellerSettlementId)
-                .orElseThrow(() -> new IllegalArgumentException("Settlement not found. id=" + sellerSettlementId));
+                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND, "정산서를 찾을 수 없습니다. id=" + sellerSettlementId));
 
         if (!settlement.getSellerId().equals(sellerId)) {
-            throw new IllegalArgumentException("Settlement does not belong to seller. sellerId=" + sellerId);
+            throw new BaseException(ErrorCode.FORBIDDEN, "정산서 소유자가 일치하지 않습니다. sellerId=" + sellerId);
         }
         return settlement;
     }
