@@ -1,6 +1,5 @@
 package com.coc.modi.seller.settlement.presentation;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.settlement.application.SellerSettlementService;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
