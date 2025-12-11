@@ -1,6 +1,8 @@
 package com.coc.modi.seller.exception;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
+import com.coc.modi.common.ErrorCode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

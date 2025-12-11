@@ -1,5 +1,6 @@
 package com.coc.modi.member.presentation;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.member.application.AddressService;
 import com.coc.modi.member.application.dto.AddressListResponse;
 import com.coc.modi.member.presentation.dto.AddressCreateRequest;

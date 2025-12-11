@@ -4,6 +4,7 @@ import com.coc.modi.auth.application.MemberAuthService;
 import com.coc.modi.auth.application.EmailVerificationService;
 import com.coc.modi.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.auth.presentation.dto.*;
+import com.coc.modi.common.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
