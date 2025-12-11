@@ -1,8 +1,5 @@
 package com.coc.modi.product.product.application;
 
-import com.coc.modi.common.ErrorCode;
-import com.coc.modi.product.product.exception.ProductException;
-
 import com.coc.modi.product.product.application.dto.*;
 import com.coc.modi.product.product.application.dto.ProductBulkResponse;
 import com.coc.modi.product.product.application.dto.ProductCommand;
@@ -18,6 +15,8 @@ import com.coc.modi.product.product.domain.ProductImage;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
 import com.coc.modi.product.product.domain.ProductStatus;
+import com.coc.modi.product.product.exception.ProductAccessDeniedException;
+import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.product.infrastructure.client.RentalFeignClient;
 import com.coc.modi.product.product.infrastructure.client.SellerFeignClient;
 import com.coc.modi.product.product.presentation.dto.RentalRequest;
@@ -136,7 +135,7 @@ public class ProductService {
     public ProductResponse getProductDetail(Long productId) {
 
         Product product = repository.findById(productId)
-                .orElseThrow(() -> new ProductException(ErrorCode.NOT_FOUND, "상품을 찾을 수 없습니다. 상품 ID: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
         return ProductResponse.from(product);
     }
@@ -173,10 +172,10 @@ public class ProductService {
 		Long sellerId = sellerFeignClient.findSellerById(memberId).sellerId();
 
         Product product = repository.findById(productId)
-                .orElseThrow(() -> new ProductException(ErrorCode.NOT_FOUND, "상품을 찾을 수 없습니다. 상품 ID: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 		
 		if (!sellerId.equals(product.getSellerId())) {
-			throw new ProductException(ErrorCode.FORBIDDEN, "해당 상품의 수정 권한이 없습니다.");
+			throw new ProductAccessDeniedException("수정");
 		}
 
         product.update(command.name(),
@@ -301,12 +300,12 @@ public class ProductService {
     private void changeStatus(Long memberId, Long productId, ProductStatus status) {
 
         Product product = repository.findById(productId)
-                .orElseThrow(() -> new ProductException(ErrorCode.NOT_FOUND, "상품을 찾을 수 없습니다. 상품 ID: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 		
 		Long sellerId = sellerFeignClient.findSellerById(memberId).sellerId();
 		
 		if (!sellerId.equals(product.getSellerId())) {
-			throw new ProductException(ErrorCode.FORBIDDEN, "해당 상품의 상태 변경 권한이 없습니다.");
+			throw new ProductAccessDeniedException("상태 변경");
 		}
 		
         product.updateStatus(status);

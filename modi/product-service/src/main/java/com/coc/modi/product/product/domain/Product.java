@@ -1,7 +1,7 @@
 package com.coc.modi.product.product.domain;
 
-import com.coc.modi.common.ErrorCode;
-import com.coc.modi.product.product.exception.ProductException;
+import com.coc.modi.product.product.exception.ProductConflictException;
+import com.coc.modi.product.product.exception.ProductInvalidInputException;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -66,7 +66,7 @@ public class Product extends BaseEntity {
 
     public static Product create(Long sellerId, String name, String description, BigDecimal pricePerDay, ProductCategory category) {
         if (sellerId == null) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "판매자 ID는 필수입니다.");
+            throw new ProductInvalidInputException("판매자 ID는 필수입니다.");
         }
         validateProduct(name, description, pricePerDay, category);
         ProductStatus status = ProductStatus.ACTIVE;
@@ -83,7 +83,7 @@ public class Product extends BaseEntity {
 
     public void updateStatus(ProductStatus status) {
         if(this.status == ProductStatus.DELETE) {
-            throw new ProductException(ErrorCode.CONFLICT, "삭제된 상품은 상태를 변경할 수 없습니다.");
+            throw new ProductConflictException("삭제된 상품은 상태를 변경할 수 없습니다.");
         }
         this.status = status;
     }
@@ -146,7 +146,7 @@ public class Product extends BaseEntity {
                 if (existing == null) {
                     // 없는 id가 왔다: 비즈니스에 따라 exception 또는 새로 추가
                     // 여기서는 예외 던지는 걸 예시로
-                    throw new ProductException(ErrorCode.INVALID_INPUT, "유효하지 않은 이미지 ID: " + spec.id());
+                    throw new ProductInvalidInputException("유효하지 않은 이미지 ID: " + spec.id());
                 }
                 existing.update(spec.url(), ordering);
             }
@@ -172,16 +172,16 @@ public class Product extends BaseEntity {
 
     private static void validateProduct(String name, String description, BigDecimal pricePerDay, ProductCategory category) {
         if (name == null) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "상품명은 필수입니다.");
+            throw new ProductInvalidInputException("상품명은 필수입니다.");
         }
         if (description == null) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "상품 설명은 필수입니다.");
+            throw new ProductInvalidInputException("상품 설명은 필수입니다.");
         }
         if (pricePerDay == null || pricePerDay.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "대여 가격은 0보다 커야 합니다.");
+            throw new ProductInvalidInputException("대여 가격은 0보다 커야 합니다.");
         }
         if (category == null) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "카테고리는 필수입니다.");
+            throw new ProductInvalidInputException("카테고리는 필수입니다.");
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.coc.modi.product.product.infrastructure;
 
-import com.coc.modi.common.ErrorCode;
-import com.coc.modi.product.product.exception.ProductException;
+import com.coc.modi.product.product.exception.ProductInternalException;
+import com.coc.modi.product.product.exception.ProductInvalidInputException;
 
 import com.coc.modi.product.product.application.ImageStoragePort;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
     @Override
     public String upload(MultipartFile file, String dirName) {
         if (file.isEmpty()) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "파일이 비어 있습니다.");
+            throw new ProductInvalidInputException("파일이 비어 있습니다.");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -58,7 +58,7 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 
             return url;
         } catch (IOException e) {
-            throw new ProductException(ErrorCode.INTERNAL_ERROR, "S3 이미지 업로드 중 오류가 발생했습니다.", e);
+            throw new ProductInternalException("S3 이미지 업로드 중 오류가 발생했습니다.", e);
         }
     }
 
