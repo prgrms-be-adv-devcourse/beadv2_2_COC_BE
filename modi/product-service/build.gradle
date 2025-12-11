@@ -1,3 +1,13 @@
 dependencies {
+    // 공통 모듈 공유
     implementation project(':common')
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    // 배치 처리
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // AWS SDK BOM 및 S3 연동
+    implementation platform("software.amazon.awssdk:bom:2.28.0")
+    implementation "software.amazon.awssdk:s3"
 }
