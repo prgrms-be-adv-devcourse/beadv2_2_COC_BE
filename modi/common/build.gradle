@@ -7,3 +7,4 @@ jar {
     // 일반 JAR 생성만 활성화
     enabled = true
 }
+

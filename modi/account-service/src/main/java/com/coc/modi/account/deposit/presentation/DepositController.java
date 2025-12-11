@@ -8,6 +8,7 @@ import com.coc.modi.account.deposit.presentation.dto.DepositCancelRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositRequest;
 import com.coc.modi.account.deposit.presentation.dto.TossConfigResponse;
 import com.coc.modi.common.ApiResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,7 +25,7 @@ public class DepositController {
     // 예치금 충전 요청
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@RequestBody DepositRequest request,
-                                                                       Authentication authentication) {
+																	   Authentication authentication) {
 
         Long memberId = (Long) authentication.getPrincipal();
 

@@ -23,7 +23,7 @@ public class SellerController {
 
     @PostMapping("/api/sellers")
     public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-                                                                      Authentication authentication) {
+																	  Authentication authentication) {
         Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
         return ResponseEntity.ok(ApiResponse.ok(seller));
