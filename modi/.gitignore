@@ -12,6 +12,7 @@ HELP.md
 **/src/main/resources/application.yml
 *.yml
 .env
+.idea/
 ### STS ###
 .apt_generated/
 .classpath
