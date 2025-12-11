@@ -1,8 +1,8 @@
-package com.coc.modi.product.product.batch;
+package com.coc.modi.product.product.infrastructure.batch;
 
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductStatus;
-import com.coc.modi.product.search.ProductIndexService;
+import com.coc.modi.product.search.application.ProductIndexService;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;

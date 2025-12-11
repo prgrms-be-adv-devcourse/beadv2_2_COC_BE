@@ -2,7 +2,6 @@ package com.coc.modi.product.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.product.application.ProductService;
-import com.coc.modi.product.product.application.dto.*;
 import com.coc.modi.product.product.application.dto.ProductCommand;
 import com.coc.modi.product.product.application.dto.ProductResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
@@ -10,7 +9,7 @@ import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
 import com.coc.modi.product.product.presentation.dto.ProductRequest;
 import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
-import com.coc.modi.product.search.ProductSortType;
+import com.coc.modi.product.search.domain.ProductSortType;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

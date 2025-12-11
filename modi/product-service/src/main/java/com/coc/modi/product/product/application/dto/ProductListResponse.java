@@ -1,7 +1,7 @@
 package com.coc.modi.product.product.application.dto;
 
 import com.coc.modi.product.product.domain.ProductStatus;
-import com.coc.modi.product.search.ProductDocument;
+import com.coc.modi.product.search.domain.ProductDocument;
 
 import java.math.BigDecimal;
 

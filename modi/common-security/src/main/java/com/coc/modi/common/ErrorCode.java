@@ -25,6 +25,7 @@ public enum ErrorCode {
 	PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-404", "상품을 찾을 수 없습니다."),
 	PRODUCT_CONFLICT(HttpStatus.CONFLICT, "PRODUCT-409", "상품 상태가 요청과 충돌합니다."),
 	PRODUCT_INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT-500", "상품 처리 중 오류가 발생했습니다."),
+	PRODUCT_SEARCH_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PRODUCT-503", "상품 검색 기능을 이용할 수 없습니다."),
 
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
 	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다.");
