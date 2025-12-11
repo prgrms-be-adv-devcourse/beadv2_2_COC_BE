@@ -1,5 +1,6 @@
 package com.coc.modi.seller.seller.presentation;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerResponse;
@@ -22,7 +23,7 @@ public class SellerController {
 
     @PostMapping("/api/sellers")
     public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-                                                                      Authentication authentication) {
+																	  Authentication authentication) {
         Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
         return ResponseEntity.ok(ApiResponse.ok(seller));
