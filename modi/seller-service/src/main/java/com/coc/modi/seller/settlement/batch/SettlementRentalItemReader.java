@@ -6,10 +6,13 @@ import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
-
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
+
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.LAST_CURSOR;
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.PAGE;
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.SELLER_INDEX;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	private List<Long> sellerIds;
 	private int sellerIndex = 0;
 	private int page = 0;
+	private String lastCursor;
 	private final Deque<RentalItemInfo> buffer = new ArrayDeque<>();
 	
 	public SettlementRentalItemReader(RentalPort rentalPort,
@@ -52,13 +56,15 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
-		
 		this.sellerIds = loadSellerIds();
-		if (executionContext.containsKey("settlement.reader.sellerIndex")) {
-			this.sellerIndex = executionContext.getInt("settlement.reader.sellerIndex");
+		if (executionContext.containsKey(SELLER_INDEX)) {
+			this.sellerIndex = executionContext.getInt(SELLER_INDEX);
 		}
-		if (executionContext.containsKey("settlement.reader.page")) {
-			this.page = executionContext.getInt("settlement.reader.page");
+		if (executionContext.containsKey(PAGE)) {
+			this.page = executionContext.getInt(PAGE);
+		}
+		if (executionContext.containsKey(LAST_CURSOR)) {
+			this.lastCursor = executionContext.getString(LAST_CURSOR);
 		}
 	}
 	
@@ -91,6 +97,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 					continue;
 				}
 				buffer.addAll(content);
+				this.lastCursor = currentSellerId + ":" + page;
 				page++;
 			}
 			
@@ -103,9 +110,9 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void update(ExecutionContext executionContext) throws ItemStreamException {
-		
-		executionContext.putInt("settlement.reader.sellerIndex", sellerIndex);
-		executionContext.putInt("settlement.reader.page", page);
+		executionContext.putInt(SELLER_INDEX, sellerIndex);
+		executionContext.putInt(PAGE, page);
+		executionContext.putString(LAST_CURSOR, lastCursor);
 	}
 	
 	@Override
