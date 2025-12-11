@@ -13,4 +13,6 @@ public final class SettlementBatchContextKeys {
     public static final String FEE_AMOUNT = "settlement.feeAmount";
     public static final String TOTAL_COUNT = "settlement.totalCount";
     public static final String SUCCESS_COUNT = "settlement.successCount";
+    public static final String FAIL_COUNT = "settlement.failCount";
+    public static final String SKIP_COUNT = "settlement.skipCount";
 }

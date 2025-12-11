@@ -41,6 +41,7 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         int readCount = stepExecution.getReadCount();
         int writeCount = stepExecution.getWriteCount();
         int skipCount = stepExecution.getProcessSkipCount() + stepExecution.getReadSkipCount() + stepExecution.getWriteSkipCount();
+        int failCount = stepExecution.getFailureExceptions().size();
 
         String cursor = context.containsKey(LAST_CURSOR) ? context.getString(LAST_CURSOR) : null;
         BigDecimal totalAmount = getDecimal(context, TOTAL_AMOUNT);
@@ -60,6 +61,8 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         // jobExecutionContext에도 누적 정보를 담아 afterJob에서 합산할 수 있게 전달
         stepExecution.getJobExecution().getExecutionContext().put(TOTAL_AMOUNT, totalAmount);
         stepExecution.getJobExecution().getExecutionContext().put(FEE_AMOUNT, feeAmount);
+        stepExecution.getJobExecution().getExecutionContext().put(SKIP_COUNT, skipCount);
+        stepExecution.getJobExecution().getExecutionContext().put(FAIL_COUNT, failCount);
         if (cursor != null) {
             stepExecution.getJobExecution().getExecutionContext().put(LAST_CURSOR, cursor);
         }

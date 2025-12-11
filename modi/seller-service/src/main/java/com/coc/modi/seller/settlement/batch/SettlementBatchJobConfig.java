@@ -50,7 +50,8 @@ public class SettlementBatchJobConfig {
 										  PlatformTransactionManager transactionManager,
 										  SettlementRentalItemReader settlementRentalItemReader,
 										  SettlementAggregationProcessor settlementAggregationProcessor,
-										  SettlementAggregationWriter settlementAggregationWriter) {
+										  SettlementAggregationWriter settlementAggregationWriter,
+										  SettlementSkipListener settlementSkipListener) {
 		
 		return new StepBuilder("settlementAggregationStep", jobRepository)
 				.<RentalItemInfo, SettlementAggregationItem>chunk(chunkSize, transactionManager)
@@ -66,6 +67,7 @@ public class SettlementBatchJobConfig {
 				.skip(FeignException.BadRequest.class)
 				.skip(FeignException.NotFound.class)
 				.skipLimit(50)
+				.listener(settlementSkipListener)
 				.listener(stepListener)
 				.build();
 	}
@@ -107,6 +109,11 @@ public class SettlementBatchJobConfig {
 	@StepScope
 	public SettlementAggregationWriter settlementAggregationWriter() {
 		return new SettlementAggregationWriter(settlementAggregationService);
+	}
+	
+	@Bean
+	public SettlementSkipListener settlementSkipListener() {
+		return new SettlementSkipListener();
 	}
 	
 	@Bean

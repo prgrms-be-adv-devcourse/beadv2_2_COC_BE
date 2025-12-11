@@ -61,6 +61,14 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 .map(BigDecimal.class::cast)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        int failCount = jobExecution.getStepExecutions().stream()
+                .mapToInt(se -> se.getFailureExceptions().size())
+                .sum();
+
+        int skipCount = jobExecution.getStepExecutions().stream()
+                .mapToInt(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
+                .sum();
+
         String lastCursor = jobExecution.getStepExecutions().stream()
                 .sorted(Comparator.comparingLong(se -> se.getId()))
                 .map(se -> {
@@ -72,13 +80,13 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 .orElse(null);
 
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-            executionService.complete(executionId, readCount, writeCount, processSkip, totalAmount, feeAmount, lastCursor);
+            executionService.complete(executionId, readCount, writeCount, skipCount, totalAmount, feeAmount, lastCursor);
         } else {
             String errorMessage = jobExecution.getAllFailureExceptions().stream()
                     .findFirst()
                     .map(Throwable::getMessage)
                     .orElse("Batch failed");
-            executionService.fail(executionId, errorMessage, readCount, writeCount, processSkip, lastCursor);
+            executionService.fail(executionId, errorMessage, readCount, writeCount, skipCount + failCount, lastCursor);
         }
     }
 }
