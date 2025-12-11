@@ -1,5 +1,6 @@
 package com.coc.modi.seller.settlement.presentation;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
