@@ -3,23 +3,26 @@ package com.coc.modi.common.auth;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
-
-    private final String secretKey;
+	
+    private final Key signingKey;
     private final long accessTokenValidityInMs;
     private final long refreshTokenValidityInMs;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
                             @Value("${jwt.access-token-expiration}") long accessTokenValidityInMs,
                             @Value("${jwt.refresh-token-expiration}") long refreshTokenValidityInMs) {
-
-        this.secretKey = secretKey;
+		
+        this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidityInMs = accessTokenValidityInMs;
         this.refreshTokenValidityInMs = refreshTokenValidityInMs;
     }
@@ -47,7 +50,7 @@ public class JwtTokenProvider {
                 .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -75,8 +78,9 @@ public class JwtTokenProvider {
 
     private Claims getClaims(String token) {
 
-        return Jwts.parser()
-                .setSigningKey(secretKey)
+        return Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
