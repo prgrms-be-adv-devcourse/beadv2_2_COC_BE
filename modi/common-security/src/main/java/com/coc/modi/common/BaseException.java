@@ -25,13 +25,4 @@ public class BaseException extends RuntimeException {
 		this.detailMessage = detailMessage;
 	}
 	
-	public ErrorCode getErrorCode() {
-		
-		return errorCode;
-	}
-	
-	public String getDetailMessage() {
-		
-		return detailMessage;
-	}
 }

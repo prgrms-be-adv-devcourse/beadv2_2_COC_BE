@@ -17,7 +17,7 @@ public class OpenApiConfig {
 	public OpenAPI openAPI() {
 		
 		Server server = new Server();
-		server.setUrl("http://localhost:8080");
+		server.setUrl("http://localhost:8083");
 		
 		List<Server> servers = new ArrayList<>();
 		servers.add(server);

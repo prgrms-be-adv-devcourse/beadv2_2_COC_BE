@@ -11,14 +11,11 @@ import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprova
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelResponse;
 import com.coc.modi.account.wallet.application.WalletCommandService;
 import com.coc.modi.account.wallet.application.dto.WalletTransactionCommand;
-import com.coc.modi.common.ApiResponse;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.util.UUID;
