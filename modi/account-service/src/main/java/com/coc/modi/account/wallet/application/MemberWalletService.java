@@ -1,11 +1,14 @@
 package com.coc.modi.account.wallet.application;
 
+import com.coc.modi.account.wallet.exception.AccountNotFoundException;
 import com.coc.modi.account.wallet.application.dto.MemberWalletResponse;
 import com.coc.modi.account.wallet.application.dto.WalletTransactionResponse;
 import com.coc.modi.account.wallet.domain.MemberWallet;
 import com.coc.modi.account.wallet.domain.MemberWalletRepository;
 import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +27,7 @@ public class MemberWalletService {
     public MemberWalletResponse getMemberWalletBalance(Long memberId) {
 
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원의 예치금을 찾을 수 없습니다."));
+                .orElseThrow(() -> new AccountNotFoundException(memberId));
 
         return MemberWalletResponse.from(wallet);
     }
