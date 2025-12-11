@@ -4,9 +4,9 @@ import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
-
+import feign.FeignException;
+import feign.RetryableException;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -17,6 +17,8 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.backoff.BackOffPolicy;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -55,6 +57,15 @@ public class SettlementBatchJobConfig {
 				.reader(settlementRentalItemReader)
 				.processor(settlementAggregationProcessor)
 				.writer(settlementAggregationWriter)
+				.faultTolerant()
+				.retryLimit(3)
+				.retry(RetryableException.class)
+				.retry(FeignException.ServiceUnavailable.class)
+				.retry(FeignException.GatewayTimeout.class)
+				.backOffPolicy(settlementRetryBackOffPolicy())
+				.skip(FeignException.BadRequest.class)
+				.skip(FeignException.NotFound.class)
+				.skipLimit(50)
 				.listener(stepListener)
 				.build();
 	}
@@ -95,7 +106,15 @@ public class SettlementBatchJobConfig {
 	@Bean
 	@StepScope
 	public SettlementAggregationWriter settlementAggregationWriter() {
-		
 		return new SettlementAggregationWriter(settlementAggregationService);
+	}
+	
+	@Bean
+	public BackOffPolicy settlementRetryBackOffPolicy() {
+		ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+		backOffPolicy.setInitialInterval(1000L);
+		backOffPolicy.setMultiplier(2.0);
+		backOffPolicy.setMaxInterval(4000L);
+		return backOffPolicy;
 	}
 }
