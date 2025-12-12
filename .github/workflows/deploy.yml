@@ -29,7 +29,7 @@ jobs:
       # 3. Docker build & save (서비스별)
       - name: Build & save docker images
         run: |
-          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "modi-config" "modi-gateway" "modi-discovery")
+          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "review-service" "notification-service" "modi-config" "modi-gateway" "modi-discovery")
         
           for service in "${services[@]}"; do
             echo "Building $service ..."
