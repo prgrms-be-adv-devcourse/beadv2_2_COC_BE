@@ -1,14 +1,11 @@
 package com.coc.modi.product.product.application;
 
-import com.coc.modi.product.product.application.dto.*;
 import com.coc.modi.product.product.application.dto.ProductBulkResponse;
 import com.coc.modi.product.product.application.dto.ProductCommand;
-import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
-import com.coc.modi.product.product.application.dto.RentalResponse;
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductCategory;
 import com.coc.modi.product.product.domain.ProductImage;
@@ -17,117 +14,30 @@ import com.coc.modi.product.product.domain.ProductRepository;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.product.infrastructure.client.RentalFeignClient;
 import com.coc.modi.product.product.infrastructure.client.SellerFeignClient;
-import com.coc.modi.product.product.presentation.dto.RentalRequest;
-import com.coc.modi.product.search.ProductDocument;
-import com.coc.modi.product.search.ProductIndexService;
-import com.coc.modi.product.search.ProductSearchQueryRepository;
-import com.coc.modi.product.search.ProductSearchRepository;
-import com.coc.modi.product.search.ProductSortType;
+import com.coc.modi.product.search.application.ProductIndexService;
+import com.coc.modi.product.search.application.ProductSearchPort;
+import com.coc.modi.product.search.domain.ProductSortType;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
-    // TODO: 사용자 검증 로직 추가
-
     private final ProductRepository repository;
-    private final ProductSearchRepository searchRepository;
-    private final ProductSearchQueryRepository searchQueryRepository;
-    private final ProductIndexService indexService;
+	private final ProductSearchPort searchPort;
 	private final SellerFeignClient sellerFeignClient;
-	private final RentalFeignClient rentalFeignClient;
-
-    // 3-1. 상품 목록 조회 검색 기능
+	private final ProductIndexService indexService;
+	
+	// 3-1. 상품 목록 조회 검색 기능
     @Transactional(readOnly = true)
     public ProductScrollResponse searchProducts(ProductSearchCondition condition, String cursor, int size, ProductSortType sortType) {
 		
-		ProductSortType effectiveSortType = sortType != null ? sortType : condition.effectiveSortType();
-		
-		List<ProductListResponse> items = new ArrayList<>();
-		String currentCursor = cursor;
-		boolean hasMoreFromEs = true;
-		int safetyLimit = 5;
-		
-		List<ProductDocument> lastDocsBatch = List.of();
-		
-		while (items.size() < size && hasMoreFromEs && safetyLimit-- > 0) {
-			
-			// ES에서 1차 검색
-			List<ProductDocument> docs = searchQueryRepository.search(condition, currentCursor, size, effectiveSortType);
-			
-			if (docs.isEmpty()) {
-				hasMoreFromEs = false;
-				break;
-			}
-			
-			lastDocsBatch = docs;
-			
-			List<ProductDocument> availableDocs = docs;
-			
-			// 렌탈 기간 필터가 있는 경우(대여 불가 상품 제거)
-			if (condition.hasRentalPeriod()) {
-				List<Long> productIds = docs.stream()
-						.map(ProductDocument::getId)
-						.toList();
-				
-				if(!productIds.isEmpty()) {
-					RentalRequest request = new RentalRequest(condition.startDate(), condition.endDate(), productIds);
-					
-					RentalResponse rentalResponse = rentalFeignClient.unavailableProducts(request);
-					
-					Set<Long> unavailableIds = new HashSet<>(
-							Optional.ofNullable(rentalResponse)
-									.map(RentalResponse::unavailableProductIds)
-									.orElseGet(List::of)
-					);
-					
-					availableDocs = docs.stream()
-							.filter(doc -> !unavailableIds.contains(doc.getId())).toList();
-				}
-			}
-			
-			// 대여 가능한 리스트만 item에 추가
-			items.addAll(availableDocs.stream()
-					.map(ProductListResponse::from)
-					.toList());
-			
-			// cursor 갱신
-			currentCursor = buildNextCursor(docs, effectiveSortType);
-			hasMoreFromEs = docs.size() == size && currentCursor != null;
-		}
-		
-		// items가 빈 경우
-		if (items.isEmpty()) {
-			return new ProductScrollResponse(List.of(), null, false);
-		}
-		
-		// size보다 많이 쌓인 경우 잘라주기
-		if (items.size() > size) {
-			items = items.subList(0, size);
-		}
-		
-		// 결과 반환
-		String nextCursor = (hasMoreFromEs && !lastDocsBatch.isEmpty())
-				? currentCursor
-				: null;
-		
-		boolean hasNext = hasMoreFromEs;
-		
-		return new ProductScrollResponse(items, nextCursor, hasNext);
+		return searchPort.searchProducts(condition, cursor, size, sortType);
     }
 
     // 3-2. 상품 상세 조회
@@ -160,7 +70,7 @@ public class ProductService {
         updateThumbnailFromFirstImage(saved);
 
         // ES 인덱싱
-        indexService.index(saved);
+		indexService.index(saved);
 
         return ProductResponse.from(saved);
     }
@@ -191,8 +101,8 @@ public class ProductService {
         }
 
         repository.saveAndFlush(product);
-
-        indexService.index(product);
+		
+		indexService.index(product);
 
         return ProductResponse.from(product);
     }
@@ -220,50 +130,6 @@ public class ProductService {
                 .map(ProductBulkResponse::from)
                 .toList();
     }
-	
-	// 다음 커서
-	private String buildNextCursor(List<ProductDocument> docs, ProductSortType sortType) {
-		return switch (sortType) {
-			case LATEST, OLDEST -> {
-				// 뒤에서부터 createdAt 이 있는 문서를 찾음
-				ProductDocument target = null;
-				for (int i = docs.size() - 1; i >= 0; i--) {
-					if (docs.get(i).getCreatedAt() != null) {
-						target = docs.get(i);
-						break;
-					}
-				}
-				
-				if (target == null) {
-					// createdAt 이 하나도 없는 배치면 커서를 만들 수 없음
-					yield null;
-				}
-				
-				String rawCursor = target.getCreatedAt().toString();
-				
-				yield Base64.getUrlEncoder()
-						.encodeToString(rawCursor.getBytes(StandardCharsets.UTF_8));
-			}
-			case PRICE_HIGH, PRICE_LOW -> {
-				ProductDocument target = null;
-				for (int i = docs.size() - 1; i >= 0; i--) {
-					if (docs.get(i).getPricePerDay() != null) {
-						target = docs.get(i);
-						break;
-					}
-				}
-				
-				if (target == null) {
-					yield null;
-				}
-				
-				BigDecimal price = target.getPricePerDay();
-				Long id = target.getId();
-				
-				yield price.toPlainString() + ":" + id;
-			}
-		};
-	}
 
     // 상품에 이미지 추가하기
     private void addImages(Product product, List<String> imageUrls) {
@@ -312,10 +178,10 @@ public class ProductService {
 
         if (status == ProductStatus.DELETE) {
             // 완전 삭제 → ES에서도 제거
-            searchRepository.deleteById(productId);
+			searchPort.deleteById(productId);
         } else {
             // ACTIVE/INACTIVE 등의 상태 변경 → ES 문서 갱신
-            indexService.index(product);
+			indexService.index(product);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.coc.modi.product.search;
+package com.coc.modi.product.search.domain;
 
 import com.coc.modi.product.product.domain.Product;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import java.time.ZoneOffset;
 
 @Getter
 @NoArgsConstructor
-@Document(indexName = "products") // ES 인덱스 이름
+@Document(indexName = "products", createIndex = false) // ES 인덱스 이름
 public class ProductDocument {
 
     @Id

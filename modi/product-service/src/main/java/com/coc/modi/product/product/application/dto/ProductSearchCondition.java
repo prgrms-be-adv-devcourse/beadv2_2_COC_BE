@@ -1,7 +1,7 @@
 package com.coc.modi.product.product.application.dto;
 
 import com.coc.modi.product.product.domain.ProductCategory;
-import com.coc.modi.product.search.ProductSortType;
+import com.coc.modi.product.search.domain.ProductSortType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
