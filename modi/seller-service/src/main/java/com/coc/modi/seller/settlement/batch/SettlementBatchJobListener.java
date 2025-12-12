@@ -38,15 +38,19 @@ public class SettlementBatchJobListener implements JobExecutionListener {
             return;
         }
 
-        int readCount = (int) jobExecution.getStepExecutions().stream()
+        long readCount = jobExecution.getStepExecutions().stream()
                 .mapToLong(se -> se.getReadCount())
                 .sum();
-        int writeCount = (int) jobExecution.getStepExecutions().stream()
+        long writeCount = jobExecution.getStepExecutions().stream()
                 .mapToLong(se -> se.getWriteCount())
                 .sum();
-        int processSkip = (int) jobExecution.getStepExecutions().stream()
+        long skipCount = jobExecution.getStepExecutions().stream()
                 .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
                 .sum();
+        long failureCount = jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getFailureExceptions().size())
+                .sum();
+        long failTotal = skipCount + failureCount;
 
         BigDecimal totalAmount = jobExecution.getStepExecutions().stream()
                 .map(se -> se.getExecutionContext().get(TOTAL_AMOUNT))
@@ -60,14 +64,6 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 .map(BigDecimal.class::cast)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int failCount = jobExecution.getStepExecutions().stream()
-                .mapToInt(se -> se.getFailureExceptions().size())
-                .sum();
-
-        int skipCount = (int) jobExecution.getStepExecutions().stream()
-                .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
-                .sum();
-
         String lastCursor = jobExecution.getStepExecutions().stream()
                 .sorted(Comparator.comparingLong(se -> se.getId()))
                 .map(se -> {
@@ -79,13 +75,28 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 .orElse(null);
 
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-            executionService.complete(executionId, readCount, writeCount, skipCount, totalAmount, feeAmount, lastCursor);
+            executionService.complete(
+                    executionId,
+                    Math.toIntExact(readCount),
+                    Math.toIntExact(writeCount),
+                    Math.toIntExact(failTotal),
+                    totalAmount,
+                    feeAmount,
+                    lastCursor
+            );
         } else {
             String errorMessage = jobExecution.getAllFailureExceptions().stream()
                     .findFirst()
                     .map(Throwable::getMessage)
                     .orElse("Batch failed");
-            executionService.fail(executionId, errorMessage, readCount, writeCount, skipCount + failCount, lastCursor);
+            executionService.fail(
+                    executionId,
+                    errorMessage,
+                    Math.toIntExact(readCount),
+                    Math.toIntExact(writeCount),
+                    Math.toIntExact(failTotal),
+                    lastCursor
+            );
         }
     }
 }

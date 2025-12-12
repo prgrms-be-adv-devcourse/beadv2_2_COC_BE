@@ -39,7 +39,8 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         long readCount = stepExecution.getReadCount();
         long writeCount = stepExecution.getWriteCount();
         long skipCount = stepExecution.getProcessSkipCount() + stepExecution.getReadSkipCount() + stepExecution.getWriteSkipCount();
-        int failCount = stepExecution.getFailureExceptions().size();
+        long failureCount = stepExecution.getFailureExceptions().size();
+        long failTotal = skipCount + failureCount;
 
         String cursor = context.containsKey(LAST_CURSOR) ? context.getString(LAST_CURSOR) : null;
         BigDecimal totalAmount = getDecimal(context, TOTAL_AMOUNT);
@@ -49,9 +50,9 @@ public class SettlementBatchStepListener implements StepExecutionListener {
                 executionId,
                 stepExecution.getStepName(),
                 cursor,
-				Math.toIntExact(readCount),
-				Math.toIntExact(writeCount),
-				Math.toIntExact(skipCount),
+                Math.toIntExact(readCount),
+                Math.toIntExact(writeCount),
+                Math.toIntExact(failTotal),
                 duration,
                 stepExecution.getExitStatus().getExitDescription()
         );
@@ -60,7 +61,7 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         stepExecution.getJobExecution().getExecutionContext().put(TOTAL_AMOUNT, totalAmount);
         stepExecution.getJobExecution().getExecutionContext().put(FEE_AMOUNT, feeAmount);
         stepExecution.getJobExecution().getExecutionContext().put(SKIP_COUNT, skipCount);
-        stepExecution.getJobExecution().getExecutionContext().put(FAIL_COUNT, failCount);
+        stepExecution.getJobExecution().getExecutionContext().put(FAIL_COUNT, failTotal);
         if (cursor != null) {
             stepExecution.getJobExecution().getExecutionContext().put(LAST_CURSOR, cursor);
         }

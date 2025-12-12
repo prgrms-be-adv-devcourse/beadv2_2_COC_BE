@@ -82,9 +82,6 @@ public class SettlementBatchJobConfig {
 			@Value("#{jobParameters['pageSize']}") Integer pageSize
 	) {
 		
-		if (periodYm == null || periodYm.isBlank()) {
-			throw new IllegalArgumentException("periodYm is required");
-		}
 		if (startDate == null || startDate.isBlank() || endDate == null || endDate.isBlank()) {
 			throw new IllegalArgumentException("startDate and endDate are required");
 		}
