@@ -2,7 +2,6 @@ package com.coc.modi.seller.settlement.batch;
 
 import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.*;
 
-import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
@@ -31,11 +30,6 @@ public class SettlementBatchStepListener implements StepExecutionListener {
             return stepExecution.getExitStatus();
         }
         ExecutionContext context = stepExecution.getExecutionContext();
-        Long startedAt = context.getLong(STEP_STARTED_AT, System.currentTimeMillis());
-        long duration = System.currentTimeMillis() - startedAt;
-
-        long readCount = stepExecution.getReadCount();
-        long writeCount = stepExecution.getWriteCount();
         long skipCount = stepExecution.getProcessSkipCount() + stepExecution.getReadSkipCount() + stepExecution.getWriteSkipCount();
         long failureCount = stepExecution.getFailureExceptions().size();
         long failTotal = skipCount + failureCount;
