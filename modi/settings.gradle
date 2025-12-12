@@ -2,9 +2,14 @@ rootProject.name = 'modi'
 
 include(
         'common',
+        'common-security',
+        'common-openapi',
         'account-service',
         'product-service',
         'rental-service',
         'seller-service',
-        'member-service'
+        'member-service',
+        'modi-gateway',
+        'modi-discovery',
+        'modi-config'
 )

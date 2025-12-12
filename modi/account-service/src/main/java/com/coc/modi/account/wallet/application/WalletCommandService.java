@@ -1,14 +1,19 @@
 package com.coc.modi.account.wallet.application;
 
+import com.coc.modi.account.wallet.exception.AccountAlreadyExistsException;
+import com.coc.modi.account.wallet.exception.AccountNotFoundException;
+import com.coc.modi.account.wallet.exception.InsufficientBalanceException;
 import com.coc.modi.account.wallet.application.dto.RentalPaymentCommand;
 import com.coc.modi.account.wallet.application.dto.RentalPaymentResponse;
 import com.coc.modi.account.wallet.application.dto.RentalRefundCommand;
 import com.coc.modi.account.wallet.application.dto.WalletTransactionCommand;
 import com.coc.modi.account.wallet.domain.MemberWallet;
-import com.coc.modi.account.wallet.domain.WalletTransaction;
 import com.coc.modi.account.wallet.domain.MemberWalletRepository;
+import com.coc.modi.account.wallet.domain.WalletTransaction;
 import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +34,7 @@ public class WalletCommandService {
         memberWalletRepository.findByMemberId(memberId)
                 .ifPresent(memberWallet -> {
 
-                    throw new IllegalStateException("이미 지갑이 존재합니다.");
+                    throw new AccountAlreadyExistsException(String.valueOf(memberId));
                 });
 
         MemberWallet wallet = MemberWallet.create(memberId);
@@ -45,7 +50,7 @@ public class WalletCommandService {
 
         // 1. 예치금 조회
         MemberWallet wallet = memberWalletRepository.findByMemberId(command.memberId())
-                .orElseThrow(() -> new IllegalArgumentException("지갑 없음"));
+                .orElseThrow(() -> new AccountNotFoundException(command.memberId()));
 
         // 2. txType에 따라 예치금 입금, 차감 결정
         BigDecimal signedAmount = switch (command.txType()) {
@@ -59,7 +64,7 @@ public class WalletCommandService {
         // 2-1. 잔액 부족 체크
         if (balanceAfter.compareTo(BigDecimal.ZERO) < 0) {
 
-            throw new IllegalStateException("잔액 부족");
+            throw new InsufficientBalanceException("잔액 부족");
         }
 
         // 3. WalletTransaction 생성
@@ -98,7 +103,7 @@ public class WalletCommandService {
 
         // 차감 후 지갑 상태 조회
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("지갑 없음"));
+                .orElseThrow(() -> new AccountNotFoundException(memberId));
 
         return RentalPaymentResponse.from(wallet);
     }
@@ -119,7 +124,7 @@ public class WalletCommandService {
         createTransactionAndUpdateBalance(txCommand);
 
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("지갑 없음"));
+                .orElseThrow(() -> new AccountNotFoundException(memberId));
 
         return RentalPaymentResponse.from(wallet);
     }
