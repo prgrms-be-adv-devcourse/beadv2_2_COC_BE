@@ -30,15 +30,18 @@ public class SettlementAggregationService {
                                           Long memberId,
                                           Long productId,
                                           BigDecimal rentalAmount) {
-        SettlementBatch batch = null;
+        final SettlementBatch batch;
         if (batchId != null) {
             batch = settlementBatchRepository.findById(batchId)
                     .orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. id=" + batchId));
+        } else {
+            batch = null;
         }
-
+        
         SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm)
                 .orElseGet(() -> SellerSettlement.create(batch, sellerId, periodYm));
-
+        
+        
         // TODO: rentalItemId 중복 방지 필요 시 체크
         BigDecimal feeAmount = rentalAmount.multiply(FEE_RATE).setScale(2, RoundingMode.HALF_UP);
 
