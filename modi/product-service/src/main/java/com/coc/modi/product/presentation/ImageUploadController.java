@@ -1,5 +1,6 @@
 package com.coc.modi.product.presentation;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ImageStoragePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class ImageUploadController {
     // 3-3. 상품 이미지 등록
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<String>> upload(@RequestParam("file") MultipartFile file,
-                                                      @RequestParam(value = "dir", required = false) String dir) {
+													  @RequestParam(value = "dir", required = false) String dir) {
         String imageUrl = imageStoragePort.upload(file, dir);
 
         return ResponseEntity.ok(ApiResponse.ok(imageUrl));
