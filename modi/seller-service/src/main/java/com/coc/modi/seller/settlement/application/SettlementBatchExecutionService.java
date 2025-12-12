@@ -1,5 +1,6 @@
 package com.coc.modi.seller.settlement.application;
 
+import com.coc.modi.seller.exception.SettlementBatchExecutionNotFoundException;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecution;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLog;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogRepository;
@@ -31,7 +32,7 @@ public class SettlementBatchExecutionService {
                          BigDecimal feeAmount,
                          String lastCursor) {
         SettlementBatchExecution execution = executionRepository.findById(executionId)
-                .orElseThrow(() -> new IllegalArgumentException("Execution not found. id=" + executionId));
+                .orElseThrow(() -> new SettlementBatchExecutionNotFoundException("배치 실행을 찾을 수 없습니다. id=" + executionId));
         execution.complete(totalCount, successCount, failCount, totalAmount, feeAmount, lastCursor);
     }
 
@@ -42,7 +43,7 @@ public class SettlementBatchExecutionService {
                      Integer failCount,
                      String lastCursor) {
         SettlementBatchExecution execution = executionRepository.findById(executionId)
-                .orElseThrow(() -> new IllegalArgumentException("Execution not found. id=" + executionId));
+                .orElseThrow(() -> new SettlementBatchExecutionNotFoundException("배치 실행을 찾을 수 없습니다. id=" + executionId));
         execution.fail(errorMessage, totalCount, successCount, failCount, lastCursor);
     }
 
@@ -55,7 +56,7 @@ public class SettlementBatchExecutionService {
                     Long durationMs,
                     String errorMessage) {
         SettlementBatchExecution execution = executionRepository.findById(executionId)
-                .orElseThrow(() -> new IllegalArgumentException("Execution not found. id=" + executionId));
+                .orElseThrow(() -> new SettlementBatchExecutionNotFoundException("배치 실행을 찾을 수 없습니다. id=" + executionId));
         SettlementBatchExecutionLog log = SettlementBatchExecutionLog.builder()
                 .execution(execution)
                 .stepName(stepName)

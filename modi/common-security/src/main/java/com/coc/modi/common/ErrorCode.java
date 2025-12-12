@@ -19,6 +19,16 @@ public enum ErrorCode {
 	RENTAL_STATUS_INVALID(HttpStatus.CONFLICT, "RENTAL-409", "허용되지 않은 대여 상태 변경입니다."),
 	RENTAL_MEMBER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-403", "대여 요청자와 요청 멤버가 일치하지 않습니다."),
 	RENTAL_SELLER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-SELLER-403", "판매자 정보가 일치하지 않습니다."),
+
+	PRODUCT_INVALID_INPUT(HttpStatus.BAD_REQUEST, "PRODUCT-400", "잘못된 상품 요청입니다."),
+	PRODUCT_FORBIDDEN(HttpStatus.FORBIDDEN, "PRODUCT-403", "상품 접근 권한이 없습니다."),
+	PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-404", "상품을 찾을 수 없습니다."),
+	PRODUCT_CONFLICT(HttpStatus.CONFLICT, "PRODUCT-409", "상품 상태가 요청과 충돌합니다."),
+	PRODUCT_INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT-500", "상품 처리 중 오류가 발생했습니다."),
+	PRODUCT_SEARCH_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PRODUCT-503", "상품 검색 기능을 이용할 수 없습니다."),
+
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
+	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다."),
 	
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-404", "회원 정보를 찾을 수 없습니다."),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-EMAIL-409", "이미 사용 중인 이메일입니다."),
@@ -33,7 +43,15 @@ public enum ErrorCode {
 	ACCOUNT_ALREADY_EXISTS(HttpStatus.CONFLICT, "ACCOUNT-409", "계정이 이미존재합니다."),
 	ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "ACCOUNT-LOCKED-403", "잠긴 계정입니다."),
 	ACCOUNT_UNVERIFIED(HttpStatus.FORBIDDEN, "ACCOUNT-UNVERIFIED-403", "인증되지 않은 계정입니다."),
-	ACCOUNT_TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-TXN-404", "거래 정보를 찾을 수 없습니다.");
+	ACCOUNT_TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-TXN-404", "거래 정보를 찾을 수 없습니다."),
+	
+	SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-404", "판매자를 찾을 수 없습니다."),
+	SELLER_DUPLICATE(HttpStatus.CONFLICT, "SELLER-409", "이미 등록된 판매자입니다."),
+	SETTLEMENT_BATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-404", "정산 배치를 찾을 수 없습니다."),
+	SETTLEMENT_BATCH_DUPLICATE(HttpStatus.CONFLICT, "SETTLEMENT-BATCH-409", "이미 생성된 정산 배치입니다."),
+	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),
+	SELLER_SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-SETTLEMENT-404", "정산서를 찾을 수 없습니다."),
+	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다.");
 	
 	private final HttpStatus status;
 	private final String code;
