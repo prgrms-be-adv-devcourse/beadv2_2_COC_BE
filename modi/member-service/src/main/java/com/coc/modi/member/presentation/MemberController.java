@@ -1,12 +1,12 @@
 package com.coc.modi.member.presentation;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.member.application.MemberService;
 import com.coc.modi.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.presentation.dto.MemberSignupRequest;
 import com.coc.modi.member.presentation.dto.MemberUpdateRequest;
 import com.coc.modi.member.presentation.dto.MemberPasswordUpdateRequest;
-import com.coc.modi.common.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 

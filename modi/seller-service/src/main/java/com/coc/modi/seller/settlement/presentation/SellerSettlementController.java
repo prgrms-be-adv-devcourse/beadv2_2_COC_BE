@@ -29,8 +29,8 @@ public class SellerSettlementController {
 
     @GetMapping("/api/settlements/sellers/me")
     public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(Authentication authentication,
-                                                                                        @RequestParam(value = "periodYm", required = false) String periodYm,
-                                                                                        Pageable pageable) {
+																						@RequestParam(value = "periodYm", required = false) String periodYm,
+																						Pageable pageable) {
         Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.getSellerByMemberId(memberId);
         Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
