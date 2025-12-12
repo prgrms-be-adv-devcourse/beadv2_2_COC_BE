@@ -2,7 +2,10 @@ dependencies {
     // 공통 모듈 공유
     implementation project(':common')
 
+    implementation 'co.elastic.clients:elasticsearch-java:8.18.0'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.18.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // 배치 처리
     implementation 'org.springframework.boot:spring-boot-starter-batch'

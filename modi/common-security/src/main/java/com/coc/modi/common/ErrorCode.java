@@ -19,6 +19,16 @@ public enum ErrorCode {
 	RENTAL_STATUS_INVALID(HttpStatus.CONFLICT, "RENTAL-409", "허용되지 않은 대여 상태 변경입니다."),
 	RENTAL_MEMBER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-403", "대여 요청자와 요청 멤버가 일치하지 않습니다."),
 	RENTAL_SELLER_MISMATCH(HttpStatus.FORBIDDEN, "RENTAL-SELLER-403", "판매자 정보가 일치하지 않습니다."),
+
+	PRODUCT_INVALID_INPUT(HttpStatus.BAD_REQUEST, "PRODUCT-400", "잘못된 상품 요청입니다."),
+	PRODUCT_FORBIDDEN(HttpStatus.FORBIDDEN, "PRODUCT-403", "상품 접근 권한이 없습니다."),
+	PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-404", "상품을 찾을 수 없습니다."),
+	PRODUCT_CONFLICT(HttpStatus.CONFLICT, "PRODUCT-409", "상품 상태가 요청과 충돌합니다."),
+	PRODUCT_INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT-500", "상품 처리 중 오류가 발생했습니다."),
+	PRODUCT_SEARCH_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PRODUCT-503", "상품 검색 기능을 이용할 수 없습니다."),
+
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
+	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다.");
 	
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-404", "회원 정보를 찾을 수 없습니다."),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-EMAIL-409", "이미 사용 중인 이메일입니다."),
