@@ -1,7 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
-import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
@@ -39,14 +38,14 @@ public class SettlementBatchJobListener implements JobExecutionListener {
             return;
         }
 
-        int readCount = jobExecution.getStepExecutions().stream()
-                .mapToInt(se -> se.getReadCount())
+        int readCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getReadCount())
                 .sum();
-        int writeCount = jobExecution.getStepExecutions().stream()
-                .mapToInt(se -> se.getWriteCount())
+        int writeCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getWriteCount())
                 .sum();
-        int processSkip = jobExecution.getStepExecutions().stream()
-                .mapToInt(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
+        int processSkip = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
                 .sum();
 
         BigDecimal totalAmount = jobExecution.getStepExecutions().stream()
@@ -65,8 +64,8 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 .mapToInt(se -> se.getFailureExceptions().size())
                 .sum();
 
-        int skipCount = jobExecution.getStepExecutions().stream()
-                .mapToInt(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
+        int skipCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
                 .sum();
 
         String lastCursor = jobExecution.getStepExecutions().stream()

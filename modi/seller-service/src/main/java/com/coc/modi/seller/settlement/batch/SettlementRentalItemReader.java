@@ -142,9 +142,9 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	}
 	
 	private void moveToNextSeller() {
-		
 		sellerIndex++;
 		page = 0;
+		lastCursor = null;
 		buffer.clear();
 	}
 }

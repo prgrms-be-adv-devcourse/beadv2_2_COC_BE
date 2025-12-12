@@ -1,5 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.*;
+
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.ExitStatus;
@@ -9,10 +11,6 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.FEE_AMOUNT;
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.LAST_CURSOR;
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.TOTAL_AMOUNT;
 
 @Component
 @RequiredArgsConstructor
@@ -38,9 +36,9 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         Long startedAt = context.getLong(STEP_STARTED_AT, System.currentTimeMillis());
         long duration = System.currentTimeMillis() - startedAt;
 
-        int readCount = stepExecution.getReadCount();
-        int writeCount = stepExecution.getWriteCount();
-        int skipCount = stepExecution.getProcessSkipCount() + stepExecution.getReadSkipCount() + stepExecution.getWriteSkipCount();
+        long readCount = stepExecution.getReadCount();
+        long writeCount = stepExecution.getWriteCount();
+        long skipCount = stepExecution.getProcessSkipCount() + stepExecution.getReadSkipCount() + stepExecution.getWriteSkipCount();
         int failCount = stepExecution.getFailureExceptions().size();
 
         String cursor = context.containsKey(LAST_CURSOR) ? context.getString(LAST_CURSOR) : null;
@@ -51,9 +49,9 @@ public class SettlementBatchStepListener implements StepExecutionListener {
                 executionId,
                 stepExecution.getStepName(),
                 cursor,
-                readCount,
-                writeCount,
-                skipCount,
+				Math.toIntExact(readCount),
+				Math.toIntExact(writeCount),
+				Math.toIntExact(skipCount),
                 duration,
                 stepExecution.getExitStatus().getExitDescription()
         );
