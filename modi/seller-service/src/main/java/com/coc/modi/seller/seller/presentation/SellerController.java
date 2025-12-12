@@ -43,7 +43,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/api/sellers/me/rentals")
+	@GetMapping("/api/sellers/self/rentals")
 	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(Authentication authentication,
 																				@RequestParam(value = "productId", required = false) Long productId,
 																				@RequestParam(value = "status") String status,

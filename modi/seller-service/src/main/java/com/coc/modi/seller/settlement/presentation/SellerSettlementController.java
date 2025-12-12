@@ -35,17 +35,17 @@ public class SellerSettlementController {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    @GetMapping("/api/settlements/sellers/me")
+    @GetMapping("/api/settlements/sellers/self")
     public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(Authentication authentication,
-																						@RequestParam(value = "periodYm", required = false) String periodYm,
-																						Pageable pageable) {
+												@RequestParam(value = "periodYm", required = false) String periodYm,
+												Pageable pageable) {
         Long memberId = (Long) authentication.getPrincipal();
         SellerResponse seller = sellerService.getSellerByMemberId(memberId);
         Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
         return ResponseEntity.ok(ApiResponse.ok(settlements));
     }
 
-    @GetMapping("/api/settlements/sellers/me/{sellerSettlementId}")
+    @GetMapping("/api/settlements/sellers/self/{sellerSettlementId}")
     public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(Authentication authentication,
                                                                                  @PathVariable Long sellerSettlementId) {
         Long memberId = (Long) authentication.getPrincipal();
@@ -54,7 +54,7 @@ public class SellerSettlementController {
         return ResponseEntity.ok(ApiResponse.ok(settlement));
     }
 
-    @GetMapping("/api/settlements/sellers/me/{sellerSettlementId}/lines")
+    @GetMapping("/api/settlements/sellers/self/{sellerSettlementId}/lines")
     public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(Authentication authentication,
                                                                                                 @PathVariable Long sellerSettlementId) {
         Long memberId = (Long) authentication.getPrincipal();
@@ -63,7 +63,7 @@ public class SellerSettlementController {
         return ResponseEntity.ok(ApiResponse.ok(lines));
     }
 
-    @PostMapping("/api/settlements/sellers/me/{sellerSettlementId}/pay")
+    @PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/pay")
     public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(Authentication authentication,
                                                                                  @PathVariable Long sellerSettlementId,
                                                                                  @RequestParam(value = "paidAt", required = false) String paidAt) {
@@ -74,7 +74,7 @@ public class SellerSettlementController {
         return ResponseEntity.ok(ApiResponse.ok(settlement));
     }
 
-    @PostMapping("/api/settlements/sellers/me/{sellerSettlementId}/cancel")
+    @PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/cancel")
     public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(Authentication authentication,
                                                                                     @PathVariable Long sellerSettlementId) {
         Long memberId = (Long) authentication.getPrincipal();
