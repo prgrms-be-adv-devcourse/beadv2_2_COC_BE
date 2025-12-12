@@ -51,6 +51,8 @@ public class RentalLifecycleService {
 			throw RentalAccessDeniedException.memberMismatch(rentalItem.getRental().getId(), memberId);
 		}
 		
+		if (re)
+		
 		rentalItem.cancelByMemberRequest();
 		
 		Rental rental = rentalItem.getRental();

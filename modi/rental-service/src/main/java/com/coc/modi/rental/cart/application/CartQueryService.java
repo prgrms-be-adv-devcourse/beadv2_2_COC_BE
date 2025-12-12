@@ -3,6 +3,7 @@ package com.coc.modi.rental.cart.application;
 import com.coc.modi.rental.cart.application.dto.CartItemResponse;
 import com.coc.modi.rental.cart.application.dto.CartResponse;
 import com.coc.modi.rental.cart.domain.Cart;
+import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
 import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
@@ -33,7 +34,7 @@ public class CartQueryService {
         }
 
         List<Long> productIds = cart.getItems().stream()
-                .map(item -> item.getProductId())
+                .map(CartItem::getProductId)
                 .distinct()
                 .toList();
 

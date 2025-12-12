@@ -1,6 +1,9 @@
 package com.coc.modi.rental.rental.domain;
 
 import com.coc.modi.common.BaseEntity;
+import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
+import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -282,7 +285,17 @@ public class RentalItem extends BaseEntity {
 		
 		if (this.status == RentalItemStatus.CANCELED) {
 			
-			throw new IllegalStateException("이미 취소된 대여입니다. rentalStatus: " + this.status);
+			throw new RentalStatusInvalidException("");
+		}
+		
+		if (this.status == RentalItemStatus.RETURNED) {
+			
+			throw new RentalStatusInvalidException("이미 반납된 상품은 취소 할 수 없습니다.");
+		}
+		
+		if (this.status == RentalItemStatus.REJECTED) {
+			
+			throw new RentalStatusInvalidException("이미 거절된 상품은 취소 할 수 없습니다.");
 		}
 		
 		markCanceled();

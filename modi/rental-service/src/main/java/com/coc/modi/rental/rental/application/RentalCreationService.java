@@ -144,6 +144,8 @@ public class RentalCreationService {
 		rentalTotalAmount = rentalTotalAmount.add(rentalItem.calculateRentalAmount());
 		
 		rental.updateTotalAmount(rentalTotalAmount);
+		rentalRepository.save(rental);
+		
 		logCreatedEvent(rental);
 	}
 	
