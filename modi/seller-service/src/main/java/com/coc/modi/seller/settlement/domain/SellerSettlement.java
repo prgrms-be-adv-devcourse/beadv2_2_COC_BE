@@ -9,6 +9,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -33,8 +35,9 @@ public class SellerSettlement extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "batch_id")
-    private Long batchId;
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    private SettlementBatch batch;
 
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
@@ -61,8 +64,12 @@ public class SellerSettlement extends BaseEntity {
     @OneToMany(mappedBy = "sellerSettlement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SellerSettlementLine> lines = new ArrayList<>();
 
+    public Long getBatchId() {
+        return batch != null ? batch.getId() : null;
+    }
+
     @Builder
-    private SellerSettlement(Long batchId,
+    private SellerSettlement(SettlementBatch batch,
                              Long sellerId,
                              String periodYm,
                              BigDecimal totalRentalAmount,
@@ -70,7 +77,7 @@ public class SellerSettlement extends BaseEntity {
                              BigDecimal settlementAmount,
                              SellerSettlementStatus status,
                              LocalDateTime paidAt) {
-        this.batchId = batchId;
+        this.batch = batch;
         this.sellerId = sellerId;
         this.periodYm = periodYm;
         this.totalRentalAmount = totalRentalAmount != null ? totalRentalAmount : ZERO;
@@ -80,11 +87,11 @@ public class SellerSettlement extends BaseEntity {
         this.paidAt = paidAt;
     }
 
-    public static SellerSettlement create(Long batchId,
+    public static SellerSettlement create(SettlementBatch batch,
                                           Long sellerId,
                                           String periodYm) {
         return SellerSettlement.builder()
-                .batchId(batchId)
+                .batch(batch)
                 .sellerId(sellerId)
                 .periodYm(periodYm)
                 .totalRentalAmount(ZERO)

@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,6 +16,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecution;
+import com.coc.modi.seller.settlement.domain.SellerSettlement;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,6 +44,12 @@ public class SettlementBatch extends BaseEntity {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @OneToMany(mappedBy = "batch")
+    private List<SettlementBatchExecution> executions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "batch")
+    private List<SellerSettlement> settlements = new ArrayList<>();
 
     @Builder
     private SettlementBatch(String periodYm,

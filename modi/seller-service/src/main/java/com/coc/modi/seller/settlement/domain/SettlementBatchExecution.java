@@ -8,6 +8,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,8 +32,9 @@ public class SettlementBatchExecution extends BaseEntity {
     @Column(name = "batch_type", nullable = false, length = 50)
     private String batchType;
 
-    @Column(name = "batch_id")
-    private Long batchId;
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    private SettlementBatch batch;
 
     @Column(name = "params", columnDefinition = "TEXT")
     private String params;
@@ -70,9 +73,13 @@ public class SettlementBatchExecution extends BaseEntity {
     @Column(name = "error_message", length = 500)
     private String errorMessage;
 
+    public Long getBatchId() {
+        return batch != null ? batch.getId() : null;
+    }
+
     @Builder
     private SettlementBatchExecution(String batchType,
-                                     Long batchId,
+                                     SettlementBatch batch,
                                      String params,
                                      SettlementBatchExecutionStatus status,
                                      LocalDateTime startedAt,
@@ -86,7 +93,7 @@ public class SettlementBatchExecution extends BaseEntity {
                                      String lastCursor,
                                      String errorMessage) {
         this.batchType = batchType;
-        this.batchId = batchId;
+        this.batch = batch;
         this.params = params;
         this.status = status != null ? status : SettlementBatchExecutionStatus.PENDING;
         this.startedAt = startedAt;
@@ -101,10 +108,10 @@ public class SettlementBatchExecution extends BaseEntity {
         this.errorMessage = errorMessage;
     }
 
-    public static SettlementBatchExecution start(String batchType, Long batchId, String params) {
+    public static SettlementBatchExecution start(String batchType, SettlementBatch batch, String params) {
         return SettlementBatchExecution.builder()
                 .batchType(batchType)
-                .batchId(batchId)
+                .batch(batch)
                 .params(params)
                 .status(SettlementBatchExecutionStatus.RUNNING)
                 .startedAt(LocalDateTime.now())
