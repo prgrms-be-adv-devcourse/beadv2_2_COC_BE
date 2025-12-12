@@ -67,11 +67,7 @@ public class SellerService {
 
         return SellerResponse.from(seller);
     }
-
-    @Transactional
-    public void deleteSeller(Long sellerId) {
-        sellerRepository.deleteById(sellerId);
-    }
+    
 
     @Transactional(readOnly = true)
     public List<SellerRentalResponse> getMyRentals(Long memberId,

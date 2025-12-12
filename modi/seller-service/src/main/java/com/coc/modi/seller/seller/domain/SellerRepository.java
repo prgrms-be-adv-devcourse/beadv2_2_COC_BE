@@ -18,7 +18,5 @@ public interface SellerRepository {
 	
 	Seller save(Seller seller);
 	
-	void deleteById(Long sellerId);
-	
 	List<Seller> findByStatus(SellerStatus status);
 }
