@@ -1,7 +1,7 @@
 package com.coc.modi.review.application.dto;
 
 public record CreateReviewCommand(
-		Long rentalId,
+		Long rentalItemid,
 		Long sellerId,
 		Long memberId,
 		Short rating,
