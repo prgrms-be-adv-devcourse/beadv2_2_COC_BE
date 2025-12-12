@@ -20,7 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 )
 @SpringBootApplication(scanBasePackages = "com.coc.modi")
 @OpenAPIDefinition(
-        info = @Info(title = "Seller Service API", version = "1.0"),
+        info = @Info(title = "Account Service API", version = "1.0"),
         security = @SecurityRequirement(name = "Authorization")
 )
 public class AccountServiceApplication {
