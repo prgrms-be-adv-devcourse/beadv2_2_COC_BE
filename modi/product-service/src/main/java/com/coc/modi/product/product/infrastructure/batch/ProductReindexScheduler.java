@@ -1,4 +1,4 @@
-package com.coc.modi.product.product.batch;
+package com.coc.modi.product.product.infrastructure.batch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

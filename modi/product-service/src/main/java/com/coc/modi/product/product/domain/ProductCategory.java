@@ -1,7 +1,6 @@
 package com.coc.modi.product.product.domain;
 
-import com.coc.modi.common.ErrorCode;
-import com.coc.modi.product.product.exception.ProductException;
+import com.coc.modi.product.product.exception.ProductInvalidInputException;
 
 public enum ProductCategory {
     LAPTOP,
@@ -19,7 +18,7 @@ public enum ProductCategory {
         try {
             return ProductCategory.valueOf(value.toUpperCase());
         } catch (Exception e) {
-            throw new ProductException(ErrorCode.INVALID_INPUT, "존재하지 않는 카테고리입니다: " + value);
+            throw new ProductInvalidInputException("존재하지 않는 카테고리입니다: " + value);
         }
     }
 }
