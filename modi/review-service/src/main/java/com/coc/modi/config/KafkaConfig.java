@@ -1,5 +1,6 @@
 package com.coc.modi.config;
 
+import com.coc.modi.common.ReviewCreatedEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
