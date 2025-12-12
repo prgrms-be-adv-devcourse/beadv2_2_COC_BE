@@ -9,8 +9,11 @@ import com.coc.modi.account.deposit.domain.PgDepositRepository;
 import com.coc.modi.account.deposit.infrastructure.client.TossPaymentsClient;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprovalResponse;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelResponse;
+import com.coc.modi.account.wallet.exception.AccountException;
+import com.coc.modi.account.wallet.exception.AccountTransactionNotFoundException;
 import com.coc.modi.account.wallet.application.WalletCommandService;
 import com.coc.modi.account.wallet.application.dto.WalletTransactionCommand;
+import com.coc.modi.common.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +56,7 @@ public class DepositService {
 
         // 1. orderId로 충전 요청 조회
         PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 요청입니다."));
+                .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
 
         // 2. 금액 검증
         BigDecimal requestedAmount = deposit.getAmount();
@@ -63,7 +66,7 @@ public class DepositService {
 
             deposit.fail("금액 불일치");
 
-            throw new IllegalArgumentException("요청 금액과 실제 금액이 일치하지 않습니다.");
+            throw new AccountException(ErrorCode.INVALID_INPUT, "요청 금액과 실제 금액이 일치하지 않습니다.");
         }
 
         // 3. Toss 결제 승인 API 호출
@@ -78,7 +81,7 @@ public class DepositService {
 
             deposit.fail("Toss 결제 승인 실패 : " + tossResponse.status());
 
-            throw new IllegalStateException("결제 승인에 실패했습니다.");
+            throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 승인에 실패했습니다.");
         }
 
         // 5. DB 상태 업데이트
@@ -104,17 +107,17 @@ public class DepositService {
 
         // 1. 기존 요청 조회
         PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 요청입니다."));
+                .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
 
         if (!deposit.getMemberId().equals(command.memberId())) {
 
-            throw new IllegalArgumentException("본인 요청만 취소할 수 있습니다.");
+            throw new AccountException(ErrorCode.FORBIDDEN, "본인 요청만 취소할 수 있습니다.");
         }
 
         // 2. 취소 가능한지 확인
         if (!deposit.isCancelable()) {
 
-            throw new IllegalStateException("취소할 수 없는 상태입니다. : " + deposit.getStatus());
+            throw new AccountException(ErrorCode.CONFLICT, "취소할 수 없는 상태입니다. : " + deposit.getStatus());
         }
 
         // 3. 금액 검증
@@ -123,7 +126,7 @@ public class DepositService {
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
 
-            throw new IllegalArgumentException("요청 금액과 실제 금액이 일치하지 않습니다.");
+            throw new AccountException(ErrorCode.INVALID_INPUT, "요청 금액과 실제 금액이 일치하지 않습니다.");
         }
 
         // 4. Toss 취소 API 호출
@@ -137,7 +140,7 @@ public class DepositService {
 
             deposit.fail("Toss 결제 취소 실패 : " + tossResponse.status());
 
-            throw new IllegalStateException("결제 취소에 실패했습니다.");
+            throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소에 실패했습니다.");
         }
 
         // 5. 상태, 잔액 갱신
