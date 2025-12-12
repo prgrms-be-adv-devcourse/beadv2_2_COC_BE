@@ -16,8 +16,8 @@ public class SellerRentalService {
     private final RentalPort rentalPort;
 
     public List<SellerRentalResponse> getSellerRentals(Long sellerId,
+                                                       Long productId,
                                                        String status,
-                                                       String periodYm,
                                                        String startDate,
                                                        String endDate,
                                                        Integer page,
@@ -25,9 +25,9 @@ public class SellerRentalService {
         RentalListResponse response = rentalPort.getRentals(
                 sellerId,
                 status,
-                periodYm,
                 startDate,
                 endDate,
+                productId,
                 page != null ? page : 0,
                 size != null ? size : 20
         );
