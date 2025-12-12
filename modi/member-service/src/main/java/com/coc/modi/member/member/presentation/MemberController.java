@@ -38,7 +38,9 @@ public class MemberController {
 		if (authentication == null || !authentication.isAuthenticated()) {
 			throw new UnauthorizedException(); // 공통 예외
 		}
+		
 		Object principal = authentication.getPrincipal();
+		
 		if (!(principal instanceof Long memberId)) {
 			throw new UnauthorizedException();
 		}
