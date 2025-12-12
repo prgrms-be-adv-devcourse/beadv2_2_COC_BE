@@ -4,13 +4,15 @@ import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
 
 public record MemberPasswordUpdateRequest(
 		String name,
-		String password
+		String password,
+		String email
 ) {
 	public UpdateMemberPasswordCommand toCommand() {
 		
 		return new UpdateMemberPasswordCommand(
 				name,
-				password
+				password,
+				email
 		);
 	}
 }
