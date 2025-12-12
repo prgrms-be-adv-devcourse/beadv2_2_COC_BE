@@ -35,11 +35,67 @@ subprojects {
     }
 
     dependencies {
-        // 핵심 Spring Boot 스타터.
-        implementation 'org.springframework.boot:spring-boot-starter-web'
-//        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    dependencyManagement {
+        // Spring Cloud 의존성 BOM 가져오기.
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
+
+project(':common') {
+
+    dependencies {
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+        annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    }
+}
+project(':common-security') {
+
+    dependencies {
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    }
+}
+
+
+configure([
+        project(':account-service'),
+        project(':product-service'),
+        project(':rental-service'),
+        project(':seller-service'),
+        project(':member-service'),
+        project(':review-service'),
+        project(':notification-service')
+]) {
+    dependencies {
+
+        implementation project(':common')
+        implementation project(':common-security')
+        implementation project(':common-notification')
+        // 핵심 Spring Boot 스타터.
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         runtimeOnly 'org.postgresql:postgresql'
 
         implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
@@ -52,28 +108,17 @@ subprojects {
         annotationProcessor "jakarta.annotation:jakarta.annotation-api"
         annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
-        // API 문서와 보안/JWT 지원.
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
         implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
         implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-        // Lombok 컴파일 시 도구.
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
-        testCompileOnly 'org.projectlombok:lombok'
-        testAnnotationProcessor 'org.projectlombok:lombok'
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    }
-    dependencyManagement {
-        // Spring Cloud 의존성 BOM 가져오기.
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-        }
-    }
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-    tasks.named('test') {
-        useJUnitPlatform()
+        // API 문서와 보안/JWT 지원.
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
     }
 }

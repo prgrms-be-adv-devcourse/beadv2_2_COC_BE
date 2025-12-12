@@ -1,4 +1,4 @@
-package com.coc.modi.review.exception;
+package com.coc.modi.exception;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
