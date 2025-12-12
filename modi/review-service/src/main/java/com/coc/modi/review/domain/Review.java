@@ -24,8 +24,8 @@ public class Review extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "rental_id", nullable = false)
-	private Long rentalId;
+	@Column(name = "rental_item_id", nullable = false)
+	private Long rentalItemId;
 
 	@Column(name = "seller_id", nullable = false)
 	private Long sellerId;
@@ -44,11 +44,11 @@ public class Review extends BaseEntity {
 	private ReviewStatus status;
 
 	@Builder
-	private Review(Long rentalId, Long sellerId, Long memberId, Short rating, String content) {
+	private Review(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content) {
 
 		validateRating(rating);
 		
-		this.rentalId = rentalId;
+		this.rentalItemId = rentalItemId;
 		this.sellerId = sellerId;
 		this.memberId = memberId;
 		this.rating = rating;
@@ -56,10 +56,10 @@ public class Review extends BaseEntity {
 		this.status = ReviewStatus.ACTIVE;
 	}
 
-	public static Review create(Long rentalId, Long sellerId, Long memberId, Short rating, String content) {
+	public static Review create(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content) {
 
 		return Review.builder()
-				.rentalId(rentalId)
+				.rentalItemId(rentalItemId)
 				.sellerId(sellerId)
 				.memberId(memberId)
 				.rating(rating)
