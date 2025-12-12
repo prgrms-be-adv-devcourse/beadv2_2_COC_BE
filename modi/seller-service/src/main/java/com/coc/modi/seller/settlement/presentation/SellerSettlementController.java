@@ -6,7 +6,9 @@ import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineRespon
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.seller.application.dto.SellerResponse;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -28,66 +30,72 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping
 public class SellerSettlementController {
-
-    private final SellerSettlementService sellerSettlementService;
-    private final SellerService sellerService;
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
-    private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-    @GetMapping("/api/settlements/sellers/self")
-    public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(Authentication authentication,
-												@RequestParam(value = "periodYm", required = false) String periodYm,
-												Pageable pageable) {
-        Long memberId = (Long) authentication.getPrincipal();
-        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-        Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
-        return ResponseEntity.ok(ApiResponse.ok(settlements));
-    }
-
-    @GetMapping("/api/settlements/sellers/self/{sellerSettlementId}")
-    public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(Authentication authentication,
-                                                                                 @PathVariable Long sellerSettlementId) {
-        Long memberId = (Long) authentication.getPrincipal();
-        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-        SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.id(), sellerSettlementId);
-        return ResponseEntity.ok(ApiResponse.ok(settlement));
-    }
-
-    @GetMapping("/api/settlements/sellers/self/{sellerSettlementId}/lines")
-    public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(Authentication authentication,
-                                                                                                @PathVariable Long sellerSettlementId) {
-        Long memberId = (Long) authentication.getPrincipal();
-        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-        List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.id(), sellerSettlementId);
-        return ResponseEntity.ok(ApiResponse.ok(lines));
-    }
-
-    @PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/pay")
-    public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(Authentication authentication,
-                                                                                 @PathVariable Long sellerSettlementId,
-                                                                                 @RequestParam(value = "paidAt", required = false) String paidAt) {
-        Long memberId = (Long) authentication.getPrincipal();
-        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-        LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now(KST);
-        SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.id(), sellerSettlementId, paidAtValue);
-        return ResponseEntity.ok(ApiResponse.ok(settlement));
-    }
-
-    @PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/cancel")
-    public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(Authentication authentication,
-                                                                                    @PathVariable Long sellerSettlementId) {
-        Long memberId = (Long) authentication.getPrincipal();
-        SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-        SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.id(), sellerSettlementId);
-        return ResponseEntity.ok(ApiResponse.ok(settlement));
-    }
-
-    private LocalDateTime parsePaidAt(String paidAt) {
-        try {
-            return LocalDateTime.parse(paidAt, PAID_AT_FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("paidAt must be ISO-8601 format, e.g. 2024-12-31T23:59:59", e);
-        }
-    }
+	
+	private final SellerSettlementService sellerSettlementService;
+	private final SellerService sellerService;
+	
+	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+	private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+	
+	@GetMapping("/api/settlements/sellers/self")
+	public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(Authentication authentication,
+																						@RequestParam(value = "periodYm", required = false) String periodYm,
+																						Pageable pageable) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
+		return ResponseEntity.ok(ApiResponse.ok(settlements));
+	}
+	
+	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}")
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(Authentication authentication,
+																				 @PathVariable Long sellerSettlementId) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.id(), sellerSettlementId);
+		return ResponseEntity.ok(ApiResponse.ok(settlement));
+	}
+	
+	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}/lines")
+	public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(Authentication authentication,
+																								@PathVariable Long sellerSettlementId) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.id(), sellerSettlementId);
+		return ResponseEntity.ok(ApiResponse.ok(lines));
+	}
+	
+	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/pay")
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(Authentication authentication,
+																				 @PathVariable Long sellerSettlementId,
+																				 @RequestParam(value = "paidAt", required = false) String paidAt) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now(KST);
+		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.id(), sellerSettlementId, paidAtValue);
+		return ResponseEntity.ok(ApiResponse.ok(settlement));
+	}
+	
+	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/cancel")
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(Authentication authentication,
+																					@PathVariable Long sellerSettlementId) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.id(), sellerSettlementId);
+		return ResponseEntity.ok(ApiResponse.ok(settlement));
+	}
+	
+	private LocalDateTime parsePaidAt(String paidAt) {
+		
+		try {
+			return LocalDateTime.parse(paidAt, PAID_AT_FORMATTER);
+		} catch (DateTimeParseException e) {
+			throw new IllegalArgumentException("paidAt must be ISO-8601 format, e.g. 2024-12-31T23:59:59", e);
+		}
+	}
 }
