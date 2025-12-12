@@ -4,6 +4,7 @@ include(
         'common',
         'common-security',
         'common-notification',
+        'common-openapi',
         'account-service',
         'product-service',
         'rental-service',

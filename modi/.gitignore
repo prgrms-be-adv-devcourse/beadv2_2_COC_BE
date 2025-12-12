@@ -13,6 +13,7 @@ HELP.md
 .idea
 *.yml
 .env
+
 ### STS ###
 .apt_generated/
 .classpath
@@ -25,6 +26,7 @@ HELP.md
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 **/md/
+**/src/main/generated/
 
 ### IntelliJ IDEA ###
 **/.idea/

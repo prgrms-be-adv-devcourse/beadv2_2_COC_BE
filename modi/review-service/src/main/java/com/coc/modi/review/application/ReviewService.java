@@ -14,18 +14,16 @@ import com.coc.modi.review.domain.ReviewStatus;
 import com.coc.modi.review.event.NotificationEventPublisher;
 import com.coc.modi.review.exception.ReviewAccessDeniedException;
 import com.coc.modi.review.exception.ReviewNotFoundException;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Set;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +31,7 @@ public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
+
 	
 	// 판매자 리뷰 생성
 	@Transactional

@@ -17,5 +17,6 @@ public record ReviewCreateRequest(
 	public CreateReviewCommand toCommand(Long memberId) {
 		
 		return new CreateReviewCommand(rentalItemId, sellerId, memberId, rating, content);
+
 	}
 }
