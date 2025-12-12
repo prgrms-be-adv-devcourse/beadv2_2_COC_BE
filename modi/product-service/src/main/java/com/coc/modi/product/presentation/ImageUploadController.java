@@ -1,6 +1,5 @@
 package com.coc.modi.product.presentation;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.application.ImageStoragePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
