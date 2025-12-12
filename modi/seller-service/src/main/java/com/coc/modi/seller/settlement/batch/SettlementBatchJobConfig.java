@@ -4,9 +4,11 @@ import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
+
 import feign.FeignException;
 import feign.RetryableException;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -108,20 +110,24 @@ public class SettlementBatchJobConfig {
 	public SettlementAggregationWriter settlementAggregationWriter(
 			@Value("#{jobParameters['batchId']}") Long batchId
 	) {
+		
 		return new SettlementAggregationWriter(settlementAggregationService, batchId);
 	}
 	
 	@Bean
 	public SettlementSkipListener settlementSkipListener() {
+		
 		return new SettlementSkipListener();
 	}
 	
 	@Bean
 	public BackOffPolicy settlementRetryBackOffPolicy() {
+		
 		ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
 		backOffPolicy.setInitialInterval(1000L);
 		backOffPolicy.setMultiplier(2.0);
 		backOffPolicy.setMaxInterval(4000L);
+		
 		return backOffPolicy;
 	}
 }

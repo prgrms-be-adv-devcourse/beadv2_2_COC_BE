@@ -19,8 +19,6 @@ public class SettlementBatchStepListener implements StepExecutionListener {
     private static final String EXECUTION_ID_KEY = "settlementExecutionId";
     private static final String STEP_STARTED_AT = "stepStartedAt";
 
-    private final SettlementBatchExecutionService executionService;
-
     @Override
     public void beforeStep(StepExecution stepExecution) {
         stepExecution.getExecutionContext().putLong(STEP_STARTED_AT, System.currentTimeMillis());

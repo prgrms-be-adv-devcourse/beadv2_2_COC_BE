@@ -6,6 +6,7 @@ import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
+
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
@@ -53,6 +54,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
+		
 		this.sellerIds = loadSellerIds();
 		if (executionContext.containsKey(SELLER_INDEX)) {
 			this.sellerIndex = executionContext.getInt(SELLER_INDEX);
@@ -107,6 +109,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void update(ExecutionContext executionContext) throws ItemStreamException {
+		
 		executionContext.putInt(SELLER_INDEX, sellerIndex);
 		executionContext.putInt(PAGE, page);
 		executionContext.putString(LAST_CURSOR, lastCursor);
@@ -139,6 +142,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	}
 	
 	private void moveToNextSeller() {
+		
 		sellerIndex++;
 		page = 0;
 		lastCursor = null;

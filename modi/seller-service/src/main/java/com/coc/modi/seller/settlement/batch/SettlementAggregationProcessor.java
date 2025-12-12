@@ -23,8 +23,6 @@ public class SettlementAggregationProcessor implements ItemProcessor<RentalItemI
 		}
 		String resolvedPeriodYm = resolvePeriodYm(
 				requestedPeriodYm,
-				item.paidAt(),
-				item.startDate(),
 				item.endDate()
 		);
 		return new SettlementAggregationItem(
@@ -38,20 +36,18 @@ public class SettlementAggregationProcessor implements ItemProcessor<RentalItemI
 	}
 	
 	private String resolvePeriodYm(String periodYm,
-								   java.time.LocalDateTime paidAt,
-								   java.time.LocalDate startDate,
 								   java.time.LocalDate endDate) {
-		
+
+		// 1. 요청된 기간(Job Parameter)이 있으면 최우선으로 사용
 		if (periodYm != null && !periodYm.isBlank()) {
 			return periodYm;
 		}
-		if (paidAt != null) {
-			return YearMonth.from(paidAt.toLocalDate()).toString();
+
+		// 2. end_date를 기준으로 월 결정 (없으면 실패시켜 데이터 수정 유도)
+		if (endDate != null) {
+			return YearMonth.from(endDate).toString();
 		}
-		java.time.LocalDate fallback = startDate != null ? startDate : endDate;
-		if (fallback != null) {
-			return YearMonth.from(fallback).toString();
-		}
-		return null;
+
+		throw new IllegalStateException("endDate is required to resolve settlement period");
 	}
 }
