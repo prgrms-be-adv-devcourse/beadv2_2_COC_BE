@@ -2,9 +2,9 @@ services:
   postgres:
     image: postgres:15
     container_name: modi-postgres
+    ports:
+      - "5432:5432"
     restart: always
-    env_file:
-      - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -37,6 +37,8 @@ services:
   modi-discovery:
     image: modi-discovery:latest
     container_name: modi-discovery
+    env_file:
+      - .env
     expose:
       - "8761"
     networks:
@@ -46,6 +48,8 @@ services:
   modi-config:
     image: modi-config:latest
     container_name: modi-config
+    env_file:
+      - .env
     depends_on:
       - modi-discovery
     expose:
@@ -60,6 +64,8 @@ services:
     depends_on:
       - modi-config
       - modi-discovery
+    env_file:
+      - .env
     ports:
       - "8000:8080"
     networks:
