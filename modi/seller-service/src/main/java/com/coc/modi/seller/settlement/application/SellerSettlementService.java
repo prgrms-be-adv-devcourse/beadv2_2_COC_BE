@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,6 +44,20 @@ public class SellerSettlementService {
         return settlement.getLines().stream()
                 .map(SellerSettlementLineResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public SellerSettlementResponse markAsPaid(Long sellerId, Long sellerSettlementId, LocalDateTime paidAt) {
+        SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
+        settlement.pay(paidAt);
+        return SellerSettlementResponse.from(settlement);
+    }
+
+    @Transactional
+    public SellerSettlementResponse cancelSettlement(Long sellerId, Long sellerSettlementId) {
+        SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
+        settlement.cancel();
+        return SellerSettlementResponse.from(settlement);
     }
 
     private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {

@@ -101,6 +101,35 @@ public class SellerSettlement extends BaseEntity {
                 .build();
     }
 
+    // 정산 완료 처리: READY 상태에서만 가능
+    public void pay(LocalDateTime paidAt) {
+        if (paidAt == null) {
+            throw new IllegalArgumentException("paidAt is required to mark settlement as paid");
+        }
+        if (this.status == SellerSettlementStatus.PAID) {
+            throw new IllegalStateException("settlement is already paid");
+        }
+        if (this.status == SellerSettlementStatus.CANCELED) {
+            throw new IllegalStateException("canceled settlement cannot be paid");
+        }
+        this.status = SellerSettlementStatus.PAID;
+        this.paidAt = paidAt;
+    }
+
+    
+     // 정산 취소: READY, PAID에서만 허용, 이미 취소된 건은 무시
+     
+    public void cancel() {
+        if (this.status == SellerSettlementStatus.CANCELED) {
+            return;
+        }
+        if (this.status == SellerSettlementStatus.READY || this.status == SellerSettlementStatus.PAID) {
+            this.status = SellerSettlementStatus.CANCELED;
+            return;
+        }
+        throw new IllegalStateException("unsupported settlement status: " + this.status);
+    }
+
     public void addLineWithAggregation(SellerSettlementLine line) {
         // 멱등성: 동일 rentalItemId 중복 방지
         boolean exists = this.lines.stream()
