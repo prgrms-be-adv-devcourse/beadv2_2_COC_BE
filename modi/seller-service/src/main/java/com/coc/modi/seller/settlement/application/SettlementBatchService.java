@@ -1,5 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
+import com.coc.modi.seller.exception.SettlementBatchDuplicateException;
+import com.coc.modi.seller.exception.SettlementBatchNotFoundException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
@@ -23,7 +25,7 @@ public class SettlementBatchService {
     public SettlementBatchResponse createBatch(SettlementBatchCreateCommand command) {
         settlementBatchRepository.findByPeriodYm(command.periodYm())
                 .ifPresent(batch -> {
-                    throw new IllegalArgumentException("이미 생성된 정산 배치입니다. periodYm=" + command.periodYm());
+                    throw new SettlementBatchDuplicateException("이미 생성된 정산 배치입니다. periodYm=" + command.periodYm());
                 });
 
         SettlementBatch batch = SettlementBatch.create(command.periodYm());
@@ -61,6 +63,6 @@ public class SettlementBatchService {
 
     private SettlementBatch findBatch(Long batchId) {
         return settlementBatchRepository.findById(batchId)
-                .orElseThrow(() -> new IllegalArgumentException("정산 배치를 찾을 수 없습니다. id=" + batchId));
+                .orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. id=" + batchId));
     }
 }

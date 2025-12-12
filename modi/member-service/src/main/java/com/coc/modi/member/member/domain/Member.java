@@ -1,5 +1,7 @@
 package com.coc.modi.member.member.domain;
 
+import com.coc.modi.member.member.domain.MemberRole;
+import com.coc.modi.member.member.domain.MemberStatus;
 import com.coc.modi.common.BaseEntity;
 
 import jakarta.persistence.*;
