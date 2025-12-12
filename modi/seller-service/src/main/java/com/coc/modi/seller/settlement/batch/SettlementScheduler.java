@@ -12,7 +12,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 
 @Component
@@ -28,16 +28,21 @@ public class SettlementScheduler {
 
     @Scheduled(cron = "0 5 0 1 * ?")
     public void runMonthlySettlement() {
-        String periodYm = PERIOD_FORMATTER.format(LocalDate.now().minusMonths(1));
+        YearMonth targetMonth = YearMonth.now().minusMonths(1);
+        String periodYm = targetMonth.format(PERIOD_FORMATTER);
+        String startDate = targetMonth.atDay(1).toString();
+        String endDate = targetMonth.atEndOfMonth().toString();
         try {
             SettlementBatchResponse batch = settlementBatchService.createBatch(new SettlementBatchCreateCommand(periodYm));
             settlementBatchService.startBatch(batch.id());
             JobParameters params = new JobParametersBuilder()
                     .addString("periodYm", periodYm)
+                    .addString("startDate", startDate)
+                    .addString("endDate", endDate)
                     .addLong("timestamp", System.currentTimeMillis())
                     .toJobParameters();
             jobLauncher.run(settlementAggregationJob, params);
-            log.info("Settlement batch job triggered. periodYm={}", periodYm);
+            log.info("Settlement batch job triggered. periodYm={}, startDate={}, endDate={}", periodYm, startDate, endDate);
         } catch (Exception e) {
             log.error("Settlement batch failed. periodYm={}", periodYm, e);
         }

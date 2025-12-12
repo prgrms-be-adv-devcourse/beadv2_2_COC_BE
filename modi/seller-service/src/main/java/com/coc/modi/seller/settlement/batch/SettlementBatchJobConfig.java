@@ -85,6 +85,9 @@ public class SettlementBatchJobConfig {
 		if (periodYm == null || periodYm.isBlank()) {
 			throw new IllegalArgumentException("periodYm is required");
 		}
+		if (startDate == null || startDate.isBlank() || endDate == null || endDate.isBlank()) {
+			throw new IllegalArgumentException("startDate and endDate are required");
+		}
 		return new SettlementRentalItemReader(
 				rentalPort,
 				sellerRepository,
