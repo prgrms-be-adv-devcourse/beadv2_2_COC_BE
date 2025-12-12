@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: modi-discovery
+  config:
+    import: "optional:configserver:http://localhost:8888"

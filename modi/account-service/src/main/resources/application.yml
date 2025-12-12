@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: account-service
+  config:
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config

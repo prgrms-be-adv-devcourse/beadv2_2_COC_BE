@@ -6,12 +6,12 @@ HELP.md
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
-!**/src/main/src/resources/application.yml
 !**/src/test/**/build/
 .gitignore
-**/src/main/resources/application.yml
 .idea
-*.yml
+#!**/src/main/src/resources/application.yml
+#**/src/main/resources/application.yml
+#*.yml
 .env
 
 ### STS ###

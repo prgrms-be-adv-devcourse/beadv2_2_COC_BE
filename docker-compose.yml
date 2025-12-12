@@ -37,8 +37,6 @@ services:
   modi-discovery:
     image: modi-discovery:latest
     container_name: modi-discovery
-    env_file:
-      - .env
     expose:
       - "8761"
     networks:
@@ -48,10 +46,10 @@ services:
   modi-config:
     image: modi-config:latest
     container_name: modi-config
-    env_file:
-      - .env
     depends_on:
       - modi-discovery
+    env_file:
+      - .env
     expose:
       - "8888"
     networks:
