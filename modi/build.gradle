@@ -94,14 +94,16 @@ configure([
         project(':product-service'),
         project(':rental-service'),
         project(':seller-service'),
-        project(':member-service')
+        project(':member-service'),
+        project(':review-service'),
+        project(':notification-service')
 ]) {
     dependencies {
 
         implementation project(':common')
         implementation project(':common-security')
+        implementation project(':common-notification')
         implementation project(':common-openapi')
-
         // 핵심 Spring Boot 스타터.
 
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
