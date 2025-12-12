@@ -4,10 +4,8 @@ import com.coc.modi.seller.exception.SellerSettlementForbiddenException;
 import com.coc.modi.seller.exception.SellerSettlementNotFoundException;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
-import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineCommand;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
-import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,33 +43,6 @@ public class SellerSettlementService {
         return settlement.getLines().stream()
                 .map(SellerSettlementLineResponse::from)
                 .toList();
-    }
-
-    @Transactional
-    public SellerSettlementResponse recordSettlementLine(SellerSettlementLineCommand command) {
-        SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(
-                        command.sellerId(),
-                        command.periodYm())
-                .orElseGet(() -> SellerSettlement.create(
-                        command.batchId(),
-                        command.sellerId(),
-                        command.periodYm()));
-
-        settlement.assignBatchIfAbsent(command.batchId());
-
-        SellerSettlementLine line = SellerSettlementLine.of(
-                command.sellerId(),
-                command.rentalItemId(),
-                command.memberId(),
-                command.productId(),
-                command.rentalAmount(),
-                command.feeAmount()
-        );
-
-        settlement.addLineWithAggregation(line);
-
-        SellerSettlement saved = sellerSettlementRepository.save(settlement);
-        return SellerSettlementResponse.from(saved);
     }
 
     private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {

@@ -112,18 +112,4 @@ public class SellerSettlement extends BaseEntity {
         this.settlementAmount = this.totalRentalAmount.subtract(this.totalFeeAmount);
     }
 
-    public void markPaid(LocalDateTime paidAt) {
-        this.status = SellerSettlementStatus.PAID;
-        this.paidAt = paidAt;
-    }
-
-    public void cancel() {
-        this.status = SellerSettlementStatus.CANCELED;
-    }
-
-    public void assignBatchIfAbsent(Long batchId) {
-        if (this.batchId == null && batchId != null) {
-            this.batchId = batchId;
-        }
-    }
 }
