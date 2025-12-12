@@ -11,11 +11,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableJpaAuditing
 @SpringBootApplication
 @ComponentScan(basePackages = "com.coc.modi")
 @EnableFeignClients(basePackages = "com.coc.modi")
+@EnableScheduling
 @SecurityScheme(
         name = "Authorization",
         type = SecuritySchemeType.HTTP,
