@@ -1,6 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
+import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
@@ -23,6 +24,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
     private static final String BATCH_ID_KEY = "batchId";
 
     private final SettlementBatchExecutionService executionService;
+    private final SettlementBatchService batchService;
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
@@ -108,7 +110,11 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                 ? jobExecution.getExecutionContext().getLong(BATCH_ID_KEY)
                 : null;
         if (batchId != null) {
-            // TODO: SettlementBatchService.completeBatch/failBatch 등으로 상태 동기화 추가 필요
+            if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
+                batchService.completeBatch(batchId);
+            } else {
+                batchService.failBatch(batchId);
+            }
         }
     }
 }
