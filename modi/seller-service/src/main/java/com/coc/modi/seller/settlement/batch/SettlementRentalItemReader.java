@@ -85,9 +85,9 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 				RentalListResponse response = rentalPort.getRentals(
 						currentSellerId,
 						STATUS_RETURNED,
-						periodYm,
 						startDate,
 						endDate,
+						null,
 						page,
 						pageSize
 				);

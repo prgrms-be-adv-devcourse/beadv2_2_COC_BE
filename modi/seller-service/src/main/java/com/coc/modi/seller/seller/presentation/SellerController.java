@@ -45,15 +45,15 @@ public class SellerController {
 	
 	@GetMapping("/api/sellers/me/rentals")
 	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(Authentication authentication,
-																				@RequestParam(value = "status", required = false) String status,
-																				@RequestParam(value = "periodYm", required = false) String periodYm,
-																				@RequestParam(value = "startDate", required = false) String startDate,
-																				@RequestParam(value = "endDate", required = false) String endDate,
+																				@RequestParam(value = "productId", required = false) Long productId,
+																				@RequestParam(value = "status") String status,
+																				@RequestParam(value = "startDate") String startDate,
+																				@RequestParam(value = "endDate") String endDate,
 																				@RequestParam(value = "page", required = false) Integer page,
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(memberId, status, periodYm, startDate, endDate, page, size);
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(memberId, productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}

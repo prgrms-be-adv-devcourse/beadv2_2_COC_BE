@@ -71,8 +71,8 @@ public class SellerService {
 
     @Transactional(readOnly = true)
     public List<SellerRentalResponse> getMyRentals(Long memberId,
+                                                   Long productId,
                                                    String status,
-                                                   String periodYm,
                                                    String startDate,
                                                    String endDate,
                                                    Integer page,
@@ -81,8 +81,8 @@ public class SellerService {
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. memberId=" + memberId));
         return sellerRentalService.getSellerRentals(
                 seller.getId(),
+                productId,
                 status,
-                periodYm,
                 startDate,
                 endDate,
                 page,

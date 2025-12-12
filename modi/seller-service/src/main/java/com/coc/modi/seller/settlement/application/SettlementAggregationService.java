@@ -62,9 +62,9 @@ public class SettlementAggregationService {
         RentalListResponse response = rentalPort.getRentals(
                 sellerId,
                 status,
-                periodYm,
                 startDate,
                 endDate,
+                null,
                 page != null ? page : 0,
                 size != null ? size : 100
         );
