@@ -30,6 +30,9 @@ public class SettlementBatchExecution extends BaseEntity {
     @Column(name = "batch_type", nullable = false, length = 50)
     private String batchType;
 
+    @Column(name = "batch_id")
+    private Long batchId;
+
     @Column(name = "params", columnDefinition = "TEXT")
     private String params;
 
@@ -69,6 +72,7 @@ public class SettlementBatchExecution extends BaseEntity {
 
     @Builder
     private SettlementBatchExecution(String batchType,
+                                     Long batchId,
                                      String params,
                                      SettlementBatchExecutionStatus status,
                                      LocalDateTime startedAt,
@@ -82,6 +86,7 @@ public class SettlementBatchExecution extends BaseEntity {
                                      String lastCursor,
                                      String errorMessage) {
         this.batchType = batchType;
+        this.batchId = batchId;
         this.params = params;
         this.status = status != null ? status : SettlementBatchExecutionStatus.PENDING;
         this.startedAt = startedAt;
@@ -96,9 +101,10 @@ public class SettlementBatchExecution extends BaseEntity {
         this.errorMessage = errorMessage;
     }
 
-    public static SettlementBatchExecution start(String batchType, String params) {
+    public static SettlementBatchExecution start(String batchType, Long batchId, String params) {
         return SettlementBatchExecution.builder()
                 .batchType(batchType)
+                .batchId(batchId)
                 .params(params)
                 .status(SettlementBatchExecutionStatus.RUNNING)
                 .startedAt(LocalDateTime.now())

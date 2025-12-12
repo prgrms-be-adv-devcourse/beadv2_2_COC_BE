@@ -17,8 +17,8 @@ public class SettlementBatchExecutionService {
 
     private final SettlementBatchExecutionRepository executionRepository;
 
-    public SettlementBatchExecution start(String batchType, String params) {
-        return executionRepository.save(SettlementBatchExecution.start(batchType, params));
+    public SettlementBatchExecution start(String batchType, Long batchId, String params) {
+        return executionRepository.save(SettlementBatchExecution.start(batchType, batchId, params));
     }
 
     public void complete(Long executionId,

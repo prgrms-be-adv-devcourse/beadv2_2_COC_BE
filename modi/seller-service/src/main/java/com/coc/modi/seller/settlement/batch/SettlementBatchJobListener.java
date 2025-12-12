@@ -29,10 +29,10 @@ public class SettlementBatchJobListener implements JobExecutionListener {
     @Override
     public void beforeJob(JobExecution jobExecution) {
         String batchType = jobExecution.getJobInstance().getJobName();
-        String params = jobExecution.getJobParameters().toString();
-        Long executionId = executionService.start(batchType, params).getId();
-        jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
         Long batchId = jobExecution.getJobParameters().getLong(BATCH_ID_KEY);
+        String params = jobExecution.getJobParameters().toString();
+        Long executionId = executionService.start(batchType, batchId, params).getId();
+        jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
         if (batchId != null) {
             jobExecution.getExecutionContext().putLong(BATCH_ID_KEY, batchId);
         }
