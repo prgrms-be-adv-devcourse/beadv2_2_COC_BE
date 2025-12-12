@@ -5,10 +5,6 @@ import com.coc.modi.common.ErrorCode;
 
 public class SellerNotFoundException extends BaseException {
 
-    public SellerNotFoundException() {
-        super(ErrorCode.SELLER_NOT_FOUND, "판매자를 찾을 수 없습니다.");
-    }
-
     public SellerNotFoundException(String detailMessage) {
         super(ErrorCode.SELLER_NOT_FOUND, detailMessage);
     }
