@@ -18,9 +18,11 @@ public class SettlementAggregationWriter implements ItemWriter<SettlementAggrega
 	
 	private static final BigDecimal FEE_RATE = new BigDecimal("0.10");
 	private final SettlementAggregationService settlementAggregationService;
+	private final Long batchId;
 	
-	public SettlementAggregationWriter(SettlementAggregationService settlementAggregationService) {
+	public SettlementAggregationWriter(SettlementAggregationService settlementAggregationService, Long batchId) {
 		this.settlementAggregationService = settlementAggregationService;
+		this.batchId = batchId;
 	}
 	
 	@Override
@@ -37,6 +39,7 @@ public class SettlementAggregationWriter implements ItemWriter<SettlementAggrega
 				continue;
 			}
 			settlementAggregationService.aggregateLine(
+					batchId,
 					item.sellerId(),
 					item.periodYm(),
 					item.rentalItemId(),

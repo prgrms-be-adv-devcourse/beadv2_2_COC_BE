@@ -105,8 +105,10 @@ public class SettlementBatchJobConfig {
 	
 	@Bean
 	@StepScope
-	public SettlementAggregationWriter settlementAggregationWriter() {
-		return new SettlementAggregationWriter(settlementAggregationService);
+	public SettlementAggregationWriter settlementAggregationWriter(
+			@Value("#{jobParameters['batchId']}") Long batchId
+	) {
+		return new SettlementAggregationWriter(settlementAggregationService, batchId);
 	}
 	
 	@Bean

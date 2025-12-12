@@ -19,14 +19,15 @@ public class SettlementAggregationService {
 
     private final SellerSettlementRepository sellerSettlementRepository;
 
-    public SellerSettlement aggregateLine(Long sellerId,
+    public SellerSettlement aggregateLine(Long batchId,
+                                          Long sellerId,
                                           String periodYm,
                                           Long rentalItemId,
                                           Long memberId,
                                           Long productId,
                                           BigDecimal rentalAmount) {
         SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm)
-                .orElseGet(() -> SellerSettlement.create(null, sellerId, periodYm));
+                .orElseGet(() -> SellerSettlement.create(batchId, sellerId, periodYm));
 
         // TODO: rentalItemId 중복 방지 필요 시 체크
         BigDecimal feeAmount = rentalAmount.multiply(FEE_RATE).setScale(2, RoundingMode.HALF_UP);
@@ -46,4 +47,3 @@ public class SettlementAggregationService {
     }
 
 }
-
