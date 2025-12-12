@@ -104,6 +104,13 @@ public class MemberService {
 		
 		Member member = getMemberOrThrow(memberId);
 		
+		// 이메일 유효성 검사
+		memberValidationService.validateEmail(command.email());
+		
+		if (!member.getEmail().equals(command.email())) {
+			throw new PasswordMismatchException("이메일이 일치하지 않습니다.");
+		}
+		
 		if (command.name() == null || command.name().isBlank()) {
 			
 			throw new PasswordMismatchException("이름을 입력해주세요.");
