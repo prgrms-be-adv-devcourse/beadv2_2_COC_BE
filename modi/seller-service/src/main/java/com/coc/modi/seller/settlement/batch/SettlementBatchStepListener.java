@@ -46,17 +46,7 @@ public class SettlementBatchStepListener implements StepExecutionListener {
         BigDecimal totalAmount = getDecimal(context, TOTAL_AMOUNT);
         BigDecimal feeAmount = getDecimal(context, FEE_AMOUNT);
 
-        executionService.log(
-                executionId,
-                stepExecution.getStepName(),
-                cursor,
-                Math.toIntExact(readCount),
-                Math.toIntExact(writeCount),
-                Math.toIntExact(failTotal),
-                duration,
-                stepExecution.getExitStatus().getExitDescription()
-        );
-
+        
         // jobExecutionContext에도 누적 정보를 담아 afterJob에서 합산할 수 있게 전달
         stepExecution.getJobExecution().getExecutionContext().put(TOTAL_AMOUNT, totalAmount);
         stepExecution.getJobExecution().getExecutionContext().put(FEE_AMOUNT, feeAmount);

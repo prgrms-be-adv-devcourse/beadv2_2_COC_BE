@@ -75,7 +75,6 @@ public class SettlementBatchJobConfig {
 	@Bean
 	@StepScope
 	public SettlementRentalItemReader settlementRentalItemReader(
-			@Value("#{jobParameters['periodYm']}") String periodYm,
 			@Value("#{jobParameters['startDate']}") String startDate,
 			@Value("#{jobParameters['endDate']}") String endDate,
 			@Value("#{jobParameters['sellerId']}") Long sellerId,
@@ -88,7 +87,6 @@ public class SettlementBatchJobConfig {
 		return new SettlementRentalItemReader(
 				rentalPort,
 				sellerRepository,
-				periodYm,
 				startDate,
 				endDate,
 				sellerId,

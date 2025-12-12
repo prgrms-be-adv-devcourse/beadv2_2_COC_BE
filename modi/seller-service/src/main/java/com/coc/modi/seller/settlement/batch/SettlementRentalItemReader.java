@@ -25,7 +25,6 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	private final RentalPort rentalPort;
 	private final SellerRepository sellerRepository;
-	private final String periodYm;
 	private final String startDate;
 	private final String endDate;
 	private final Long targetSellerId;
@@ -39,7 +38,6 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	public SettlementRentalItemReader(RentalPort rentalPort,
 									  SellerRepository sellerRepository,
-									  String periodYm,
 									  String startDate,
 									  String endDate,
 									  Long targetSellerId,
@@ -47,7 +45,6 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 		
 		this.rentalPort = rentalPort;
 		this.sellerRepository = sellerRepository;
-		this.periodYm = periodYm;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.targetSellerId = targetSellerId;

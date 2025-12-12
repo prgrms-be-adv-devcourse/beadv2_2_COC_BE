@@ -20,6 +20,7 @@ import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.TO
 public class SettlementBatchJobListener implements JobExecutionListener {
 
     private static final String EXECUTION_ID_KEY = "settlementExecutionId";
+    private static final String BATCH_ID_KEY = "batchId";
 
     private final SettlementBatchExecutionService executionService;
 
@@ -29,6 +30,10 @@ public class SettlementBatchJobListener implements JobExecutionListener {
         String params = jobExecution.getJobParameters().toString();
         Long executionId = executionService.start(batchType, params).getId();
         jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
+        Long batchId = jobExecution.getJobParameters().getLong(BATCH_ID_KEY);
+        if (batchId != null) {
+            jobExecution.getExecutionContext().putLong(BATCH_ID_KEY, batchId);
+        }
     }
 
     @Override
@@ -97,6 +102,13 @@ public class SettlementBatchJobListener implements JobExecutionListener {
                     Math.toIntExact(failTotal),
                     lastCursor
             );
+        }
+
+        Long batchId = jobExecution.getExecutionContext().containsKey(BATCH_ID_KEY)
+                ? jobExecution.getExecutionContext().getLong(BATCH_ID_KEY)
+                : null;
+        if (batchId != null) {
+            // TODO: SettlementBatchService.completeBatch/failBatch 등으로 상태 동기화 추가 필요
         }
     }
 }

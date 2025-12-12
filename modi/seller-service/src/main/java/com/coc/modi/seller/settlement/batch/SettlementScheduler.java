@@ -36,13 +36,14 @@ public class SettlementScheduler {
             SettlementBatchResponse batch = settlementBatchService.createBatch(new SettlementBatchCreateCommand(periodYm));
             settlementBatchService.startBatch(batch.id());
             JobParameters params = new JobParametersBuilder()
+                    .addLong("batchId", batch.id())
                     .addString("periodYm", periodYm)
                     .addString("startDate", startDate)
                     .addString("endDate", endDate)
                     .addLong("timestamp", System.currentTimeMillis())
                     .toJobParameters();
             jobLauncher.run(settlementAggregationJob, params);
-            log.info("Settlement batch job triggered. periodYm={}, startDate={}, endDate={}", periodYm, startDate, endDate);
+            log.info("Settlement batch job triggered. batchId={}, periodYm={}, startDate={}, endDate={}", batch.id(), periodYm, startDate, endDate);
         } catch (Exception e) {
             log.error("Settlement batch failed. periodYm={}", periodYm, e);
         }

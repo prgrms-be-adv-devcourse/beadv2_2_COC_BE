@@ -47,6 +47,13 @@ public class SettlementBatchService {
         return SettlementBatchResponse.from(batch);
     }
 
+    @Transactional
+    public SettlementBatchResponse failBatch(Long batchId) {
+        SettlementBatch batch = findBatch(batchId);
+        batch.fail();
+        return SettlementBatchResponse.from(batch);
+    }
+
     public SettlementBatchResponse getBatch(Long batchId) {
         SettlementBatch batch = findBatch(batchId);
         return SettlementBatchResponse.from(batch);
