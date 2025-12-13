@@ -12,6 +12,7 @@ import com.coc.modi.rental.rental.infrastructure.client.AccountFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.WalletInfoResponse;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -61,8 +62,13 @@ public class RentalPaymentService {
 		}
 		
 		BigDecimal totalAmount = rental.getTotalAmount();
-		WalletInfoResponse walletInfoResponse = accountFeignClient.charge(
-				new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
+		WalletInfoResponse walletInfoResponse;
+		try {
+			walletInfoResponse = accountFeignClient.charge(
+					new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
+		} catch (FeignException ex) {
+			throw new RentalStatusInvalidException("결제 처리 중 지갑 서비스 호출에 실패했습니다.");
+		}
 		
 		LocalDateTime paidAt = LocalDateTime.now();
 		rental.markPaid(paidAt);

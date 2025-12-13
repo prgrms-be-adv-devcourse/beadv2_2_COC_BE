@@ -11,7 +11,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
-import com.coc.modi.common.NotificationEvent;
+import com.coc.modi.kafka.event.NotificationEvent;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -21,7 +21,7 @@ public class KafkaConsumerConfig {
 		
 		Map<String, Object> props = kafkaProperties.buildConsumerProperties();
 		props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, NotificationEvent.class);
-		props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+		props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.coc.modi.kafka.event");
 		
 		return new DefaultKafkaConsumerFactory<>(
 				props,

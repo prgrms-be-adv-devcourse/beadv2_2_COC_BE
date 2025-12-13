@@ -63,7 +63,9 @@ public class RentalQueryService {
 		
 		
 		return rentals.stream().map(rental -> {
+			
 			List<RentalItemResponse> itemResponses = rental.getItems().stream().map(RentalItemResponse::from).toList();
+			
 			return RentalResponse.create(rental, itemResponses);
 		}).toList();
 	}
@@ -85,7 +87,7 @@ public class RentalQueryService {
 			List<RentalItemInfo> rentalItemInfoList = rentalItems.getContent()
 					.stream().map(this::toRentalItemInfo).toList();
 			
-			return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalPages(), rentalItems.getTotalPages());
+			return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
 		}
 		
 		if (condition.status() != RentalItemStatus.RETURNED) {
@@ -101,7 +103,7 @@ public class RentalQueryService {
 		
 		List<RentalItemInfo> rentalItemInfoList = rentalItems.stream().map(this::toRentalItemInfo).toList();
 		
-		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalPages(), rentalItems.getTotalPages());
+		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
 	}
 	
 	private void validateCondition(RentalInternalSearchCondition condition) {
