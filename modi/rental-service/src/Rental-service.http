@@ -1,0 +1,12 @@
+@host = http://localhost:8000/rental-service/api/rentals
+
+### GET request to example server
+
+###
+
+POST {{host}}/carts
+Content-Type: application/json
+
+{
+  "cartItemIds": [1, 2, 3]
+}

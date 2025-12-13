@@ -70,7 +70,7 @@ public class RentalDecisionService {
 		}
 		
 		rentalItem.decide(targetStatus);
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 	}
 	
 }
