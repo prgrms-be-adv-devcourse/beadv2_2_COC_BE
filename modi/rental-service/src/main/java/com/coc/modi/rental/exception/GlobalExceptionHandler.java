@@ -3,6 +3,7 @@ package com.coc.modi.rental.exception;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
 import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,20 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+	
+	
+	@ExceptionHandler(RentalException.class)
+	public ResponseEntity<ApiResponse<?>> handleRentalException(RentalException ex) {
+		
+		ErrorCode errorCode = ex.getErrorCode();
+		String message = ex.getDetailMessage();
+		
+		log.warn("Rental exception: code={}, message={}", errorCode.getCode(), message);
+		
+		return ResponseEntity
+				.status(errorCode.getStatus())
+				.body(ApiResponse.error(errorCode, message));
+	}
 	
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ApiResponse<?>> handleBaseException(BaseException ex) {

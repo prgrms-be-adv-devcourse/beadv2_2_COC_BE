@@ -11,17 +11,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
-@SecurityScheme(
-        name = "Authorization",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT",
-        in = SecuritySchemeIn.HEADER
-)
 @SpringBootApplication(scanBasePackages = "com.coc.modi")
 @OpenAPIDefinition(
-        info = @Info(title = "Account Service API", version = "1.0"),
-        security = @SecurityRequirement(name = "Authorization")
+        info = @Info(title = "Account Service API", version = "1.0")
 )
 public class AccountServiceApplication {
 

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record ReviewSummaryResponse(
 		Long id,
-		Long rentalId,
+		Long rentalItemId,
 		Long sellerId,
 		Long memberId,
 		Short rating,
@@ -18,7 +18,7 @@ public record ReviewSummaryResponse(
 		
 		return new ReviewSummaryResponse(
 				review.getId(),
-				review.getRentalId(),
+				review.getRentalItemId(),
 				review.getSellerId(),
 				review.getMemberId(),
 				review.getRating(),
