@@ -1,5 +1,6 @@
 package com.coc.modi.member.member.presentation;
 
+import com.coc.modi.common.UnauthorizedException;
 import com.coc.modi.member.member.application.MemberService;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -34,7 +35,16 @@ public class MemberController {
 	@GetMapping("/profile")
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(Authentication authentication) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new UnauthorizedException(); // 공통 예외
+		}
+		
+		Object principal = authentication.getPrincipal();
+		
+		if (!(principal instanceof Long memberId)) {
+			throw new UnauthorizedException();
+		}
+		
 		MemberProfileResponse response = memberService.getProfile(memberId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
