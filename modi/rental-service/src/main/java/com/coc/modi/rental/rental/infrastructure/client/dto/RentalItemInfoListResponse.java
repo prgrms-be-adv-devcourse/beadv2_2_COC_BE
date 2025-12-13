@@ -6,7 +6,7 @@ import java.util.List;
 public record RentalItemInfoListResponse(
 		
 		List<RentalItemInfo> rentalItemInfoList,
-		Integer totalCount,
+		Long totalCount,
 		Integer totalPages
 ) {
 }

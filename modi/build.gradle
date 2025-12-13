@@ -88,6 +88,18 @@ project(':common-openapi') {
     }
 }
 
+project(':common-kafka') {
+
+    dependencies {
+
+        implementation 'org.springframework.kafka:spring-kafka'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    }
+}
+
 
 configure([
         project(':account-service'),

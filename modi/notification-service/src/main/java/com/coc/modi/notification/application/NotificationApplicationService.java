@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import com.coc.modi.common.NotificationEvent;
 import com.coc.modi.notification.domain.Notification;
 import com.coc.modi.notification.domain.NotificationRepository;
+import com.coc.modi.kafka.event.NotificationEvent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,9 +21,7 @@ public class NotificationApplicationService {
 	public void handle(NotificationEvent event) {
 		
 		Notification notification = Notification.fromEvent(event);
-		
 		Notification saved = notificationRepository.save(notification);
-		
-		notificationSseService.sendNotification(event.getReceiverId(), saved);
+		notificationSseService.sendNotification(event.receiverId(), saved);
 	}
 }

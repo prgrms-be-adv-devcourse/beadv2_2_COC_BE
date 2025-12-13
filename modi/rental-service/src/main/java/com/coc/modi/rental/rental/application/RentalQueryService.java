@@ -9,6 +9,7 @@ import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
+import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
 import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
@@ -33,10 +34,16 @@ public class RentalQueryService {
 	private final RentalRepository rentalRepository;
 	private final RentalQueryRepository rentalQueryRepository;
 	
-	public RentalResponse getRentalDetails(Long rentalId) {
+	public RentalResponse getRentalDetails(Long rentalId, Long memberId) {
 		
 		Rental rental = rentalRepository.findById(rentalId)
 				.orElseThrow(() -> new RentalNotFoundException(rentalId));
+		
+		if (!rental.getMemberId().equals(memberId)) {
+			
+			throw RentalAccessDeniedException.memberMismatch(rentalId, memberId);
+		}
+		
 		List<RentalItem> rentalItemList = rental.getItems();
 		
 		List<RentalItemResponse> rentalItemResponseList = rentalItemList.stream()
@@ -46,12 +53,19 @@ public class RentalQueryService {
 		return RentalResponse.create(rental, rentalItemResponseList);
 	}
 	
-	public List<RentalResponse> searchRentals(LocalDate startDate, LocalDate endDate, RentalStatus status) {
+	public List<RentalResponse> searchRentals(LocalDate startDate,
+											  LocalDate endDate,
+											  RentalStatus status,
+											  Long memberId) {
 		
-		List<Rental> rentals = rentalQueryRepository.search(startDate, endDate, status);
+		List<Rental> rentals = rentalQueryRepository.search(startDate, endDate, status, memberId);
+		
+		
 		
 		return rentals.stream().map(rental -> {
+			
 			List<RentalItemResponse> itemResponses = rental.getItems().stream().map(RentalItemResponse::from).toList();
+			
 			return RentalResponse.create(rental, itemResponses);
 		}).toList();
 	}
@@ -63,17 +77,17 @@ public class RentalQueryService {
 		if (condition.productId() != null) {
 			
 			Page<RentalItem> rentalItems = rentalQueryRepository.findRentalItemsBySellerAndProduct(
-							condition.sellerId(),
-							condition.productId(),
-							condition.status(),
-							condition.startDate(),
-							condition.endDate(),
-							pageable);
+					condition.sellerId(),
+					condition.productId(),
+					condition.status(),
+					condition.startDate(),
+					condition.endDate(),
+					pageable);
 			
 			List<RentalItemInfo> rentalItemInfoList = rentalItems.getContent()
-					.stream().map(this :: toRentalItemInfo).toList();
+					.stream().map(this::toRentalItemInfo).toList();
 			
-			return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalPages(), rentalItems.getTotalPages());
+			return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
 		}
 		
 		if (condition.status() != RentalItemStatus.RETURNED) {
@@ -87,9 +101,9 @@ public class RentalQueryService {
 				condition.endDate(),
 				pageable);
 		
-		List<RentalItemInfo> rentalItemInfoList = rentalItems.stream().map(this :: toRentalItemInfo).toList();
+		List<RentalItemInfo> rentalItemInfoList = rentalItems.stream().map(this::toRentalItemInfo).toList();
 		
-		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalPages(), rentalItems.getTotalPages());
+		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
 	}
 	
 	private void validateCondition(RentalInternalSearchCondition condition) {

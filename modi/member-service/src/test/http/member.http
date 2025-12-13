@@ -1,0 +1,18 @@
+@host = http://localhost:8000
+@access_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjU1NTI4NzYsImV4cCI6MTc2NTU1NjQ3Nn0.1DlaHHpI2MDC42zdctO9KrCWMJA3iogd3SbRoVBlqok
+
+### 회원가입
+POST {{host}}/member-service/api/members/signup
+Content-Type: application/json
+
+{
+  "email": "dsadwwqe@gmail.com",
+  "password": "!@#asdf1122",
+  "name": "김이김",
+  "phone": "010-3232-3234"
+}
+###
+### 내 정보 조회
+
+GET {{host}}/member-service/api/members/profile
+Authorization: Bearer {{access_token}}

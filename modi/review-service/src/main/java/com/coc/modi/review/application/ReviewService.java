@@ -1,9 +1,5 @@
 package com.coc.modi.review.application;
 
-import com.coc.modi.common.NotificationChannel;
-import com.coc.modi.common.NotificationEvent;
-import com.coc.modi.common.NotificationType;
-import com.coc.modi.common.ReviewCreatedEvent;
 import com.coc.modi.review.application.dto.CreateReviewCommand;
 import com.coc.modi.review.application.dto.ReviewResponse;
 import com.coc.modi.review.application.dto.ReviewSummaryResponse;
@@ -14,15 +10,13 @@ import com.coc.modi.review.domain.ReviewStatus;
 import com.coc.modi.review.event.NotificationEventPublisher;
 import com.coc.modi.review.exception.ReviewAccessDeniedException;
 import com.coc.modi.review.exception.ReviewNotFoundException;
+import com.coc.modi.kafka.event.NotificationEvent;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Set;
 
 
 @Service
@@ -46,17 +40,17 @@ public class ReviewService {
 		);
 
 		Review saved = reviewRepository.save(review);
-		
-		NotificationEvent event = new NotificationEvent();
-		event.setType(NotificationType.REVIEW_CREATED);
-		event.setReceiverId(saved.getSellerId());
-		event.setTitle("새 리뷰가 등록 되었습니다!");
-		event.setContent("상품에 새로운 리뷰가 등록되어습니다.");
-		event.setReferenceType("REVIEW");
-		event.setReferenceId(saved.getId());
-		event.setChannels(Set.of(NotificationChannel.IN_APP));
-		
-		notificationEventPublisher.publish(event);
+
+		notificationEventPublisher.publish(
+				NotificationEvent.of(
+						saved.getSellerId(),
+						"REVIEW_CREATED",
+						"새 리뷰가 등록 되었습니다!",
+						"상품에 새로운 리뷰가 등록되었습니다.",
+						"REVIEW",
+						String.valueOf(saved.getId())
+				)
+		);
 		
 		return ReviewResponse.from(saved);
 	}
