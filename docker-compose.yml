@@ -50,8 +50,8 @@ services:
       - modi-discovery
     env_file:
       - .env
-    expose:
-      - "8888"
+    ports:
+      - "8888:8888"
     networks:
       - msa-net
     restart: always
@@ -65,7 +65,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8080"
+      - "8000:8000"
     networks:
       - msa-net
     restart: always
@@ -101,8 +101,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8081"
+    ports:
+      - "8081:8081"
     env_file:
       - .env
     restart: always
@@ -115,8 +115,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8082"
+    ports:
+      - "8082:8082"
     env_file:
       - .env
     restart: always
@@ -129,8 +129,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8083"
+    ports:
+      - "8083:8083"
     env_file:
       - .env
     restart: always
@@ -143,8 +143,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8084"
+    ports:
+      - "8084:8084"
     env_file:
       - .env
     restart: always
@@ -157,8 +157,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8085"
+    ports:
+      - "8085:8085"
     env_file:
       - .env
     restart: always
@@ -171,8 +171,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8086"
+    ports:
+      - "8086:8086"
     env_file:
       - .env
     restart: always
@@ -185,8 +185,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    expose:
-      - "8087"
+    ports:
+      - "8087:8087"
     env_file:
       - .env
     restart: always
