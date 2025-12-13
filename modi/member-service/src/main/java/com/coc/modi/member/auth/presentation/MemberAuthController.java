@@ -1,15 +1,17 @@
 package com.coc.modi.member.auth.presentation;
 
-import com.coc.modi.member.auth.application.MemberAuthService;
-import com.coc.modi.member.auth.application.EmailVerificationService;
-import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
-import com.coc.modi.member.auth.presentation.dto.*;
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.member.auth.application.EmailVerificationService;
+import com.coc.modi.member.auth.application.MemberAuthService;
+import com.coc.modi.member.auth.application.PasswordResetService;
+import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmRequest;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendRequest;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendResponse;
 import com.coc.modi.member.auth.presentation.dto.MemberLoginRequest;
+import com.coc.modi.member.auth.presentation.dto.PasswordResetConfirmRequest;
+import com.coc.modi.member.auth.presentation.dto.PasswordResetRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +28,7 @@ public class MemberAuthController {
 	
 	private final MemberAuthService memberAuthService;
 	private final EmailVerificationService emailVerificationService;
+	private final PasswordResetService passwordResetService;
 	
 	// 로그인
 	@PostMapping("/login")
@@ -52,5 +55,23 @@ public class MemberAuthController {
 		EmailVerificationConfirmResponse response = emailVerificationService.confirmVerification(request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 비밀번호 재설정 코드 발송
+	@PostMapping("/password/reset/send")
+	public ResponseEntity<ApiResponse<?>> sendPasswordReset(@RequestBody PasswordResetRequest request) {
+		
+		passwordResetService.sendResetCode(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok());
+	}
+	
+	// 비밀번호 재설정
+	@PostMapping("/password/reset/confirm")
+	public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody PasswordResetConfirmRequest request) {
+		
+		passwordResetService.resetPassword(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok());
 	}
 }

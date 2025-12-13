@@ -40,6 +40,25 @@ Content-Type: application/json
   "password": "!@#asdf11223"
 }
 
+### 비밀번호 찾기 - 코드 발송
+
+POST {{host}}/member-service/api/auth/password/reset/send
+Content-Type: application/json
+
+{
+  "email": "bbb@gmail.com"
+}
+
+### 비밀번호 찾기 - 재설정
+
+POST {{host}}/member-service/api/auth/password/reset/confirm
+Content-Type: application/json
+
+{
+  "email": "bbb@gmail.com",
+  "code": "123456",
+  "newPassword": "NewPass!23"
+}
 
 ### 회원 탈퇴
 
