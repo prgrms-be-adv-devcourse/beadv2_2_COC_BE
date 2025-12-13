@@ -64,9 +64,9 @@ public class SettlementBatchJobConfig {
 				.retryLimit(3)
 				.retry(RetryableException.class)
 				.retry(FeignException.ServiceUnavailable.class)
-				.retry(FeignException.GatewayTimeout.class)
+				.retry(FeignException.GatewayTimeout.class) // 일시적 오류(네트워크, 외부 서비스 다운) 시 재시도
 				.backOffPolicy(settlementRetryBackOffPolicy())
-				.skip(FeignException.BadRequest.class)
+				.skip(FeignException.BadRequest.class) // 영구적 오류(데이터 문제) 시 건너뛰기
 				.skip(FeignException.NotFound.class)
 				.skipLimit(50)
 				.listener(settlementSkipListener)

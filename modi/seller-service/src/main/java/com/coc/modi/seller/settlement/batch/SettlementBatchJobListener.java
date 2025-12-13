@@ -34,7 +34,9 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 		String batchType = jobExecution.getJobInstance().getJobName();
 		Long batchId = jobExecution.getJobParameters().getLong(BATCH_ID_KEY);
 		String params = jobExecution.getJobParameters().toString();
+		// 1. 실행 기록 생성
 		Long executionId = executionService.start(batchType, batchId, params).getId();
+		// 2. 실행 컨텍스트에 저장
 		jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
 		if (batchId != null) {
 			jobExecution.getExecutionContext().putLong(BATCH_ID_KEY, batchId);
@@ -49,6 +51,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 			return;
 		}
 		
+		// 1. 읽기, 쓰기, 건너뛰기 건수 총합 계산
 		long readCount = jobExecution.getStepExecutions().stream()
 				.mapToLong(se -> se.getReadCount())
 				.sum();
@@ -110,6 +113,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 			);
 		}
 		
+		// 4. 비즈니스 배치 기록 업데이트 (Scheduler에서 생성한 기록)
 		Long batchId = jobExecution.getExecutionContext().containsKey(BATCH_ID_KEY)
 				? jobExecution.getExecutionContext().getLong(BATCH_ID_KEY)
 				: null;
