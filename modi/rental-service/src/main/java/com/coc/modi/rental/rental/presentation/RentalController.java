@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,7 +32,9 @@ public class RentalController {
 	
 	@PostMapping("/carts")
 	public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@RequestBody RentalFromCartRequest rentalFromCartRequest,
-																  @RequestParam Long memberId) {
+																  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalCreationService.createRentalFromCart(rentalFromCartRequest.toCommand(memberId));
 		
@@ -40,7 +43,9 @@ public class RentalController {
 	
 	@PostMapping
 	public ResponseEntity<ApiResponse<Void>> createRental(@RequestBody RentalRequest rentalRequest,
-														  @RequestParam Long memberId) {
+														  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalCreationService.createRental(rentalRequest.toCommand(memberId));
 		
@@ -49,7 +54,9 @@ public class RentalController {
 	
 	@PatchMapping("/{rentalItemId}/accept")
 	public ResponseEntity<ApiResponse<Void>> acceptRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+															  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalDecisionService.acceptRentalItem(rentalItemId, memberId);
 		
@@ -58,7 +65,9 @@ public class RentalController {
 	
 	@PatchMapping("/{rentalItemId}/reject")
 	public ResponseEntity<ApiResponse<Void>> rejectRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+															  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalDecisionService.rejectRentalItem(rentalItemId, memberId);
 		
@@ -67,14 +76,18 @@ public class RentalController {
 	
 	@PostMapping("/{rentalId}/pay")
 	public ResponseEntity<ApiResponse<PayRentalResponse>> completePayment(@PathVariable(name = "rentalId") Long rentalId,
-																		  @RequestParam Long memberId) {
+																		  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalPaymentService.completePayment(rentalId, memberId)));
 	}
 	
 	@PatchMapping("/{rentalItemId}/cancel")
 	public ResponseEntity<ApiResponse<Void>> cancelRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+															  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalLifecycleService.cancelRentalItem(rentalItemId, memberId);
 		
@@ -83,8 +96,10 @@ public class RentalController {
 	
 	@PostMapping("/{rentalItemId}/return")
 	public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(@PathVariable(name = "rentalItemId") Long rentalItemId,
-																			@RequestParam Long memberId,
+																			Authentication authentication,
 																			@RequestBody RentalReturnRequest rentalReturnRequest) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalLifecycleService.completeReturn(
 				rentalReturnRequest.toCommand(rentalItemId, memberId))));
@@ -92,7 +107,9 @@ public class RentalController {
 	
 	@PostMapping("/{rentalItemId}/refund")
 	public ResponseEntity<ApiResponse<Void>> refundRental(@PathVariable(name = "rentalItemId") Long rentalItemId,
-														  @RequestParam Long memberId) {
+														  Authentication authentication) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalLifecycleService.refundRentalItem(rentalItemId, memberId);
 		
@@ -101,8 +118,10 @@ public class RentalController {
 	
 	@PostMapping("/{rentalItemId}/extend")
 	public ResponseEntity<ApiResponse<Void>> extendRental(@PathVariable(name = "rentalItemId") Long rentalItemId,
-														  @RequestParam Long memberId,
+														  Authentication authentication,
 														  @RequestBody ExtendRentalRequest request) {
+		
+		Long memberId = (Long) authentication.getPrincipal();
 		
 		rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, memberId));
 		
@@ -111,17 +130,21 @@ public class RentalController {
 	
 	@GetMapping("/{rentalId}")
 	public ResponseEntity<ApiResponse<RentalResponse>> getRentalDetails(@PathVariable(name = "rentalId") Long rentalId,
-																		@RequestParam Long memberId) {
+																		Authentication authentication) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId)));
+		Long memberId = (Long) authentication.getPrincipal();
+		
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId, memberId)));
 	}
 	
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<RentalResponse>>> searchRentals(
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-			@RequestParam(required = false) RentalStatus rentalStatus) {
+			@RequestParam(required = false) RentalStatus rentalStatus, Authentication authentication) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus)));
+		Long memberId = (Long) authentication.getPrincipal();
+		
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, memberId)));
 	}
 }

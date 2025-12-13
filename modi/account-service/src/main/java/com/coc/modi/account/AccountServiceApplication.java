@@ -8,13 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @EnableJpaAuditing
-@SecurityScheme(
-        name = "Authorization",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT",
-        in = SecuritySchemeIn.HEADER
-)
 @SpringBootApplication(scanBasePackages = "com.coc.modi")
 public class AccountServiceApplication {
 

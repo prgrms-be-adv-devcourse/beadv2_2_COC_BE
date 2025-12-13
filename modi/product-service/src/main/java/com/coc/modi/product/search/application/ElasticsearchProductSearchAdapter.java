@@ -42,13 +42,12 @@ import lombok.extern.slf4j.Slf4j;
 )
 public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 	
-	private static final String INDEX = "product";
+	private static final String INDEX = "products";
 	
 	private final ProductSearchQueryRepository searchQueryRepository;
 	private final ElasticsearchClientManager clientManager;
 	private final RentalFeignClient rentalFeignClient;
 	private final ElasticsearchStatus status;
-	
 	
 	@Override
 	@Transactional(readOnly = true)
@@ -58,7 +57,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 												ProductSortType sortType) {
 		
 		try {
-			ProductSortType effectiveSortType = sortType != null ? sortType : condition.effectiveSortType();
+			ProductSortType effectiveSortType = sortType != null ? sortType : ProductSortType.LATEST;
 			
 			List<ProductListResponse> items = new ArrayList<>();
 			String currentCursor = cursor;
@@ -180,10 +179,12 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 	}
 	
 	private ProductSearchUnavailableException unavailable(String message, Exception cause) {
+		
 		return new ProductSearchUnavailableException(message, cause);
 	}
 	
 	private String buildNextCursor(List<ProductDocument> docs, ProductSortType sortType) {
+		
 		return switch (sortType) {
 			case LATEST, OLDEST -> {
 				// 뒤에서부터 createdAt 이 있는 문서를 찾음

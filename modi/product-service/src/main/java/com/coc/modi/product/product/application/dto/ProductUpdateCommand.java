@@ -1,24 +1,31 @@
 package com.coc.modi.product.product.application.dto;
 
-import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.coc.modi.product.product.domain.ProductCategory;
+import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
+
 public record ProductUpdateCommand(
-
-        @NotBlank(message = "name is required")
-        String name,
-
-        @NotBlank(message = "description is required")
-        String description,
-
-        @NotNull(message = "pricePerDay is required")
-        @Positive(message = "pricePerDay must be positive")
-        BigDecimal pricePerDay,
-
-        @NotBlank(message = "category is required")
-        String category,
-
-        List<ProductResponse.ImageInfo> images
+		Long memberId,
+		Long productId,
+		String name,
+		String description,
+		BigDecimal pricePerDay,
+		ProductCategory category,
+		List<ProductDetailResponse.ImageInfo> images
 ) {
+	
+	public static ProductUpdateCommand toCommand(Long memberId, Long productId, ProductUpdateRequest productUpdateRequest) {
+		
+		return new ProductUpdateCommand(
+				memberId,
+				productId,
+				productUpdateRequest.name(),
+				productUpdateRequest.description(),
+				productUpdateRequest.pricePerDay(),
+				productUpdateRequest.category(),
+				productUpdateRequest.images()
+		);
+	}
 }
