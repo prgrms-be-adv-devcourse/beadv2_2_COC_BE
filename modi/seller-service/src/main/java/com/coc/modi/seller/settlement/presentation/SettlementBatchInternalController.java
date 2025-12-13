@@ -4,7 +4,9 @@ import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,32 +21,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/internal/settlements/batches")
 public class SettlementBatchInternalController {
-
-    private final SettlementBatchService settlementBatchService;
-
-    @PostMapping
-    public ApiResponse<SettlementBatchResponse> createBatch(@RequestBody SettlementBatchCreateCommand command) {
-        return ApiResponse.ok(settlementBatchService.createBatch(command));
-    }
-
-    @PostMapping("/{batchId}/start")
-    public ApiResponse<SettlementBatchResponse> startBatch(@PathVariable Long batchId) {
-        return ApiResponse.ok(settlementBatchService.startBatch(batchId));
-    }
-
-    @PostMapping("/{batchId}/complete")
-    public ApiResponse<SettlementBatchResponse> completeBatch(@PathVariable Long batchId) {
-        return ApiResponse.ok(settlementBatchService.completeBatch(batchId));
-    }
-
-    @GetMapping
-    public ApiResponse<Page<SettlementBatchResponse>> getBatches(@RequestParam(value = "periodYm", required = false) String periodYm,
-                                                                 Pageable pageable) {
-        return ApiResponse.ok(settlementBatchService.getBatches(periodYm, pageable));
-    }
-
-    @GetMapping("/{batchId}")
-    public ApiResponse<SettlementBatchResponse> getBatch(@PathVariable Long batchId) {
-        return ApiResponse.ok(settlementBatchService.getBatch(batchId));
-    }
+	
+	private final SettlementBatchService settlementBatchService;
+	
+	@PostMapping
+	public ApiResponse<SettlementBatchResponse> createBatch(@RequestBody SettlementBatchCreateCommand command) {
+		
+		return ApiResponse.ok(settlementBatchService.createBatch(command));
+	}
+	
+	@PostMapping("/{batchId}/start")
+	public ApiResponse<SettlementBatchResponse> startBatch(@PathVariable Long batchId) {
+		
+		return ApiResponse.ok(settlementBatchService.startBatch(batchId));
+	}
+	
+	@PostMapping("/{batchId}/complete")
+	public ApiResponse<SettlementBatchResponse> completeBatch(@PathVariable Long batchId) {
+		
+		return ApiResponse.ok(settlementBatchService.completeBatch(batchId));
+	}
+	
+	@GetMapping
+	public ApiResponse<Page<SettlementBatchResponse>> getBatches(@RequestParam(value = "periodYm", required = false) String periodYm,
+																 Pageable pageable) {
+		
+		return ApiResponse.ok(settlementBatchService.getBatches(periodYm, pageable));
+	}
+	
+	@GetMapping("/{batchId}")
+	public ApiResponse<SettlementBatchResponse> getBatch(@PathVariable Long batchId) {
+		
+		return ApiResponse.ok(settlementBatchService.getBatch(batchId));
+	}
 }

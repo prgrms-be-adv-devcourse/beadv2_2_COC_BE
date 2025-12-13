@@ -27,9 +27,9 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
             @ModelAttribute ProductSearchCondition condition,
-			@RequestParam(required = false) String cursor,
-			@RequestParam(defaultValue = "20") int size,
-			@RequestParam(defaultValue = "LATEST") ProductSortType sortType) {
+			@RequestParam(name = "cursor", required = false) String cursor,
+			@RequestParam(name = "size", defaultValue = "20") int size,
+			@RequestParam(name = "sortType", defaultValue = "LATEST") ProductSortType sortType) {
 
         return ResponseEntity.ok(ApiResponse.ok(service.searchProducts(condition, cursor, size, sortType)));
     }
