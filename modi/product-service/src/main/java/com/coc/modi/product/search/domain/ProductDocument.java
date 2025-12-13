@@ -46,7 +46,7 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String thumbnailUrl;
 	
-	@Field(type = FieldType.Date, format = DateFormat.date_time)
+	@Field(type = FieldType.Date, format = DateFormat.strict_date_optional_time_nanos)
 	private OffsetDateTime createdAt;
 	
 	public ProductDocument(Long id,

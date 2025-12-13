@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 )
 public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 	
-	private static final String INDEX = "product";
+	private static final String INDEX = "products";
 	
 	private final ProductSearchQueryRepository searchQueryRepository;
 	private final ElasticsearchClientManager clientManager;

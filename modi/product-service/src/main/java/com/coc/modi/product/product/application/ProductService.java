@@ -124,13 +124,24 @@ public class ProductService {
 	// sellerId 조회
 	private Long getSellerId(Long memberId) {
 		
-		SellerResponse sellerResponse = sellerFeignClient.getSellerIdByMemberId(memberId);
-		
-		if (sellerResponse == null || sellerResponse.sellerId() == null) {
-			throw new ProductInvalidInputException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
+		try {
+			SellerResponse sellerResponse =
+					sellerFeignClient.getSellerIdByMemberId(memberId);
+			
+			if (sellerResponse == null || sellerResponse.sellerId() == null) {
+				throw new ProductInvalidInputException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
+			}
+			
+			return sellerResponse.sellerId();
+			
+		} catch (feign.FeignException.NotFound e) {
+			
+			throw new ProductInvalidInputException("판매자 정보가 등록되지 않았습니다. memberId: " + memberId);
+			
+		} catch (feign.FeignException e) {
+			
+			throw new ProductInvalidInputException("판매자 서비스 호출 중 오류가 발생했습니다.");
 		}
-		
-		return sellerResponse.sellerId();
 	}
 	
 	// 내부 api
