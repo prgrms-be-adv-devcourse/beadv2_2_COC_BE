@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: modi-discovery
+  config:
+    import: "optional:configserver:http://modi-config:8888"
 
 eureka:
   client:
