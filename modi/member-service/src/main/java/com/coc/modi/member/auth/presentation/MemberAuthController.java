@@ -6,9 +6,9 @@ import com.coc.modi.member.auth.application.MemberAuthService;
 import com.coc.modi.member.auth.application.PasswordResetService;
 import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmRequest;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationConfirmResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendRequest;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationSendResponse;
 import com.coc.modi.member.auth.presentation.dto.MemberLoginRequest;
 import com.coc.modi.member.auth.presentation.dto.PasswordResetConfirmRequest;
 import com.coc.modi.member.auth.presentation.dto.PasswordResetRequest;
@@ -59,19 +59,19 @@ public class MemberAuthController {
 	
 	// 비밀번호 재설정 코드 발송
 	@PostMapping("/password/reset/send")
-	public ResponseEntity<ApiResponse<?>> sendPasswordReset(@RequestBody PasswordResetRequest request) {
+	public ResponseEntity<ApiResponse<Void>> sendPasswordReset(@RequestBody PasswordResetRequest request) {
 		
 		passwordResetService.sendResetCode(request.toCommand());
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 비밀번호 재설정
 	@PostMapping("/password/reset/confirm")
-	public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody PasswordResetConfirmRequest request) {
+	public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody PasswordResetConfirmRequest request) {
 		
 		passwordResetService.resetPassword(request.toCommand());
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

@@ -5,8 +5,8 @@ import com.coc.modi.member.auth.application.dto.ConfirmEmailVerificationCommand;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.auth.infrastructure.mail.EmailSender;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendResponse;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationSendResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationConfirmResponse;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.MemberException;
 
