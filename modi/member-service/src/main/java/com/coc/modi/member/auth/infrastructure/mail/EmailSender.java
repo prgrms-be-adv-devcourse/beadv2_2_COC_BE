@@ -14,7 +14,7 @@ public class EmailSender {
 	
 	private final JavaMailSender mailSender;
 	
-	@Value("${mail.from-address:}")
+	@Value("${mail.from-address}")
 	private String fromAddress;
 	
 	public void sendVerificationCode(String to, String code) {

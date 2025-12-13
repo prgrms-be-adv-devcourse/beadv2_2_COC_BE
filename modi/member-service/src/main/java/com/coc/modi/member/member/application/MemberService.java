@@ -1,5 +1,6 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -8,24 +9,34 @@ import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PasswordMismatchException;
+import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.regex.Pattern;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
+	
+	private static final Pattern VERIFICATION_CODE_PATTERN = Pattern.compile("^\\d{6}$");
 	
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccountFeignClient accountFeignClient;
 	private final MemberValidationService memberValidationService;
+	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	
 	// 회원가입
 	@Transactional
@@ -55,7 +66,15 @@ public class MemberService {
 		Member saved = memberRepository.save(member);
 		
 		// 회원 지갑 생성 요청
-		accountFeignClient.createWallet(saved.getId());
+		try {
+			
+			accountFeignClient.createWallet(saved.getId());
+		} catch (FeignException ex) {
+			
+			log.error("Failed to create wallet for memberId={}", saved.getId(), ex);
+			
+			throw new WalletCreationFailedException();
+		}
 		
 		return MemberSignupResponse.from(saved);
 	}
@@ -104,6 +123,14 @@ public class MemberService {
 		
 		Member member = getMemberOrThrow(memberId);
 		
+		// 이메일 유효성 검사
+		memberValidationService.validateEmail(command.email());
+		
+		if (!member.getEmail().equals(command.email())) {
+			
+			throw new PasswordMismatchException("이메일이 일치하지 않습니다.");
+		}
+		
 		if (command.name() == null || command.name().isBlank()) {
 			
 			throw new PasswordMismatchException("이름을 입력해주세요.");
@@ -113,6 +140,8 @@ public class MemberService {
 			
 			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
 		}
+		
+		validateVerificationCode(command.email(), command.verificationCode());
 		
 		memberValidationService.validatePassword(command.password());
 		
@@ -134,6 +163,33 @@ public class MemberService {
 		
 		return memberRepository.findById(memberId)
 				.orElseThrow(() -> new MemberNotFoundException(memberId));
+	}
+	
+	private void validateVerificationCode(String email, String verificationCode) {
+		
+		if (verificationCode == null || verificationCode.isBlank()) {
+			
+			throw new AuthCodeInvalidException("인증 코드를 입력해주세요.");
+		}
+		
+		if (!VERIFICATION_CODE_PATTERN.matcher(verificationCode).matches()) {
+			
+			throw new AuthCodeInvalidException("인증 코드는 6자리 숫자입니다.");
+		}
+		
+		String storedCode = emailVerificationCodeStore.getCode(email);
+		
+		if (storedCode == null) {
+			
+			throw new AuthCodeInvalidException("이메일 인증 요청이 존재하지 않습니다.");
+		}
+		
+		if (!storedCode.equals(verificationCode)) {
+			
+			throw new AuthCodeInvalidException("인증 코드가 일치하지 않습니다.");
+		}
+		
+		emailVerificationCodeStore.deleteCode(email);
 	}
 	
 }
