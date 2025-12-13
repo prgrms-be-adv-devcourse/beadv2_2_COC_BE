@@ -1,0 +1,91 @@
+package com.coc.modi.seller.settlement.batch;
+
+import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionListener;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Comparator;
+
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.FEE_AMOUNT;
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.LAST_CURSOR;
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.TOTAL_AMOUNT;
+
+@Component
+@RequiredArgsConstructor
+public class SettlementBatchJobListener implements JobExecutionListener {
+
+    private static final String EXECUTION_ID_KEY = "settlementExecutionId";
+
+    private final SettlementBatchExecutionService executionService;
+
+    @Override
+    public void beforeJob(JobExecution jobExecution) {
+        String batchType = jobExecution.getJobInstance().getJobName();
+        String params = jobExecution.getJobParameters().toString();
+        Long executionId = executionService.start(batchType, params).getId();
+        jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
+    }
+
+    @Override
+    public void afterJob(JobExecution jobExecution) {
+        Long executionId = jobExecution.getExecutionContext().getLong(EXECUTION_ID_KEY, -1L);
+        if (executionId < 0) {
+            return;
+        }
+
+        int readCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getReadCount())
+                .sum();
+        int writeCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getWriteCount())
+                .sum();
+        int processSkip = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
+                .sum();
+
+        BigDecimal totalAmount = jobExecution.getStepExecutions().stream()
+                .map(se -> se.getExecutionContext().get(TOTAL_AMOUNT))
+                .filter(BigDecimal.class::isInstance)
+                .map(BigDecimal.class::cast)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal feeAmount = jobExecution.getStepExecutions().stream()
+                .map(se -> se.getExecutionContext().get(FEE_AMOUNT))
+                .filter(BigDecimal.class::isInstance)
+                .map(BigDecimal.class::cast)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int failCount = jobExecution.getStepExecutions().stream()
+                .mapToInt(se -> se.getFailureExceptions().size())
+                .sum();
+
+        int skipCount = (int) jobExecution.getStepExecutions().stream()
+                .mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
+                .sum();
+
+        String lastCursor = jobExecution.getStepExecutions().stream()
+                .sorted(Comparator.comparingLong(se -> se.getId()))
+                .map(se -> {
+                    ExecutionContext ctx = se.getExecutionContext();
+                    return ctx.containsKey(LAST_CURSOR) ? ctx.getString(LAST_CURSOR) : null;
+                })
+                .filter(cursor -> cursor != null && !cursor.isBlank())
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
+            executionService.complete(executionId, readCount, writeCount, skipCount, totalAmount, feeAmount, lastCursor);
+        } else {
+            String errorMessage = jobExecution.getAllFailureExceptions().stream()
+                    .findFirst()
+                    .map(Throwable::getMessage)
+                    .orElse("Batch failed");
+            executionService.fail(executionId, errorMessage, readCount, writeCount, skipCount + failCount, lastCursor);
+        }
+    }
+}

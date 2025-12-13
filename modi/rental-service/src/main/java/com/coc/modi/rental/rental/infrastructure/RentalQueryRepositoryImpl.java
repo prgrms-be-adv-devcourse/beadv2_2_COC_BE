@@ -29,12 +29,14 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 	private final JPAQueryFactory queryFactory;
 	
 	@Override
-	public List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus) {
+	public List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus, Long memberId) {
 		
 		QRental rental = QRental.rental;
 		QRentalItem rentalItem = QRentalItem.rentalItem;
 		
 		BooleanBuilder builder = new BooleanBuilder();
+		
+		builder.and(rental.memberId.eq(memberId));
 		
 		if (startDate != null) {
 			builder.and(rentalItem.startDate.goe(startDate));

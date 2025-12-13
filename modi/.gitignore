@@ -11,6 +11,8 @@ HELP.md
 .gitignore
 **/src/main/resources/application.yml
 .idea
+*.yml
+.env
 
 ### STS ###
 .apt_generated/
@@ -24,6 +26,7 @@ HELP.md
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 **/md/
+**/src/main/generated/
 
 ### IntelliJ IDEA ###
 **/.idea/

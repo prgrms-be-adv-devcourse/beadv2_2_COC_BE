@@ -1,3 +1,4 @@
+// 모든 서비스 모듈이 공통으로 쓰는 루트 빌드 스크립트.
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.8'
@@ -5,6 +6,7 @@ plugins {
 }
 
 ext {
+    // Spring Cloud BOM 버전을 중앙에서 관리.
     set('springCloudVersion', '2025.0.0')
 }
 
@@ -12,6 +14,7 @@ group = 'com.coc'
 version = '0.0.1-SNAPSHOT'
 description = 'modi'
 
+// 모든 서브모듈에 공통 적용되는 설정.
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
@@ -22,6 +25,7 @@ subprojects {
 
     java {
         toolchain {
+            // 빌드 환경을 맞추기 위해 Java 17 고정.
             languageVersion = JavaLanguageVersion.of(17)
         }
     }
@@ -31,20 +35,6 @@ subprojects {
     }
 
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-web'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-        
-        implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-        annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-        implementation 'org.springframework.boot:spring-boot-starter-security'
-        implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-        implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-        implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
@@ -52,13 +42,9 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-        }
-    }
 
     dependencyManagement {
+        // Spring Cloud 의존성 BOM 가져오기.
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
         }
@@ -66,5 +52,95 @@ subprojects {
 
     tasks.named('test') {
         useJUnitPlatform()
+    }
+}
+
+project(':common') {
+
+    dependencies {
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+        annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    }
+}
+project(':common-security') {
+
+    dependencies {
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    }
+}
+project(':common-openapi') {
+
+    dependencies {
+
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
+
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    }
+}
+
+project(':common-kafka') {
+
+    dependencies {
+
+        implementation 'org.springframework.kafka:spring-kafka'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    }
+}
+
+
+configure([
+        project(':account-service'),
+        project(':product-service'),
+        project(':rental-service'),
+        project(':seller-service'),
+        project(':member-service'),
+        project(':review-service'),
+        project(':notification-service')
+]) {
+    dependencies {
+
+        implementation project(':common')
+        implementation project(':common-security')
+        implementation project(':common-notification')
+        implementation project(':common-openapi')
+        // 핵심 Spring Boot 스타터.
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        runtimeOnly 'org.postgresql:postgresql'
+
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+        // 타입 안전한 JPA 쿼리를 위한 Querydsl.
+        implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+        annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+        annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+        annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+        implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+        // API 문서와 보안/JWT 지원.
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
     }
 }
