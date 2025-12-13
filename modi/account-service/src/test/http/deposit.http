@@ -1,0 +1,43 @@
+@host = http://localhost:8000
+@access_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzY1NjI1MTI2LCJleHAiOjE3NjU2Mjg3MjZ9.srSQf2_BJ90EknT-91GgPJ5ePYnJu37P8_tTI9jT1C8
+@amount = 50000
+@order_id = ORDER_SAMPLE_001
+@payment_key = pay-123456789
+
+### 예치금 충전 요청
+
+POST {{host}}/account-service/api/deposits/pg/request
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "amount": {{amount}}
+}
+
+### 예치금 충전 승인
+
+POST {{host}}/account-service/api/deposits/pg/approve
+Content-Type: application/json
+
+{
+  "paymentKey": "{{payment_key}}",
+  "orderId": "{{order_id}}",
+  "amount": {{amount}}
+}
+
+### 주문번호 생성 (토스 결제 위젯 설정 조회)
+
+GET {{host}}/account-service/api/deposits/pg/config
+
+### 예치금 충전 취소(환불)
+
+POST {{host}}/account-service/api/deposits/pg/cancel
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "paymentKey": "{{payment_key}}",
+  "orderId": "{{order_id}}",
+  "amount": {{amount}},
+  "reason": "사용자 취소"
+}

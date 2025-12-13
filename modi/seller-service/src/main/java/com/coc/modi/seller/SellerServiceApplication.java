@@ -18,8 +18,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         info = @Info(title = "Seller Service API", version = "1.0")
 )
 public class SellerServiceApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(SellerServiceApplication.class, args);
-    }
+	
+	public static void main(String[] args) {
+		
+		SpringApplication.run(SellerServiceApplication.class, args);
+	}
 }

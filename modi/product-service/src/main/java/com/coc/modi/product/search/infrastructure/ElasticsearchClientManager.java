@@ -21,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ElasticsearchClientManager {
 	
 	private final String elasticUrl;
-	private final ElasticsearchStatus status;
+	private final ElasticsearchStatus elasticsearchStatus;
+	
+	private final JacksonJsonpMapper jsonMapper;
 	
 	private final AtomicReference<ElasticsearchClient> clientRef = new AtomicReference<>();
 	private final AtomicReference<ElasticsearchTransport> transportRef = new AtomicReference<>();
@@ -29,23 +31,26 @@ public class ElasticsearchClientManager {
 	
 	public ElasticsearchClientManager(
 			@Value("${spring.elasticsearch.uris}") String elasticUrl,
-			ElasticsearchStatus status
+			ElasticsearchStatus elasticsearchStatus, JacksonJsonpMapper jsonMapper
 	) {
+		
 		this.elasticUrl = elasticUrl;
-		this.status = status;
+		this.elasticsearchStatus = elasticsearchStatus;
+		this.jsonMapper = jsonMapper;
 	}
 	
 	public ElasticsearchClient getClient() {
+		
 		ElasticsearchClient existing = clientRef.get();
 		
-		if (existing != null && status.isAvailable()) {
+		if (existing != null && elasticsearchStatus.isAvailable()) {
 			
 			return existing;
 		}
 		
 		synchronized (this) {
 			existing = clientRef.get();
-			if (existing != null && status.isAvailable()) {
+			if (existing != null && elasticsearchStatus.isAvailable()) {
 				return existing;
 			}
 			
@@ -54,7 +59,7 @@ public class ElasticsearchClientManager {
 			
 			try {
 				RestClient lowLevel = RestClient.builder(HttpHost.create(this.elasticUrl)).build();
-				ElasticsearchTransport transport =new RestClientTransport(lowLevel, new JacksonJsonpMapper());
+				ElasticsearchTransport transport = new RestClientTransport(lowLevel, jsonMapper);
 				ElasticsearchClient client = new ElasticsearchClient(transport);
 				
 				client.ping();
@@ -62,13 +67,13 @@ public class ElasticsearchClientManager {
 				lowLevelClientRef.set(lowLevel);
 				transportRef.set(transport);
 				clientRef.set(client);
-				status.markAvailable();
+				elasticsearchStatus.markAvailable();
 				
 				log.info("Elasticsearch 연결 성공");
 				
 				return client;
 			} catch (Exception e) {
-				status.markUnavailable(e);
+				elasticsearchStatus.markUnavailable(e);
 				log.warn("Elasticsearch 연결 실패. url={}", elasticUrl, e);
 				throw new ProductSearchUnavailableException("상품 검색 기능을 일시적으로 사용할 수 없습니다.", e);
 			}
