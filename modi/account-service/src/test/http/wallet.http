@@ -1,0 +1,42 @@
+@host = http://localhost:8000
+@access_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzY1NjI1MTI2LCJleHAiOjE3NjU2Mjg3MjZ9.srSQf2_BJ90EknT-91GgPJ5ePYnJu37P8_tTI9jT1C8
+@member_id = 10
+@rental_id = 100
+@rental_item_id = 200
+
+### 예치금 조회
+
+GET {{host}}/account-service/api/accounts/balance
+Authorization: Bearer {{access_token}}
+
+### 예치금 거래 내역 조회
+
+GET {{host}}/account-service/api/accounts/transactions
+Authorization: Bearer {{access_token}}
+
+### 회원 지갑 생성
+
+POST {{host}}/account-service/internal/wallets/{{member_id}}
+
+### Rental 결제 전용 - 결제
+
+POST {{host}}/account-service/internal/wallets/rental-payment
+Content-Type: application/json
+
+{
+  "memberId": {{member_id}},
+  "rentalId": {{rental_id}},
+  "amount": 30000
+}
+
+### Rental 결제 전용 - 환불
+
+POST {{host}}/account-service/internal/wallets/rental-refund
+Content-Type: application/json
+
+{
+  "memberId": {{member_id}},
+  "rentalId": {{rental_id}},
+  "rentalItemId": {{rental_item_id}},
+  "amount": 15000
+}
