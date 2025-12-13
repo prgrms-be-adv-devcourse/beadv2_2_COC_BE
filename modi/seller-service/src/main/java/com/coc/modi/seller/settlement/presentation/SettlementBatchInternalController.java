@@ -2,7 +2,9 @@ package com.coc.modi.seller.settlement.presentation;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
+import com.coc.modi.seller.settlement.application.SettlementBatchRunner;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
+import com.coc.modi.seller.settlement.application.dto.SettlementBatchRunCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SettlementBatchInternalController {
 	
 	private final SettlementBatchService settlementBatchService;
+	private final SettlementBatchRunner settlementBatchRunner;
 	
 	@PostMapping
 	public ApiResponse<SettlementBatchResponse> createBatch(@RequestBody SettlementBatchCreateCommand command) {
@@ -52,6 +55,14 @@ public class SettlementBatchInternalController {
 	@GetMapping("/{batchId}")
 	public ApiResponse<SettlementBatchResponse> getBatch(@PathVariable Long batchId) {
 		
+		return ApiResponse.ok(settlementBatchService.getBatch(batchId));
+	}
+	
+	@PostMapping("/{batchId}/run")
+	public ApiResponse<SettlementBatchResponse> runBatch(@PathVariable Long batchId,
+														 @RequestBody SettlementBatchRunCommand command) {
+		
+		settlementBatchRunner.run(batchId, command);
 		return ApiResponse.ok(settlementBatchService.getBatch(batchId));
 	}
 }
