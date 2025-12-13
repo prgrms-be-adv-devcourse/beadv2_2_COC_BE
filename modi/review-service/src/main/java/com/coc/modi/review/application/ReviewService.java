@@ -7,30 +7,32 @@ import com.coc.modi.review.application.dto.UpdateReviewCommand;
 import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
 import com.coc.modi.review.domain.ReviewStatus;
+import com.coc.modi.review.event.NotificationEventPublisher;
 import com.coc.modi.review.exception.ReviewAccessDeniedException;
 import com.coc.modi.review.exception.ReviewNotFoundException;
-
+import com.coc.modi.kafka.event.NotificationEvent;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
+	private final NotificationEventPublisher notificationEventPublisher;
+
 	
 	// 판매자 리뷰 생성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
 		
 		Review review = Review.create(
-				command.rentalId(),
+				command.rentalItemid(),
 				command.sellerId(),
 				command.memberId(),
 				command.rating(),
@@ -38,6 +40,17 @@ public class ReviewService {
 		);
 
 		Review saved = reviewRepository.save(review);
+
+		notificationEventPublisher.publish(
+				NotificationEvent.of(
+						saved.getSellerId(),
+						"REVIEW_CREATED",
+						"새 리뷰가 등록 되었습니다!",
+						"상품에 새로운 리뷰가 등록되었습니다.",
+						"REVIEW",
+						String.valueOf(saved.getId())
+				)
+		);
 		
 		return ReviewResponse.from(saved);
 	}

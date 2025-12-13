@@ -1,0 +1,87 @@
+@host = http://localhost:8000/product-service/api/products
+@productId = 3
+@accessToken = jwtToken
+
+### 상품 목록 조회 (기본)
+GET {{host}}
+Accept: application/json
+
+### 상품 목록 조회 (페이지/정렬/커서)
+GET {{host}}?size=20&sortType=LATEST&cursor=
+Accept: application/json
+
+### 상품 목록 조회 (검색 조건 예시)
+# ProductSearchCondition 필드명에 맞게 쿼리 파라미터를 바꿔서 쓰세요
+GET {{host}}?size=20&sortType=LATEST&category=&keyword=
+Accept: application/json
+
+### 상품 상세 조회
+GET {{host}}/{{productId}}
+Accept: application/json
+
+### 상품 등록 (ProductCreateRequest)
+# images: List<String> (이미지 URL 목록)
+POST {{host}}
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "테스트 상품",
+  "description": "설명",
+  "pricePerDay": 10000,
+  "category": "CAMERA",
+  "images": [
+    "https://cdn.example.com/image1.jpg",
+    "https://cdn.example.com/image2.jpg",
+    "https://cdn.example.com/image3.jpg"
+  ]
+}
+
+### 상품 수정 (ProductUpdateRequest)
+# images: List<ImageInfo>
+# - imageId가 null이면 신규 이미지
+# - imageId가 있으면 기존 이미지 수정
+PUT {{host}}/{{productId}}
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "수정된 상품명",
+  "description": "수정된 설명",
+  "pricePerDay": 12000,
+  "category": "ETC",
+  "images": [
+    {
+      "imageId": 10,
+      "url": "https://cdn.example.com/updated1.jpg",
+      "ordering": 1
+    },
+    {
+      "imageId": 11,
+      "url": "https://cdn.example.com/updated2.jpg",
+      "ordering": 2
+    },
+    {
+      "imageId": null,
+      "url": "https://cdn.example.com/new3.jpg",
+      "ordering": 3
+    }
+  ]
+}
+
+### 상품 활성화
+PATCH {{host}}/{{productId}}/active
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+### 상품 비활성화(숨김)
+PATCH {{host}}/{{productId}}/inactive
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+### 상품 삭제
+DELETE {{host}}/{{productId}}
+Accept: application/json
+Authorization: Bearer {{accessToken}}

@@ -1,8 +1,9 @@
-package com.coc.modi.review.exception;
+package com.coc.modi.exception;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
 import com.coc.modi.common.ErrorCode;
+import com.coc.modi.review.exception.ReviewException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,19 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+	
+	@ExceptionHandler(ReviewException.class)
+	public ResponseEntity<ApiResponse<?>> handleReviewException(ReviewException ex) {
+		
+		ErrorCode errorCode = ex.getErrorCode();
+		String message = ex.getDetailMessage();
+		
+		log.warn("Review exception: code={}, message={}", errorCode.getCode(), message);
+		
+		return ResponseEntity
+				.status(errorCode.getStatus())
+				.body(ApiResponse.error(errorCode, message));
+	}
 	
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ApiResponse<?>> handleBaseException(BaseException ex) {

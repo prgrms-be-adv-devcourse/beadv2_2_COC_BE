@@ -73,33 +73,6 @@ public class Rental extends BaseEntity {
 		this.status = RentalStatus.CANCELED;
 	}
 	
-	public void markReturned() {
-		
-		this.status = RentalStatus.COMPLETED;
-	}
-	
-	public void cancelByMemberRequest() {
-		
-		if (this.status == RentalStatus.CANCELED || this.status == RentalStatus.COMPLETED) {
-			
-			throw new IllegalStateException("이미 취소되었거나 완료된 대여입니다. rentalStatus: " + this.status);
-		}
-		
-		if (items != null) {
-			
-			boolean hasInProgressItem = items.stream().anyMatch(item -> !item.canCancelByRental());
-			
-			if (hasInProgressItem) {
-				
-				throw new IllegalStateException("이미 결제되었거나 진행 중인 상품이 있어 취소할 수 없습니다. rentalId: " + this.id);
-			}
-			
-			items.forEach(RentalItem::cancelByRentalRequest);
-		}
-		
-		markCanceled();
-	}
-	
 	public void updateTotalAmount(BigDecimal totalAmount) {
 		
 		this.totalAmount = totalAmount;
@@ -172,11 +145,6 @@ public class Rental extends BaseEntity {
 	public void updateStatusFromItems() {
 		
 		this.status = calculateStatus();
-	}
-	
-	public void updatePaidAt(LocalDateTime paidAt) {
-		
-		markPaid(paidAt);
 	}
 	
 }
