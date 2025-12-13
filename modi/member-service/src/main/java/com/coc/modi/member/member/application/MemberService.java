@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class MemberService {
 	
 	private static final Pattern VERIFICATION_CODE_PATTERN = Pattern.compile("^\\d{6}$");
