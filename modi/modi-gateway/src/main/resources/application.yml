@@ -7,5 +7,5 @@ spring:
   cloud:
     config:
       discovery:
-        enabled: false
+        enabled: true
         service-id: modi-config
