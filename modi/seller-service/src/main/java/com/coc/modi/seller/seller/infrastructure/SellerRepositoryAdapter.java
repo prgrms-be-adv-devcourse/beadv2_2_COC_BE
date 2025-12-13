@@ -20,12 +20,6 @@ public class SellerRepositoryAdapter implements SellerRepository {
 	private final SellerJpaRepository sellerJpaRepository;
 	
 	@Override
-	public Page<Seller> findAll(Pageable pageable) {
-		
-		return sellerJpaRepository.findAll(pageable);
-	}
-	
-	@Override
 	public Optional<Seller> findById(Long sellerId) {
 		
 		return sellerJpaRepository.findById(sellerId);
