@@ -1,6 +1,5 @@
 package com.coc.modi.member.member.presentation;
 
-import com.coc.modi.common.UnauthorizedException;
 import com.coc.modi.member.member.application.MemberService;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -9,6 +8,7 @@ import com.coc.modi.member.member.presentation.dto.MemberUpdateRequest;
 import com.coc.modi.member.member.presentation.dto.MemberPasswordUpdateRequest;
 import com.coc.modi.common.ApiResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -35,15 +35,7 @@ public class MemberController {
 	@GetMapping("/profile")
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(Authentication authentication) {
 		
-		if (authentication == null || !authentication.isAuthenticated()) {
-			throw new UnauthorizedException(); // 공통 예외
-		}
-		
-		Object principal = authentication.getPrincipal();
-		
-		if (!(principal instanceof Long memberId)) {
-			throw new UnauthorizedException();
-		}
+		Long memberId = (Long)authentication.getPrincipal();
 		
 		MemberProfileResponse response = memberService.getProfile(memberId);
 		
@@ -56,6 +48,7 @@ public class MemberController {
 																			@RequestBody MemberUpdateRequest request) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
+		
 		MemberProfileResponse response = memberService.updateProfile(memberId, request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
@@ -63,23 +56,25 @@ public class MemberController {
 	
 	// 비밀번호 수정
 	@PatchMapping("/{memberId}/passwords")
-	public ResponseEntity<ApiResponse<?>> updatePassword(Authentication authentication,
+	public ResponseEntity<ApiResponse<Void>> updatePassword(Authentication authentication,
 														 @PathVariable Long memberId,
-														 @RequestBody MemberPasswordUpdateRequest request) {
+														 @Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
 		Long authenticatedMemberId = (Long)authentication.getPrincipal();
+		
 		memberService.updatePassword(authenticatedMemberId, memberId, request.toCommand());
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 회원 탈퇴
 	@DeleteMapping
-	public ResponseEntity<ApiResponse<?>> deleteMember(Authentication authentication) {
+	public ResponseEntity<ApiResponse<Void>> deleteMember(Authentication authentication) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
+		
 		memberService.deleteMember(memberId);
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

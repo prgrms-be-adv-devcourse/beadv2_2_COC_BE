@@ -50,12 +50,6 @@ public class SellerRepositoryAdapter implements SellerRepository {
 	}
 	
 	@Override
-	public void deleteById(Long sellerId) {
-		
-		sellerJpaRepository.deleteById(sellerId);
-	}
-	
-	@Override
 	public List<Seller> findByStatus(SellerStatus status) {
 		
 		return sellerJpaRepository.findByStatus(status);
