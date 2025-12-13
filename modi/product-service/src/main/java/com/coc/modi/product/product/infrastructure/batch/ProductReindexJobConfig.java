@@ -27,8 +27,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProductReindexJobConfig {
 	
-	private final EntityManagerFactory emf;
-	private final ProductIndexService indexService;
+	private final EntityManagerFactory entityManagerFactory;
+	private final ProductIndexService productIndexService;
 	
 	private static final int CHUNK_SIZE = 500;
 	
@@ -37,7 +37,7 @@ public class ProductReindexJobConfig {
 		
 		return new JpaPagingItemReaderBuilder<Product>()
 				.name("productReindexReader")
-				.entityManagerFactory(emf)
+				.entityManagerFactory(entityManagerFactory)
 				.pageSize(CHUNK_SIZE)
 				.queryString("SELECT p FROM Product p WHERE p.status = :status")
 				.parameterValues(Map.of("status", ProductStatus.ACTIVE))
@@ -55,7 +55,7 @@ public class ProductReindexJobConfig {
 		
 		return item -> {
 			for (Product product : item) {
-				indexService.index(product);
+				productIndexService.index(product);
 			}
 		};
 	}

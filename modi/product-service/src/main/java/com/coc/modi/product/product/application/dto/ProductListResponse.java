@@ -6,7 +6,7 @@ import com.coc.modi.product.search.domain.ProductDocument;
 import java.math.BigDecimal;
 
 public record ProductListResponse(
-		Long id,
+		Long productId,
 		String name,
 		BigDecimal pricePerDay,
 		ProductStatus status,

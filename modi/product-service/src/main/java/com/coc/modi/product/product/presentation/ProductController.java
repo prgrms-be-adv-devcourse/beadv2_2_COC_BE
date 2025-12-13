@@ -2,15 +2,17 @@ package com.coc.modi.product.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.product.product.application.ProductService;
-import com.coc.modi.product.product.application.dto.ProductCommand;
-import com.coc.modi.product.product.application.dto.ProductResponse;
+import com.coc.modi.product.product.application.ProductStatusService;
+import com.coc.modi.product.product.application.dto.ProductCreateCommand;
+import com.coc.modi.product.product.application.dto.ProductDetailResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
-import com.coc.modi.product.product.presentation.dto.ProductRequest;
+import com.coc.modi.product.product.presentation.dto.ProductCreateRequest;
 import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
 import com.coc.modi.product.search.domain.ProductSortType;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/products")
 public class ProductController {
 	
-	private final ProductService service;
+	private final ProductService productService;
+	private final ProductStatusService productStatusService;
 	
 	// 상품 목록 조회
 	@GetMapping
@@ -33,74 +36,74 @@ public class ProductController {
 			@RequestParam(name = "size", defaultValue = "20") int size,
 			@RequestParam(name = "sortType", defaultValue = "LATEST") ProductSortType sortType) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(service.searchProducts(condition, cursor, size, sortType)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType)));
 	}
 	
 	// 상품 상세 조회
 	@GetMapping("/{productId}")
-	public ResponseEntity<ApiResponse<ProductResponse>> getProductDetail(@PathVariable("productId") Long productId) {
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(service.getProductDetail(productId)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(productId)));
 	}
 	
 	// 상품 등록
 	@PostMapping
-	public ResponseEntity<ApiResponse<ProductResponse>> createProduct(Authentication authentication,
-																	  @RequestBody ProductRequest request) {
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(Authentication authentication,
+																			@Valid @RequestBody ProductCreateRequest request) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
-		ProductCommand command = new ProductCommand(
-				request.name(),
-				request.description(),
-				request.pricePerDay(),
-				request.category(),
-				request.images()
-		);
+		ProductCreateCommand command = ProductCreateCommand.toCommand(memberId, request);
 		
-		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(service.createProduct(memberId, command)));
+		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(productService.createProduct(command)));
 	}
 	
 	// 상품 수정
 	@PutMapping("/{productId}")
-	public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(Authentication authentication,
-																	  @PathVariable("productId") Long productId,
-																	  @RequestBody ProductUpdateRequest request) {
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> updateProduct(Authentication authentication,
+																			@PathVariable("productId") Long productId,
+																			@Valid @RequestBody ProductUpdateRequest request) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
-		ProductUpdateCommand command = new ProductUpdateCommand(
-				request.name(),
-				request.description(),
-				request.pricePerDay(),
-				request.category(),
-				request.images()
-		);
+		ProductUpdateCommand command = ProductUpdateCommand.toCommand(memberId, productId, request);
 		
-		return ResponseEntity.ok(ApiResponse.ok(service.updateProduct(memberId, productId, command)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
+	}
+	
+	// 상품 활성화
+	@PatchMapping("/{productId}/active")
+	public ResponseEntity<ApiResponse<Void>> activeProduct(Authentication authentication,
+														   @PathVariable("productId") Long productId) {
+		
+		Long memberId = (Long)authentication.getPrincipal();
+		
+		productStatusService.activeProduct(memberId, productId);
+		
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 상품 숨김
-	@PatchMapping("/{productId}")
-	public ResponseEntity<ApiResponse<?>> disableProduct(Authentication authentication,
+	@PatchMapping("/{productId}/inactive")
+	public ResponseEntity<ApiResponse<Void>> disableProduct(Authentication authentication,
 														 @PathVariable("productId") Long productId) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
-		service.disableProduct(memberId, productId);
+		productStatusService.disableProduct(memberId, productId);
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 상품 삭제
 	@DeleteMapping("/{productId}")
-	public ResponseEntity<ApiResponse<?>> deleteProduct(Authentication authentication,
+	public ResponseEntity<ApiResponse<Void>> deleteProduct(Authentication authentication,
 														@PathVariable("productId") Long productId) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
-		service.deleteProduct(memberId, productId);
+		productStatusService.deleteProduct(memberId, productId);
 		
-		return ResponseEntity.ok(ApiResponse.ok());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

@@ -49,8 +49,8 @@ public class Product extends BaseEntity {
 	@Column(name = "thumbnail_image_id")
 	private Long thumbnailImageId;
 	
-	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("ordering ASC")
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ProductImage> images = new ArrayList<>();
 	
 	protected Product() {
@@ -76,19 +76,22 @@ public class Product extends BaseEntity {
 								 String name,
 								 String description,
 								 BigDecimal pricePerDay,
-								 ProductCategory category) {
+								 ProductCategory category,
+								 List<String> urls) {
 		
 		if (sellerId == null) {
 			throw new ProductInvalidInputException("판매자 ID는 필수입니다.");
 		}
-		validateProduct(name, description, pricePerDay, category);
-		ProductStatus status = ProductStatus.ACTIVE;
-		return new Product(sellerId, name, description, pricePerDay, status, category);
+		
+		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category);
+		
+		product.addImages(urls);
+		
+		return product;
 	}
 	
 	public void update(String name, String description, BigDecimal pricePerDay, ProductCategory category) {
 		
-		validateProduct(name, description, pricePerDay, category);
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
@@ -155,17 +158,17 @@ public class Product extends BaseEntity {
 			ProductImageSpec spec = specs.get(i);
 			Integer ordering = spec.ordering() != null ? spec.ordering() : (i + 1);
 			
-			if (spec.id() == null) {
+			if (spec.imageId() == null) {
 				// 새 이미지
 				ProductImage created = ProductImage.create(this, spec.url(), ordering);
 				newImages.add(created);
 			} else {
 				// 기존 이미지 수정
-				ProductImage existing = currentById.remove(spec.id());
+				ProductImage existing = currentById.remove(spec.imageId());
 				if (existing == null) {
 					// 없는 id가 왔다: 비즈니스에 따라 exception 또는 새로 추가
 					// 여기서는 예외 던지는 걸 예시로
-					throw new ProductInvalidInputException("유효하지 않은 이미지 ID: " + spec.id());
+					throw new ProductInvalidInputException("유효하지 않은 이미지 ID: " + spec.imageId());
 				}
 				existing.update(spec.url(), ordering);
 			}
@@ -209,24 +212,5 @@ public class Product extends BaseEntity {
 						.or(() -> this.images.stream().findFirst())
 						.map(ProductImage::getId)
 						.orElse(null);
-	}
-	
-	private static void validateProduct(String name,
-										String description,
-										BigDecimal pricePerDay,
-										ProductCategory category) {
-		
-		if (name == null) {
-			throw new ProductInvalidInputException("상품명은 필수입니다.");
-		}
-		if (description == null) {
-			throw new ProductInvalidInputException("상품 설명은 필수입니다.");
-		}
-		if (pricePerDay == null || pricePerDay.compareTo(BigDecimal.ZERO) <= 0) {
-			throw new ProductInvalidInputException("대여 가격은 0보다 커야 합니다.");
-		}
-		if (category == null) {
-			throw new ProductInvalidInputException("카테고리는 필수입니다.");
-		}
 	}
 }

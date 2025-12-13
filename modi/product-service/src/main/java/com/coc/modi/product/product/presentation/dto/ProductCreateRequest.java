@@ -1,16 +1,15 @@
 package com.coc.modi.product.product.presentation.dto;
 
-import com.coc.modi.product.product.application.dto.ProductDetailResponse;
-import com.coc.modi.product.product.domain.ProductCategory;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import com.coc.modi.product.product.domain.ProductCategory;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public record ProductUpdateRequest(
+public record ProductCreateRequest(
 		
 		@NotBlank(message = "상품명은 필수입니다.")
         String name,
@@ -23,7 +22,8 @@ public record ProductUpdateRequest(
         BigDecimal pricePerDay,
 		
 		@NotNull(message = "카테고리는 필수입니다.")
-        ProductCategory category,
+		ProductCategory category,
 		
-        List<ProductDetailResponse.ImageInfo> images) {
+        List<String> images
+) {
 }
