@@ -12,6 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.validation.BindException;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,6 +77,37 @@ public class GlobalExceptionHandler {
 				.orElse(ErrorCode.INVALID_INPUT.getDefaultMessage());
 		
 		log.warn("Validation error: {}", message);
+		return buildResponse(ErrorCode.INVALID_INPUT, message);
+	}
+	
+	@ExceptionHandler(BindException.class)
+	public ResponseEntity<ApiResponse<?>> handleBindException(BindException ex) {
+		
+		String message = Optional.ofNullable(ex.getBindingResult())
+				.map(bindingResult -> bindingResult.getFieldErrors()
+						.stream()
+						.map(error -> error.getField() + ": " + error.getDefaultMessage())
+						.collect(Collectors.joining(", ")))
+				.filter(str -> !str.isBlank())
+				.orElse(ErrorCode.INVALID_INPUT.getDefaultMessage());
+		
+		log.warn("Bind error: {}", message);
+		return buildResponse(ErrorCode.INVALID_INPUT, message);
+	}
+	
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ApiResponse<?>> handleConstraintViolation(ConstraintViolationException ex) {
+		
+		String message = ex.getConstraintViolations().stream()
+				.map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+				.collect(Collectors.joining(", "));
+		
+		if (message.isBlank()) {
+			
+			message = ErrorCode.INVALID_INPUT.getDefaultMessage();
+		}
+		
+		log.warn("Constraint violation: {}", message);
 		return buildResponse(ErrorCode.INVALID_INPUT, message);
 	}
 	

@@ -9,6 +9,7 @@ import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalEventType;
 import com.coc.modi.rental.rental.domain.RentalItem;
+import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ public class RentalCreationService {
 	private final CartRepository cartRepository;
 	private final ProductFeignClient productFeignClient;
 	private final RentalEventLogService rentalEventLogService;
+	private final RentalQueryRepository rentalQueryRepository;
 	
 	@Transactional
 	public void createRentalFromCart(CreateRentalFromCartCommand command) {
@@ -94,6 +97,8 @@ public class RentalCreationService {
 						"대여 종료일이 시작일보다 빠릅니다. cartItemId: " + cartItem.getId());
 			}
 			
+			validateAvailability(cartItem.getProductId(), cartItem.getStartDate(), cartItem.getEndDate());
+			
 			RentalItem rentalItem = RentalItem.create(
 					cartItem.getProductId(),
 					productResponseDto.sellerId(),
@@ -144,6 +149,8 @@ public class RentalCreationService {
 			throw new RentalException(ErrorCode.INVALID_INPUT, "대여 종료일이 시작일보다 빠릅니다. productId: " + command.productId());
 		}
 		
+		validateAvailability(command.productId(), command.startDate(), command.endDate());
+		
 		RentalItem rentalItem = RentalItem.create(command.productId(), productResponseDto.sellerId(),
 				command.startDate(), command.endDate(), unitPrice);
 		
@@ -174,5 +181,17 @@ public class RentalCreationService {
 				Map.of("memberId", rental.getMemberId(), "status", rental.getStatus().name(), "totalAmount",
 						rental.getTotalAmount(), "itemCount",
 						rental.getItems() == null ? 0 : rental.getItems().size()));
+	}
+	
+	private void validateAvailability(Long productId, LocalDate startDate, LocalDate endDate) {
+		
+		boolean hasOverlap = rentalQueryRepository.existsOverlappingRentalItem(productId, startDate, endDate, null);
+		
+		if (hasOverlap) {
+			
+			throw new RentalException(ErrorCode.CONFLICT,
+					"해당 기간에 이미 예약된 상품입니다. productId: " + productId + ", startDate: " + startDate
+							+ ", endDate: " + endDate);
+		}
 	}
 }
