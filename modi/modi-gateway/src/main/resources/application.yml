@@ -2,10 +2,10 @@ spring:
   application:
     name: modi-gateway
   config:
-    import: "optional:configserver:http://modi-config/8888"
+    import: "optional:configserver:http://modi-config:8888"
 
   cloud:
     config:
       discovery:
-        enabled: true
+        enabled: false
         service-id: modi-config
