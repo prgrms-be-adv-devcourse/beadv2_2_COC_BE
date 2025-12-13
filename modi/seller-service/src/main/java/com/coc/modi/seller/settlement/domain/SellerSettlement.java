@@ -1,6 +1,8 @@
 package com.coc.modi.seller.settlement.domain;
 
 import com.coc.modi.common.BaseEntity;
+import com.coc.modi.seller.exception.SellerSettlementStatusConflictException;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
