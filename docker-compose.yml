@@ -37,8 +37,8 @@ services:
   modi-discovery:
     image: modi-discovery:latest
     container_name: modi-discovery
-    expose:
-      - "8761"
+    ports:
+      - "8761:8761"
     networks:
       - msa-net
     restart: always
