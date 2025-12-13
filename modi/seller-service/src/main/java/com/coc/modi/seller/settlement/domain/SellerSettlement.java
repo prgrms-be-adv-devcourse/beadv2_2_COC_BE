@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ import static java.math.BigDecimal.ZERO;
 @Getter
 @Entity
 @Table(name = "seller_settlement")
+@ToString(of = {"id", "sellerId", "periodYm", "settlementAmount", "status"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SellerSettlement extends BaseEntity {
 	
@@ -105,23 +107,24 @@ public class SellerSettlement extends BaseEntity {
 				.build();
 	}
 	
-	// 정산 완료 처리: READY 상태에서만 가능
+	// 정산 완료 처리
+	
 	public void pay(LocalDateTime paidAt) {
 		
 		if (paidAt == null) {
-			throw new IllegalArgumentException("paidAt is required to mark settlement as paid");
+			throw new SettlementInputInvalidException("paidAt is required to mark settlement as paid");
 		}
 		if (this.status == SellerSettlementStatus.PAID) {
-			throw new IllegalStateException("settlement is already paid");
+			throw new SellerSettlementStatusConflictException("settlement is already paid");
 		}
 		if (this.status == SellerSettlementStatus.CANCELED) {
-			throw new IllegalStateException("canceled settlement cannot be paid");
+			throw new SellerSettlementStatusConflictException("canceled settlement cannot be paid");
 		}
 		this.status = SellerSettlementStatus.PAID;
 		this.paidAt = paidAt;
 	}
 	
-	// 정산 취소: READY, PAID에서만 허용, 이미 취소된 건은 무시
+	// 정산 취소
 	
 	public void cancel() {
 		
@@ -132,7 +135,7 @@ public class SellerSettlement extends BaseEntity {
 			this.status = SellerSettlementStatus.CANCELED;
 			return;
 		}
-		throw new IllegalStateException("unsupported settlement status: " + this.status);
+		throw new SellerSettlementStatusConflictException("unsupported settlement status: " + this.status);
 	}
 	
 	public void addLineWithAggregation(SellerSettlementLine line) {

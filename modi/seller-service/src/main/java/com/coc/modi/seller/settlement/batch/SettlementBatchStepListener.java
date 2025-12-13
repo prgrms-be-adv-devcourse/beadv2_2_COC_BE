@@ -17,18 +17,12 @@ import java.math.BigDecimal;
 public class SettlementBatchStepListener implements StepExecutionListener {
 	
 	private static final String EXECUTION_ID_KEY = "settlementExecutionId";
-	private static final String STEP_STARTED_AT = "stepStartedAt";
 	
-	@Override
-	public void beforeStep(StepExecution stepExecution) {
-		
-		stepExecution.getExecutionContext().putLong(STEP_STARTED_AT, System.currentTimeMillis());
-	}
 	
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		
-		Long executionId = stepExecution.getJobExecution().getExecutionContext().getLong(EXECUTION_ID_KEY, -1L);
+		long executionId = stepExecution.getJobExecution().getExecutionContext().getLong(EXECUTION_ID_KEY, -1L);
 		if (executionId < 0) {
 			return stepExecution.getExitStatus();
 		}

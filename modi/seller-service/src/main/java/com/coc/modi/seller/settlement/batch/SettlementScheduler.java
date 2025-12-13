@@ -35,9 +35,13 @@ public class SettlementScheduler {
 		String periodYm = targetMonth.format(PERIOD_FORMATTER);
 		String startDate = targetMonth.atDay(1).toString();
 		String endDate = targetMonth.atEndOfMonth().toString();
+		
+		SettlementBatchResponse batch = null;
+		
 		try {
-			SettlementBatchResponse batch = settlementBatchService.createBatch(new SettlementBatchCreateCommand(periodYm));
+			batch = settlementBatchService.createBatch(new SettlementBatchCreateCommand(periodYm));
 			settlementBatchService.startBatch(batch.id());
+			
 			JobParameters params = new JobParametersBuilder()
 					.addLong("batchId", batch.id())
 					.addString("periodYm", periodYm)
@@ -45,10 +49,21 @@ public class SettlementScheduler {
 					.addString("endDate", endDate)
 					.addLong("timestamp", System.currentTimeMillis())
 					.toJobParameters();
+			
 			jobLauncher.run(settlementAggregationJob, params);
 			log.info("Settlement batch job triggered. batchId={}, periodYm={}, startDate={}, endDate={}", batch.id(), periodYm, startDate, endDate);
 		} catch (Exception e) {
 			log.error("Settlement batch failed. periodYm={}", periodYm, e);
+			
+			// Job 실행 실패 시 배치 상태를 FAILED로 변경
+			if (batch != null) {
+				try {
+					settlementBatchService.failBatch(batch.id());
+				} catch (Exception failException) {
+					log.error("Failed to update batch status to FAILED. batchId={}", batch.id(), failException);
+				}
+			}
 		}
 	}
 }
+

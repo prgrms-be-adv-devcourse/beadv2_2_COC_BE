@@ -14,4 +14,8 @@ public class SettlementException extends BaseException {
 		
 		super(errorCode, message);
 	}
+
+	public SettlementException(ErrorCode errorCode, String message, Throwable cause) {
+		super(errorCode, message, cause);
+	}
 }

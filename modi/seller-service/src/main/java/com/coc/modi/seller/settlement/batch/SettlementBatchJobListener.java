@@ -35,7 +35,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 		Long batchId = jobExecution.getJobParameters().getLong(BATCH_ID_KEY);
 		String params = jobExecution.getJobParameters().toString();
 		// 1. 실행 기록 생성
-		Long executionId = executionService.start(batchType, batchId, params).getId();
+		long executionId = executionService.start(batchType, batchId, params).getId();
 		// 2. 실행 컨텍스트에 저장
 		jobExecution.getExecutionContext().putLong(EXECUTION_ID_KEY, executionId);
 		if (batchId != null) {
@@ -46,7 +46,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 	@Override
 	public void afterJob(JobExecution jobExecution) {
 		
-		Long executionId = jobExecution.getExecutionContext().getLong(EXECUTION_ID_KEY, -1L);
+		long executionId = jobExecution.getExecutionContext().getLong(EXECUTION_ID_KEY, -1L);
 		if (executionId < 0) {
 			return;
 		}

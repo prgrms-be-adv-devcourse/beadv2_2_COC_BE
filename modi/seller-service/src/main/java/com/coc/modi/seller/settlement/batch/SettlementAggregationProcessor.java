@@ -1,6 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.exception.SettlementPeriodResolveException;
 
 import org.springframework.batch.item.ItemProcessor;
 
@@ -48,6 +49,6 @@ public class SettlementAggregationProcessor implements ItemProcessor<RentalItemI
 			return YearMonth.from(endDate).toString();
 		}
 		
-		throw new IllegalStateException("endDate is required to resolve settlement period");
+		throw new SettlementPeriodResolveException("“정산 기간을 결정하기 위한 데이터가 없습니다.”");
 	}
 }

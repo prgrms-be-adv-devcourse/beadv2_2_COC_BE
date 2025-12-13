@@ -4,6 +4,7 @@ import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
 
 import feign.FeignException;
 import feign.RetryableException;
@@ -84,7 +85,7 @@ public class SettlementBatchJobConfig {
 	) {
 		
 		if (startDate == null || startDate.isBlank() || endDate == null || endDate.isBlank()) {
-			throw new IllegalArgumentException("startDate and endDate are required");
+			throw new SettlementInputInvalidException("startDate and endDate are required");
 		}
 		return new SettlementRentalItemReader(
 				rentalPort,

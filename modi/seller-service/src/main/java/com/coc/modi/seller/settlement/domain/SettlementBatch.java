@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import com.coc.modi.seller.settlement.domain.SettlementBatchExecution;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 
 @Getter
+@ToString(of = {"id", "periodYm", "status", "startedAt", "completedAt"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "settlement_batch")

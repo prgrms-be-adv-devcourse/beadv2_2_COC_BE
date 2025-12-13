@@ -6,6 +6,7 @@ import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineRespon
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.seller.application.dto.SellerResponse;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -34,7 +34,6 @@ public class SellerSettlementController {
 	private final SellerSettlementService sellerSettlementService;
 	private final SellerService sellerService;
 	
-	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 	private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	
 	@GetMapping("/api/settlements/sellers/self")
@@ -75,7 +74,7 @@ public class SellerSettlementController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now(KST);
+		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
 		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.id(), sellerSettlementId, paidAtValue);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
@@ -95,7 +94,10 @@ public class SellerSettlementController {
 		try {
 			return LocalDateTime.parse(paidAt, PAID_AT_FORMATTER);
 		} catch (DateTimeParseException e) {
-			throw new IllegalArgumentException("paidAt must be ISO-8601 format, e.g. 2024-12-31T23:59:59", e);
+			throw new SettlementInputInvalidException(
+					"paidAt must be ISO-8601 format, e.g. 2024-12-31T23:59:59",
+					e
+			);
 		}
 	}
 }
