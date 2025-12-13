@@ -14,4 +14,9 @@ public class MemberException extends BaseException {
 		
 		super(errorCode, detailMessage);
 	}
+	
+	public MemberException(ErrorCode errorCode, String detailMessage, Throwable cause) {
+		
+		super(errorCode, detailMessage, cause);
+	}
 }

@@ -44,6 +44,7 @@ public enum ErrorCode {
 	ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "ACCOUNT-LOCKED-403", "잠긴 계정입니다."),
 	ACCOUNT_UNVERIFIED(HttpStatus.FORBIDDEN, "ACCOUNT-UNVERIFIED-403", "인증되지 않은 계정입니다."),
 	ACCOUNT_TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-TXN-404", "거래 정보를 찾을 수 없습니다."),
+	ACCOUNT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "ACCOUNT-503", "지갑 서비스를 사용할 수 없습니다."),
 	
 	SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-404", "판매자를 찾을 수 없습니다."),
 	SELLER_DUPLICATE(HttpStatus.CONFLICT, "SELLER-409", "이미 등록된 판매자입니다."),
