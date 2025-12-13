@@ -31,11 +31,13 @@ public class ElasticsearchClientManager {
 			@Value("${spring.elasticsearch.uris}") String elasticUrl,
 			ElasticsearchStatus status
 	) {
+		
 		this.elasticUrl = elasticUrl;
 		this.status = status;
 	}
 	
 	public ElasticsearchClient getClient() {
+		
 		ElasticsearchClient existing = clientRef.get();
 		
 		if (existing != null && status.isAvailable()) {
@@ -54,7 +56,7 @@ public class ElasticsearchClientManager {
 			
 			try {
 				RestClient lowLevel = RestClient.builder(HttpHost.create(this.elasticUrl)).build();
-				ElasticsearchTransport transport =new RestClientTransport(lowLevel, new JacksonJsonpMapper());
+				ElasticsearchTransport transport = new RestClientTransport(lowLevel, new JacksonJsonpMapper());
 				ElasticsearchClient client = new ElasticsearchClient(transport);
 				
 				client.ping();

@@ -19,8 +19,8 @@ public class ElasticsearchHealth implements HealthIndicator {
 		
 		return switch (state) {
 			case UNKNOWN -> Health.unknown().build();
-			case AVAILABLE ->  Health.up().build();
-			case UNAVAILABLE ->  {
+			case AVAILABLE -> Health.up().build();
+			case UNAVAILABLE -> {
 				Health.Builder builder = Health.down();
 				elasticsearchStatus.getLastError()
 						.ifPresent(e -> builder.withDetail("error", e.getMessage()));
