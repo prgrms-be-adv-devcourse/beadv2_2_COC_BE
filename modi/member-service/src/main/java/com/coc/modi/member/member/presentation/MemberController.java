@@ -8,6 +8,7 @@ import com.coc.modi.member.member.presentation.dto.MemberUpdateRequest;
 import com.coc.modi.member.member.presentation.dto.MemberPasswordUpdateRequest;
 import com.coc.modi.common.ApiResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -57,7 +58,7 @@ public class MemberController {
 	@PatchMapping("/{memberId}/passwords")
 	public ResponseEntity<ApiResponse<Void>> updatePassword(Authentication authentication,
 														 @PathVariable Long memberId,
-														 @RequestBody MemberPasswordUpdateRequest request) {
+														 @Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
 		Long authenticatedMemberId = (Long)authentication.getPrincipal();
 		
