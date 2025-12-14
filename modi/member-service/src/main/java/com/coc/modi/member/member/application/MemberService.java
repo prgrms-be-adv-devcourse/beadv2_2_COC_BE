@@ -1,5 +1,7 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.member.auth.application.EmailVerificationService;
+import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
@@ -35,23 +37,17 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccountFeignClient accountFeignClient;
-	private final MemberValidationService memberValidationService;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationService emailVerificationService;
 	
 	// 회원가입
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
-		memberValidationService.validateEmail(command.email());
-		
 		if (memberRepository.existsByEmail(command.email())) {
 			
 			throw new EmailDuplicatedException(command.email());
 		}
-		
-		memberValidationService.validatePassword(command.password());
-		
-		memberValidationService.validatePhone(command.phone());
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		
@@ -101,8 +97,6 @@ public class MemberService {
 		
 		if (command.phone() != null && !command.phone().isBlank()) {
 			
-			memberValidationService.validatePhone(command.phone());
-			
 			member.changePhone(command.phone());
 		}
 		
@@ -114,9 +108,6 @@ public class MemberService {
 	public void updatePassword(UpdateMemberPasswordCommand command) {
 		
 		Member member = getMemberOrThrow(command.memberId());
-		
-		// 이메일 유효성 검사
-		memberValidationService.validateEmail(command.email());
 		
 		if (!member.getEmail().equals(command.email())) {
 			
@@ -133,9 +124,10 @@ public class MemberService {
 			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
 		}
 		
-		validateVerificationCode(command.email(), command.verificationCode());
+		// 이메일 검증 코드 발송
+		emailVerificationService.sendVerificationEmail(new SendEmailVerificationCommand(member.getEmail()));
 		
-		memberValidationService.validatePassword(command.password());
+		validateVerificationCode(command.email(), command.verificationCode());
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		

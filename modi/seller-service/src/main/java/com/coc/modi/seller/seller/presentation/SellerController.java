@@ -1,6 +1,7 @@
 package com.coc.modi.seller.seller.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,25 +28,25 @@ public class SellerController {
 	
 	@PostMapping("/api/sellers")
 	public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-																	  Authentication authentication) {
+																	  @AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
+		
+		SellerResponse seller = sellerService.registerSeller(request.toCommand(member.getMemberId()));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(Authentication authentication) {
+	public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		
+		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/api/sellers/self/rentals")
-	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(Authentication authentication,
+	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(@AuthenticationPrincipal CustomMember member,
 																				@RequestParam(value = "productId", required = false) Long productId,
 																				@RequestParam(value = "status") String status,
 																				@RequestParam(value = "startDate") String startDate,
@@ -52,18 +54,18 @@ public class SellerController {
 																				@RequestParam(value = "page", required = false) Integer page,
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(memberId, productId, status, startDate, endDate, page, size);
+		
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.getMemberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
 	
 	@PutMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(Authentication authentication,
+	public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(@AuthenticationPrincipal CustomMember member,
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.updateSellerByMemberId(memberId, request.toCommand());
+		
+		SellerResponse seller = sellerService.updateSellerByMemberId(member.getMemberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
