@@ -1,5 +1,6 @@
 package com.coc.modi.member.member.presentation;
 
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.member.member.application.MemberService;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,23 +35,19 @@ public class MemberController {
 	
 	// 내 정보 조회
 	@GetMapping("/profile")
-	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(Authentication authentication) {
+	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(@AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		MemberProfileResponse response = memberService.getProfile(memberId);
+		MemberProfileResponse response = memberService.getProfile(member.getMemberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 	
 	// 내 정보 수정
 	@PutMapping("/profile")
-	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(Authentication authentication,
+	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody MemberUpdateRequest request) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		MemberProfileResponse response = memberService.updateProfile(memberId, request.toCommand());
+		MemberProfileResponse response = memberService.updateProfile(member.getMemberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
@@ -57,8 +55,8 @@ public class MemberController {
 	// 비밀번호 수정
 	@PatchMapping("/{memberId}/passwords")
 	public ResponseEntity<ApiResponse<Void>> updatePassword(Authentication authentication,
-														    @PathVariable Long memberId,
-														    @Valid @RequestBody MemberPasswordUpdateRequest request) {
+															@PathVariable Long memberId,
+															@Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
 		Long authenticatedMemberId = (Long)authentication.getPrincipal();
 		
@@ -69,11 +67,9 @@ public class MemberController {
 	
 	// 회원 탈퇴
 	@DeleteMapping
-	public ResponseEntity<ApiResponse<Void>> deleteMember(Authentication authentication) {
+	public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		memberService.deleteMember(memberId);
+		memberService.deleteMember(member.getMemberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

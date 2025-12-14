@@ -8,10 +8,12 @@ import com.coc.modi.account.deposit.presentation.dto.DepositCancelRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositRequest;
 import com.coc.modi.account.deposit.presentation.dto.TossConfigResponse;
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,11 +27,9 @@ public class DepositController {
     // 예치금 충전 요청
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@RequestBody DepositRequest request,
-																	   Authentication authentication) {
+																	   @AuthenticationPrincipal CustomMember member) {
 
-        Long memberId = (Long) authentication.getPrincipal();
-
-        DepositResponse response = depositService.requestDeposit(request.toCommand(memberId));
+        DepositResponse response = depositService.requestDeposit(request.toCommand(member.getMemberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -59,11 +59,9 @@ public class DepositController {
     // 예치금 충전 취소(환불)
     @PostMapping("/cancel")
     public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@RequestBody DepositCancelRequest request,
-                                                                      Authentication authentication) {
+																	  @AuthenticationPrincipal CustomMember member) {
 
-        Long memberId = (Long) authentication.getPrincipal();
-
-        DepositResponse response = depositService.cancelDeposit(request.toCommand(memberId));
+        DepositResponse response = depositService.cancelDeposit(request.toCommand(member.getMemberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
