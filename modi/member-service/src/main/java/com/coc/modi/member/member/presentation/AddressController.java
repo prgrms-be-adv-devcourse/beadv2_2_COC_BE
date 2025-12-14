@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +27,7 @@ public class AddressController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getProfileAddresses(@AuthenticationPrincipal CustomMember member) {
 		
-        return ResponseEntity.ok(ApiResponse.ok(addressService.getProfileAddresses(member.getMemberId());
+        return ResponseEntity.ok(ApiResponse.ok(addressService.getProfileAddresses(member.getMemberId())));
     }
 
 	// 주소 등록
