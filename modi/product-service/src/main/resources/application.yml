@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: product-service
+  config:
+    import: "optional:configserver:"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}
