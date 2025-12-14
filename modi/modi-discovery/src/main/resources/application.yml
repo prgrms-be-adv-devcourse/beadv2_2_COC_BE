@@ -5,13 +5,9 @@ spring:
   application:
     name: modi-discovery
   config:
-    import: "optional:configserver:http://modi-config:8888"
+    import: "optional:configserver:"
 
 eureka:
-  server:
-    enable-self-preservation: true
   client:
     register-with-eureka: false
     fetch-registry: false
-    serviceUrl:
-      defaultZone: ${EUREKA_URI}

@@ -9,3 +9,8 @@ spring:
       discovery:
         enabled: true
         service-id: modi-config
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}

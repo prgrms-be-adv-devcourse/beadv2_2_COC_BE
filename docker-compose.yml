@@ -34,51 +34,6 @@ services:
     networks:
       - msa-net
 
-  modi-discovery:
-    image: modi-discovery:latest
-    container_name: modi-discovery
-    ports:
-      - "8761:8761"
-    networks:
-      - msa-net
-    restart: always
-
-  modi-config:
-    image: modi-config:latest
-    container_name: modi-config
-    depends_on:
-      - modi-discovery
-    env_file:
-      - .env
-    ports:
-      - "8888:8888"
-    networks:
-      - msa-net
-    restart: always
-
-  modi-gateway:
-    image: modi-gateway:latest
-    container_name: modi-gateway
-    depends_on:
-      - modi-config
-      - modi-discovery
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    networks:
-      - msa-net
-    restart: always
-
-  zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: zookeeper
-    restart: unless-stopped
-    networks:
-      - msa-net
-    expose:
-      - "2181"
-
   kafka:
     image: wurstmeister/kafka
     container_name: kafka
@@ -95,14 +50,69 @@ services:
     expose:
       - "9092"
 
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: unless-stopped
+    networks:
+      - msa-net
+    expose:
+      - "2181"
+
+  modi-discovery:
+    image: modi-discovery:latest
+    container_name: modi-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-config:
+    image: modi-config:latest
+    container_name: modi-config
+    depends_on:
+      - modi-discovery
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-gateway:
+    image: modi-gateway:latest
+    container_name: modi-gateway
+    depends_on:
+      - modi-config
+      - modi-discovery
+    env_file:
+      - .env
+    ports:
+      - "8000:8080"
+    networks:
+      - msa-net
+    restart: always
+
   account-service:
     image: account-service:latest
     container_name: account-service
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "8081:8081"
+    expose:
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -116,7 +126,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8082:8082"
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -130,7 +140,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8083:8083"
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -144,7 +154,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8084:8084"
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -158,7 +168,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8085:8085"
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -172,7 +182,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8086:8086"
+      - "8080"
     env_file:
       - .env
     restart: always
@@ -186,7 +196,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8087:8087"
+      - "8080"
     env_file:
       - .env
     restart: always

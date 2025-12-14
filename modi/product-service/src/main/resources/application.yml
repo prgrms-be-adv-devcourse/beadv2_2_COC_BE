@@ -2,10 +2,9 @@ spring:
   application:
     name: product-service
   config:
-    import: "optional:configserver:"
+    import: optional:configserver:http://modi-config:8888
 
-  cloud:
-    config:
-      discovery:
-        enabled: true
-        service-id: modi-config
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}
