@@ -11,6 +11,9 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 @Service
 @RequiredArgsConstructor
 public class SettlementBatchRunner {
@@ -68,10 +71,24 @@ public class SettlementBatchRunner {
 		if (isBlank(command.startDate()) || isBlank(command.endDate())) {
 			throw new SettlementInputInvalidException("startDate와 endDate는 필수입니다.");
 		}
+		LocalDate start = parseDate(command.startDate(), "startDate");
+		LocalDate end = parseDate(command.endDate(), "endDate");
+		if (start.isAfter(end)) {
+			throw new SettlementInputInvalidException("startDate는 endDate보다 이후일 수 없습니다.");
+		}
 	}
 	
 	private boolean isBlank(String value) {
 		
 		return value == null || value.isBlank();
+	}
+
+	private LocalDate parseDate(String value, String fieldName) {
+		
+		try {
+			return LocalDate.parse(value);
+		} catch (DateTimeParseException e) {
+			throw new SettlementInputInvalidException(fieldName + " 형식이 올바르지 않습니다. (yyyy-MM-dd)", e);
+		}
 	}
 }
