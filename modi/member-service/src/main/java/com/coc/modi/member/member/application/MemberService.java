@@ -1,5 +1,7 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.member.auth.application.EmailVerificationService;
+import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
@@ -36,6 +38,7 @@ public class MemberService {
 	private final PasswordEncoder passwordEncoder;
 	private final AccountFeignClient accountFeignClient;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationService emailVerificationService;
 	
 	// 회원가입
 	@Transactional
@@ -128,6 +131,9 @@ public class MemberService {
 			
 			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
 		}
+		
+		// 이메일 검증 코드 발송
+		emailVerificationService.sendVerificationEmail(new SendEmailVerificationCommand(member.getEmail()));
 		
 		validateVerificationCode(command.email(), command.verificationCode());
 		
