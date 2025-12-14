@@ -5,7 +5,7 @@ import com.coc.modi.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.exception.SellerDuplicateException;
 import com.coc.modi.seller.exception.SellerNotFoundException;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
-import com.coc.modi.seller.seller.application.dto.SellerResponse;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
@@ -22,21 +22,21 @@ public class SellerService {
     private final SellerRentalService sellerRentalService;
 
     @Transactional(readOnly = true)
-    public SellerResponse getSeller(Long sellerId) {
+    public SellerDetailResponse getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
-                .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. sellerId=" + sellerId));
-        return SellerResponse.from(seller);
+                .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + sellerId));
+        return SellerDetailResponse.from(seller);
     }
 
     @Transactional(readOnly = true)
-    public SellerResponse getSellerByMemberId(Long memberId) {
+    public SellerDetailResponse getSellerByMemberId(Long memberId) {
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. memberId=" + memberId));
-        return SellerResponse.from(seller);
+        return SellerDetailResponse.from(seller);
     }
 
     @Transactional
-    public SellerResponse registerSeller(SellerCreateCommand command) {
+    public SellerDetailResponse registerSeller(SellerCreateCommand command) {
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new SellerDuplicateException("이미 등록된 판매자입니다. memberId=" + command.memberId());
         }
@@ -49,12 +49,12 @@ public class SellerService {
         );
 
         Seller saved = sellerRepository.save(seller);
-        return SellerResponse.from(saved);
+        return SellerDetailResponse.from(saved);
     }
 
 
     @Transactional
-    public SellerResponse updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
+    public SellerDetailResponse updateSellerByMemberId(Long memberId, SellerUpdateCommand command) {
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. memberId=" + memberId));
 
@@ -65,7 +65,7 @@ public class SellerService {
         );
         seller.changeStatus(command.status());
 
-        return SellerResponse.from(seller);
+        return SellerDetailResponse.from(seller);
     }
     
 

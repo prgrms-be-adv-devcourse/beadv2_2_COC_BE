@@ -6,7 +6,7 @@ import com.coc.modi.seller.settlement.application.SellerSettlementService;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.seller.application.dto.SellerResponse;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.exception.SettlementInputInvalidException;
 
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class SellerSettlementController {
 																						Pageable pageable) {
 		
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemeberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemeberId());
 		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.sellerId(), periodYm, pageable);
 		return ResponseEntity.ok(ApiResponse.ok(settlements));
 	}
@@ -53,7 +53,7 @@ public class SellerSettlementController {
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(@AuthenticationPrincipal CustomMember member,
 																				 @PathVariable Long sellerSettlementId) {
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
@@ -62,7 +62,7 @@ public class SellerSettlementController {
 	public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(@AuthenticationPrincipal CustomMember member,
 																								@PathVariable Long sellerSettlementId) {
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
@@ -73,7 +73,7 @@ public class SellerSettlementController {
 																				 @RequestParam(value = "paidAt", required = false) String paidAt) {
 		
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
 		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.sellerId(), sellerSettlementId, paidAtValue);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
@@ -83,7 +83,7 @@ public class SellerSettlementController {
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(@AuthenticationPrincipal CustomMember member,
 																					@PathVariable Long sellerSettlementId) {
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}

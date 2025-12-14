@@ -5,7 +5,7 @@ import com.coc.modi.seller.seller.domain.SellerStatus;
 
 import java.time.LocalDateTime;
 
-public record SellerResponse(
+public record SellerDetailResponse(
         Long sellerId,
         Long memberId,
         String storeName,
@@ -16,8 +16,9 @@ public record SellerResponse(
         LocalDateTime updatedAt
 ) {
 
-    public static SellerResponse from(Seller seller) {
-        return new SellerResponse(
+    public static SellerDetailResponse from(Seller seller) {
+        
+        return new SellerDetailResponse(
                 seller.getId(),
                 seller.getMemberId(),
                 seller.getStoreName(),
