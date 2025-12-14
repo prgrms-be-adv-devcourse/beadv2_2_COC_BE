@@ -5,6 +5,7 @@ import com.coc.modi.seller.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchRunCommand;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SettlementBatchRunner {
 	
@@ -53,7 +55,7 @@ public class SettlementBatchRunner {
 				try {
 					settlementBatchService.failBatch(batchId);
 				} catch (Exception ignored) {
-					// 상태 롤백 중 실패는 무시
+					log.warn("정산 배치 실패 상태 전환 중 오류가 발생했습니다. batchId={}", batchId, ignored);
 				}
 			}
 			throw new SettlementBatchRunException("정산 배치 실행에 실패했습니다.", e);
