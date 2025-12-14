@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +43,7 @@ public class SellerSettlementController {
 																						Pageable pageable) {
 		
 		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemeberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.sellerId(), periodYm, pageable);
 		return ResponseEntity.ok(ApiResponse.ok(settlements));
 	}
