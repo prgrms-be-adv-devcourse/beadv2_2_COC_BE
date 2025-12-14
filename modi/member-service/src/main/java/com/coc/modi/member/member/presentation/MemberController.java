@@ -24,7 +24,7 @@ public class MemberController {
 	
 	// 회원가입
 	@PostMapping("/signup")
-	public ResponseEntity<ApiResponse<MemberSignupResponse>> signup(@RequestBody MemberSignupRequest request) {
+	public ResponseEntity<ApiResponse<MemberSignupResponse>> signup(@Valid @RequestBody MemberSignupRequest request) {
 		
 		MemberSignupResponse response = memberService.signup(request.toCommand());
 		
@@ -45,7 +45,7 @@ public class MemberController {
 	// 내 정보 수정
 	@PutMapping("/profile")
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(Authentication authentication,
-																			@RequestBody MemberUpdateRequest request) {
+																			@Valid @RequestBody MemberUpdateRequest request) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
@@ -57,8 +57,8 @@ public class MemberController {
 	// 비밀번호 수정
 	@PatchMapping("/{memberId}/passwords")
 	public ResponseEntity<ApiResponse<Void>> updatePassword(Authentication authentication,
-														 @PathVariable Long memberId,
-														 @Valid @RequestBody MemberPasswordUpdateRequest request) {
+														    @PathVariable Long memberId,
+														    @Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
 		Long authenticatedMemberId = (Long)authentication.getPrincipal();
 		

@@ -35,23 +35,16 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccountFeignClient accountFeignClient;
-	private final MemberValidationService memberValidationService;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	
 	// 회원가입
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
-		memberValidationService.validateEmail(command.email());
-		
 		if (memberRepository.existsByEmail(command.email())) {
 			
 			throw new EmailDuplicatedException(command.email());
 		}
-		
-		memberValidationService.validatePassword(command.password());
-		
-		memberValidationService.validatePhone(command.phone());
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		
@@ -102,8 +95,6 @@ public class MemberService {
 		
 		if (command.phone() != null && !command.phone().isBlank()) {
 			
-			memberValidationService.validatePhone(command.phone());
-			
 			member.changePhone(command.phone());
 		}
 		
@@ -123,9 +114,6 @@ public class MemberService {
 		
 		Member member = getMemberOrThrow(memberId);
 		
-		// 이메일 유효성 검사
-		memberValidationService.validateEmail(command.email());
-		
 		if (!member.getEmail().equals(command.email())) {
 			
 			throw new PasswordMismatchException("이메일이 일치하지 않습니다.");
@@ -142,8 +130,6 @@ public class MemberService {
 		}
 		
 		validateVerificationCode(command.email(), command.verificationCode());
-		
-		memberValidationService.validatePassword(command.password());
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		

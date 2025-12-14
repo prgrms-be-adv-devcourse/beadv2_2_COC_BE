@@ -5,6 +5,8 @@ import com.coc.modi.member.member.application.AddressService;
 import com.coc.modi.member.member.application.dto.AddressListResponse;
 import com.coc.modi.member.member.presentation.dto.AddressCreateRequest;
 import com.coc.modi.member.member.presentation.dto.AddressUpdateRequest;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +33,7 @@ public class AddressController {
 	// 주소 등록
     @PostMapping("/profile")
     public ResponseEntity<ApiResponse<Void>> createAddress(Authentication authentication,
-                                                        @RequestBody AddressCreateRequest request) {
+														   @Valid @RequestBody AddressCreateRequest request) {
 
         Long memberId = (Long)authentication.getPrincipal();
 		
@@ -43,8 +45,8 @@ public class AddressController {
 	// 주소 수정
     @PutMapping("/profile/{addressId}")
     public ResponseEntity<ApiResponse<Void>> updateAddress(Authentication authentication,
-                                                        @PathVariable Long addressId,
-                                                        @RequestBody AddressUpdateRequest request) {
+                                                           @PathVariable Long addressId,
+                                                           @Valid @RequestBody AddressUpdateRequest request) {
 
         Long memberId = (Long)authentication.getPrincipal();
 		
@@ -56,7 +58,7 @@ public class AddressController {
 	// 주소 삭제
     @DeleteMapping("/profile/{addressId}")
     public ResponseEntity<ApiResponse<Void>> deleteAddress(Authentication authentication,
-                                                        @PathVariable Long addressId) {
+                                                           @PathVariable Long addressId) {
 
         Long memberId = (Long)authentication.getPrincipal();
 		
