@@ -13,8 +13,9 @@ import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
+import com.coc.modi.member.member.exception.MemberEmailMismatchException;
+import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
-import com.coc.modi.member.member.exception.PasswordMismatchException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
 
@@ -111,17 +112,17 @@ public class MemberService {
 		
 		if (!member.getEmail().equals(command.email())) {
 			
-			throw new PasswordMismatchException("이메일이 일치하지 않습니다.");
+			throw new MemberEmailMismatchException("이메일이 일치하지 않습니다.");
 		}
 		
 		if (command.name() == null || command.name().isBlank()) {
 			
-			throw new PasswordMismatchException("이름을 입력해주세요.");
+			throw new MemberNameMismatchException("이름을 입력해주세요.");
 		}
 		
 		if (!member.getName().equals(command.name())) {
 			
-			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
+			throw new MemberNameMismatchException("이름이 일치하지 않습니다.");
 		}
 		
 		// 이메일 검증 코드 발송
