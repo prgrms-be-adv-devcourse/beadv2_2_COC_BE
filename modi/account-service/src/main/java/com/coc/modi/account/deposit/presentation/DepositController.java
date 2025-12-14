@@ -6,13 +6,13 @@ import com.coc.modi.account.deposit.infrastructure.config.TossPaymentsConfig;
 import com.coc.modi.account.deposit.presentation.dto.DepositApprovalRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositCancelRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositRequest;
-import com.coc.modi.account.deposit.presentation.dto.TossConfigResponse;
+import com.coc.modi.account.deposit.application.dto.TossConfigResponse;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +26,7 @@ public class DepositController {
     
     // 예치금 충전 요청
     @PostMapping("/request")
-    public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@RequestBody DepositRequest request,
+    public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@Valid @RequestBody DepositRequest request,
 																	   @AuthenticationPrincipal CustomMember member) {
 
         DepositResponse response = depositService.requestDeposit(request.toCommand(member.getMemberId()));
@@ -36,7 +36,7 @@ public class DepositController {
 
     // 예치금 충전 승인
     @PostMapping("/approve")
-    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@RequestBody DepositApprovalRequest request) {
+    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@Valid @RequestBody DepositApprovalRequest request) {
 
         DepositResponse response = depositService.approveDeposit(request.toCommand());
 
@@ -58,7 +58,7 @@ public class DepositController {
 
     // 예치금 충전 취소(환불)
     @PostMapping("/cancel")
-    public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@RequestBody DepositCancelRequest request,
+    public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@Valid @RequestBody DepositCancelRequest request,
 																	  @AuthenticationPrincipal CustomMember member) {
 
         DepositResponse response = depositService.cancelDeposit(request.toCommand(member.getMemberId()));
