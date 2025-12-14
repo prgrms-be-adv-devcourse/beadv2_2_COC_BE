@@ -49,20 +49,19 @@ public class MemberController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		
-		MemberProfileResponse response = memberService.updateProfile(memberId, request.toCommand());
+		MemberProfileResponse response = memberService.updateProfile(request.toCommand(memberId));
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 	
 	// 비밀번호 수정
-	@PatchMapping("/{memberId}/passwords")
+	@PatchMapping("/passwords")
 	public ResponseEntity<ApiResponse<Void>> updatePassword(Authentication authentication,
-														 @PathVariable Long memberId,
-														 @Valid @RequestBody MemberPasswordUpdateRequest request) {
+															@Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
-		Long authenticatedMemberId = (Long)authentication.getPrincipal();
+		Long memberId = (Long)authentication.getPrincipal();
 		
-		memberService.updatePassword(authenticatedMemberId, memberId, request.toCommand());
+		memberService.updatePassword(request.toCommand(memberId));
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

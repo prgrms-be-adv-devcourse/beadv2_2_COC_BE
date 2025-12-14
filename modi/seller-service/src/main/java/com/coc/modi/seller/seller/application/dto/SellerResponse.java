@@ -6,7 +6,7 @@ import com.coc.modi.seller.seller.domain.SellerStatus;
 import java.time.LocalDateTime;
 
 public record SellerResponse(
-        Long id,
+        Long sellerId,
         Long memberId,
         String storeName,
         String bizRegNo,

@@ -24,7 +24,7 @@ public class SellerService {
     @Transactional(readOnly = true)
     public SellerResponse getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
-                .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + sellerId));
+                .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. sellerId=" + sellerId));
         return SellerResponse.from(seller);
     }
 

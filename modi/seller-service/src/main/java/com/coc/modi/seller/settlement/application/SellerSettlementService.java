@@ -70,7 +70,7 @@ public class SellerSettlementService {
 	private SellerSettlement findOwnedSettlement(Long sellerId, Long sellerSettlementId) {
 		
 		SellerSettlement settlement = sellerSettlementRepository.findById(sellerSettlementId)
-				.orElseThrow(() -> new SellerSettlementNotFoundException("정산서를 찾을 수 없습니다. id=" + sellerSettlementId));
+				.orElseThrow(() -> new SellerSettlementNotFoundException("정산서를 찾을 수 없습니다. sellerId=" + sellerSettlementId));
 		
 		if (!settlement.getSellerId().equals(sellerId)) {
 			throw new SellerSettlementForbiddenException("정산서 소유자가 일치하지 않습니다. sellerId=" + sellerId);

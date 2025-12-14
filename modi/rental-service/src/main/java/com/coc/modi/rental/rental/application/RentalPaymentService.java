@@ -32,40 +32,34 @@ public class RentalPaymentService {
 	
 	@Transactional
 	public PayRentalResponse completePayment(Long rentalId, Long memberId) {
-		
 		Rental rental = rentalRepository.findById(rentalId)
 				.orElseThrow(() -> new RentalNotFoundException(rentalId));
 		
 		if (!rental.getMemberId().equals(memberId)) {
-			
 			throw RentalAccessDeniedException.memberMismatch(rental.getId(), memberId);
 		}
 		
 		if (rental.getItems() == null || rental.getItems().isEmpty()) {
-			
-			throw new RentalStatusInvalidException("결제할 대여 상품이 없습니다. rentalId: " + rentalId);
+			throw new RentalStatusInvalidException("결제할 대여 상품이 없습니다. rentalId=" + rentalId);
 		}
 		
+		// 승인 상태/총액 정합성
 		rental.recalculateAmountsAndStatus();
-		RentalStatus rentalStatus = rental.getStatus();
 		
+		RentalStatus rentalStatus = rental.getStatus();
 		if (rentalStatus == RentalStatus.CANCELED || rentalStatus == RentalStatus.COMPLETED) {
-			
-			throw new RentalStatusInvalidException(
-					"취소되었거나 완료된 대여는 결제할 수 없습니다. rentalId: " + rentalId + ", rentalStatus: " + rentalStatus);
+			throw new RentalStatusInvalidException("취소/완료된 대여는 결제 불가. rentalId=" + rentalId + ", status=" + rentalStatus);
 		}
 		
 		if (rentalStatus != RentalStatus.ACCEPTED) {
-			
-			throw new RentalStatusInvalidException(
-					"모든 대여 상품이 승인 상태일 때만 결제할 수 있습니다. rentalId: " + rentalId + ", rentalStatus: " + rentalStatus);
+			throw new RentalStatusInvalidException("모든 아이템이 승인(ACCEPTED)일 때만 결제 가능. rentalId=" + rentalId + ", status=" + rentalStatus);
 		}
 		
 		BigDecimal totalAmount = rental.getTotalAmount();
+		
 		WalletInfoResponse walletInfoResponse;
 		try {
-			walletInfoResponse = accountFeignClient.charge(
-					new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
+			walletInfoResponse = accountFeignClient.charge(new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
 		} catch (FeignException ex) {
 			throw new RentalStatusInvalidException("결제 처리 중 지갑 서비스 호출에 실패했습니다.");
 		}
@@ -74,8 +68,11 @@ public class RentalPaymentService {
 		rental.markPaid(paidAt);
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.PAID,
-				Map.of("rentalId", rental.getId(), "paidAt", paidAt, "amount", totalAmount, "walletBalance",
-						walletInfoResponse.balance(), "rentalStatus", rental.getStatus().name()));
+				Map.of("rentalId", rental.getId(),
+						"paidAt", paidAt,
+						"amount", totalAmount,
+						"walletBalance", walletInfoResponse.balance(),
+						"rentalStatus", rental.getStatus().name()));
 		
 		return PayRentalResponse.create(rental, totalAmount, walletInfoResponse.balance(), paidAt);
 	}

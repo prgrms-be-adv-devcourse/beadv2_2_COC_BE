@@ -43,7 +43,7 @@ public class SellerSettlementController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
+		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.sellerId(), periodYm, pageable);
 		return ResponseEntity.ok(ApiResponse.ok(settlements));
 	}
 	
@@ -53,7 +53,7 @@ public class SellerSettlementController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.id(), sellerSettlementId);
+		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
@@ -63,7 +63,7 @@ public class SellerSettlementController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.id(), sellerSettlementId);
+		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
 	
@@ -75,7 +75,7 @@ public class SellerSettlementController {
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
 		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
-		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.id(), sellerSettlementId, paidAtValue);
+		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.sellerId(), sellerSettlementId, paidAtValue);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
@@ -85,7 +85,7 @@ public class SellerSettlementController {
 		
 		Long memberId = (Long)authentication.getPrincipal();
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.id(), sellerSettlementId);
+		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	

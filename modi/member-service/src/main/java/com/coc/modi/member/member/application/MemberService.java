@@ -90,10 +90,9 @@ public class MemberService {
 	
 	// 회원 정보 수정
 	@Transactional
-	public MemberProfileResponse updateProfile(Long memberId,
-											   UpdateMemberCommand command) {
+	public MemberProfileResponse updateProfile(UpdateMemberCommand command) {
 		
-		Member member = getMemberOrThrow(memberId);
+		Member member = getMemberOrThrow(command.memberId());
 		
 		if (command.name() != null && !command.name().isBlank()) {
 			
@@ -112,16 +111,9 @@ public class MemberService {
 	
 	// 비밀번호 수정
 	@Transactional
-	public void updatePassword(Long authenticatedMemberId,
-							   Long memberId,
-							   UpdateMemberPasswordCommand command) {
+	public void updatePassword(UpdateMemberPasswordCommand command) {
 		
-		if (!authenticatedMemberId.equals(memberId)) {
-			
-			throw new PasswordMismatchException("본인만 비밀번호를 변경할 수 있습니다.");
-		}
-		
-		Member member = getMemberOrThrow(memberId);
+		Member member = getMemberOrThrow(command.memberId());
 		
 		// 이메일 유효성 검사
 		memberValidationService.validateEmail(command.email());

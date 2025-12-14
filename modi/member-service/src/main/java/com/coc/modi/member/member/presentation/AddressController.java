@@ -1,8 +1,10 @@
 package com.coc.modi.member.member.presentation;
 
+import java.util.List;
+
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.member.member.application.AddressService;
-import com.coc.modi.member.member.application.dto.AddressListResponse;
+import com.coc.modi.member.member.application.dto.AddressResponse;
 import com.coc.modi.member.member.presentation.dto.AddressCreateRequest;
 import com.coc.modi.member.member.presentation.dto.AddressUpdateRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +22,11 @@ public class AddressController {
 
 	// 주소 목록 조회
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<AddressListResponse>> getProfileAddresses(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<AddressResponse>>> getProfileAddresses(Authentication authentication) {
 
         Long memberId = (Long)authentication.getPrincipal();
-        AddressListResponse response = addressService.getProfileAddresses(memberId);
 
-        return ResponseEntity.ok(ApiResponse.ok(response));
+        return ResponseEntity.ok(ApiResponse.ok(addressService.getProfileAddresses(memberId)));
     }
 
 	// 주소 등록

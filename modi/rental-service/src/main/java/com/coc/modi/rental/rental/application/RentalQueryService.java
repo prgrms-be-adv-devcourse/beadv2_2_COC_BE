@@ -36,7 +36,7 @@ public class RentalQueryService {
 	
 	public RentalResponse getRentalDetails(Long rentalId, Long memberId) {
 		
-		Rental rental = rentalRepository.findById(rentalId)
+		Rental rental = rentalRepository.findByIdWithItems(rentalId)
 				.orElseThrow(() -> new RentalNotFoundException(rentalId));
 		
 		if (!rental.getMemberId().equals(memberId)) {

@@ -79,7 +79,7 @@ public class SellerController {
 		
 		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
 		
-		return new SellerIdResponse(seller.id());
+		return new SellerIdResponse(seller.sellerId());
 	}
 	
 	@GetMapping("/internal/sellers/{sellerId}")
