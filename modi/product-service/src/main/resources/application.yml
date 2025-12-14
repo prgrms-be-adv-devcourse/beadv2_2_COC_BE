@@ -4,6 +4,12 @@ spring:
   config:
     import: "optional:configserver:"
 
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
+
 eureka:
   client:
     service-url:

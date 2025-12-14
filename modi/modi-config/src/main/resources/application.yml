@@ -17,17 +17,17 @@ spring:
           toss.success-url: ${TOSS_SUCCESS_URL}
           toss.fail-url: ${TOSS_FAIL_URL}
           jwt.secret: ${JWT_SECRET}
-          spring.mail.username: ${EMAIL_USERNAME}
+          spring.mail.username: ${EMAIL_ADDRESS}
           spring.mail.password: ${EMAIL_PASSWORD}
           spring.data.redis.host: ${REDIS_HOST}
           spring.data.redis.port: ${REDIS_PORT}
-          mail.from: ${EMAIL_USERNAME}
+          mail.from-address: ${EMAIL_ADDRESS}
           product-service.url: ${PRODUCT_SERVICE_URL}
           account-service.url: ${ACCOUNT_SERVICE_URL}
           rental-service.url: ${RENTAL_SERVICE_URL}
+          rental-service.base-url: ${RENTAL_SERVICE_URL}
           member-service.url: ${MEMBER_SERVICE_URL}
           seller-service.url: ${SELLER_SERVICE_URL}
-          rental-service.base-url: ${RENTAL_SERVICE_URL}
           eureka.client.service-url.defaultZone: ${EUREKA_URI}
           spring.elasticsearch.uris: ${ELASTIC_URL}
           cloud.aws.s3.bucket: ${S3_BUCKET_NAME}
