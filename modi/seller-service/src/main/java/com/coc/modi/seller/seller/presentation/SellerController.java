@@ -3,8 +3,8 @@ package com.coc.modi.seller.seller.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
-import com.coc.modi.seller.seller.application.dto.SellerResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
 import com.coc.modi.seller.seller.presentation.dto.SellerUpdateRequest;
 
@@ -25,20 +25,20 @@ public class SellerController {
 	private final SellerService sellerService;
 	
 	@PostMapping("/api/sellers")
-	public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-																	  Authentication authentication) {
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
+																		  Authentication authentication) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
+		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(memberId));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(Authentication authentication) {
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(Authentication authentication) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(memberId);
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -59,31 +59,31 @@ public class SellerController {
 	}
 	
 	@PutMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(Authentication authentication,
-																	  @Valid @RequestBody SellerUpdateRequest request) {
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> updateMySeller(Authentication authentication,
+																		@Valid @RequestBody SellerUpdateRequest request) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.updateSellerByMemberId(memberId, request.toCommand());
+		SellerDetailResponse seller = sellerService.updateSellerByMemberId(memberId, request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/internal/sellers/by-member/{memberId}")
-	public SellerResponse getSellerByMemberId(@PathVariable Long memberId) {
+	// @GetMapping("/internal/sellers/by-member/{memberId}")
+	// public SellerDetailResponse getSellerByMemberId(@PathVariable Long memberId) {
+	//
+	// 	return sellerService.getSellerByMemberId(memberId);
+	// }
+
+	@GetMapping("/internal/sellers/{memberId}")
+	public SellerIdResponse getSellerInfo(@PathVariable Long memberId) {
 		
-		return sellerService.getSellerByMemberId(memberId);
-	}
-	
-	@GetMapping("/internal/sellers/member/{memberId}/id")
-	public SellerIdResponse getSellerIdByMemberId(@PathVariable Long memberId) {
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(memberId);
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		
-		return new SellerIdResponse(seller.id());
+		return new SellerIdResponse(seller.sellerId(), seller.memberId());
 	}
 	
 	@GetMapping("/internal/sellers/{sellerId}")
-	public SellerResponse getSellerById(@PathVariable Long sellerId) {
+	public SellerDetailResponse getSellerById(@PathVariable Long sellerId) {
 		
 		return sellerService.getSeller(sellerId);
 	}
