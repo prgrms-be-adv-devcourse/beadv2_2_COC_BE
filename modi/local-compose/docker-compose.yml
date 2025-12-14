@@ -1,0 +1,125 @@
+version: "3.8"
+
+services:
+  modi-discovery:
+    image: modi-discovery:latest
+    container_name: modi-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - msa-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  modi-config:
+    image: modi-config:latest
+    container_name: modi-config
+    env_file:
+      - .env
+    depends_on:
+      - modi-discovery
+    ports:
+      - "8888:8888"
+    networks:
+      - msa-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  modi-gateway:
+    image: modi-gateway:latest
+    container_name: modi-gateway
+    env_file:
+      - .env
+    depends_on:
+      - modi-config
+      - modi-discovery
+    ports:
+      - "8000:8080"
+    networks:
+      - msa-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  account-service:
+    image: account-service:latest
+    container_name: account-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+  product-service:
+    image: product-service:latest
+    container_name: product-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+  rental-service:
+    image: rental-service:latest
+    container_name: rental-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+
+  seller-service:
+    image: seller-service:latest
+    container_name: seller-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+  member-service:
+    image: member-service:latest
+    container_name: member-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+  review-service:
+    image: review-service:latest
+    container_name: review-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+  notification-service:
+    image: notification-service:latest
+    container_name: notification-service
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    networks:
+      - msa-net
+
+networks:
+  msa-net:
+    driver: bridge
