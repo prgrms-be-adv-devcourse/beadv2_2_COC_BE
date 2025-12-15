@@ -14,6 +14,7 @@ import com.coc.modi.rental.rental.infrastructure.client.SellerFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
+import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
 import com.coc.modi.rental.rental.exception.RentalItemNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalNotFoundException;
@@ -30,6 +31,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
+import feign.FeignException;
+
 @Service
 @RequiredArgsConstructor
 public class RentalLifecycleService {
@@ -39,9 +42,10 @@ public class RentalLifecycleService {
 	private final SellerFeignClient sellerFeignClient;
 	private final AccountFeignClient accountFeignClient;
 	private final RentalEventLogService rentalEventLogService;
+	private final RentalQueryRepository rentalQueryRepository;
 	
 	@Transactional
-	public void cancelRentalItem(Long rentalItemId, Long memberId) {
+	public void cancelRentalItem(Long rentalItemId, Long memberId) { //취소는 결제 전에만
 		
 		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
 				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
@@ -54,7 +58,7 @@ public class RentalLifecycleService {
 		rentalItem.cancelByMemberRequest();
 		
 		Rental rental = rentalItem.getRental();
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 		
 		rentalEventLogService.logEvent(rentalItem.getRental(), RentalEventType.RENTAL_CANCELED, Map.of("rentalItemId", rentalItemId, "status", rentalItem.getStatus()
 				.name()));
@@ -66,7 +70,12 @@ public class RentalLifecycleService {
 		RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
 				.orElseThrow(() -> new RentalItemNotFoundException(command.rentalItemId()));
 		
-		SellerInfoResponse sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
+		SellerInfoResponse sellerInfoResponse;
+		try {
+			sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
+		} catch (FeignException ex) {
+			throw new RentalStatusInvalidException("판매자 정보 조회에 실패했습니다.");
+		}
 		
 		if (!sellerInfoResponse.memberId().equals(command.memberId())) {
 			
@@ -81,7 +90,7 @@ public class RentalLifecycleService {
 		}
 		
 		rentalItem.processReturn();
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 		
 		BigDecimal damageFee = command.damageFee() == null ? BigDecimal.ZERO : command.damageFee();
 		BigDecimal lateFee = command.lateFee() == null ? BigDecimal.ZERO : command.lateFee();
@@ -119,13 +128,17 @@ public class RentalLifecycleService {
 		}
 		
 		LocalDate oldEndDate = rentalItem.getEndDate();
+		validateAvailability(rentalItem.getProductId(), rentalItem.getStartDate(), command.newEndDate(), rentalItem.getId());
 		
 		BigDecimal extraAmount = rentalItem.extendRental(command.newEndDate());
 		
-		accountFeignClient.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount));
+		try {
+			accountFeignClient.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount));
+		} catch (FeignException ex) {
+			throw new RentalStatusInvalidException("지갑 추가 결제에 실패했습니다.");
+		}
 		
-		rental.updateTotalAmount(rental.getTotalAmount().add(extraAmount));
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 		
 		long extraDays = ChronoUnit.DAYS.between(oldEndDate, command.newEndDate());
 		
@@ -150,11 +163,27 @@ public class RentalLifecycleService {
 		}
 		
 		BigDecimal refundAmount = rentalItem.processRefund();
-		accountFeignClient.refund(new RefundWalletCommand(memberId, rental.getId(), rentalItem.getId(), refundAmount));
+		try {
+			accountFeignClient.refund(new RefundWalletCommand(memberId, rental.getId(), rentalItem.getId(), refundAmount));
+		} catch (FeignException ex) {
+			throw new RentalStatusInvalidException("환불 처리 중 지갑 서비스 호출에 실패했습니다.");
+		}
 		
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_REFUNDED, Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(), "status", rental.getStatus()
 				.name(), "itemStatus", rentalItem.getStatus().name(), "refundAmount", refundAmount));
+	}
+	
+	private void validateAvailability(Long productId, LocalDate startDate, LocalDate endDate, Long excludeRentalItemId) {
+		
+		boolean hasOverlap = rentalQueryRepository.existsOverlappingRentalItem(productId, startDate, endDate, excludeRentalItemId);
+		
+		if (hasOverlap) {
+			
+			throw new RentalStatusInvalidException(
+					"요청한 기간에 이미 예약된 상품입니다. productId: " + productId + ", startDate: " + startDate + ", endDate: "
+							+ endDate);
+		}
 	}
 }

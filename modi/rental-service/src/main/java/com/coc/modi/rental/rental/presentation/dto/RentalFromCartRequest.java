@@ -4,7 +4,13 @@ import com.coc.modi.rental.rental.application.dto.CreateRentalFromCartCommand;
 
 import java.util.List;
 
-public record RentalFromCartRequest(List<Long> cartItemIds) {
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record RentalFromCartRequest(
+		@NotEmpty List<@NotNull @Positive Long> cartItemIds
+) {
 	
 	public CreateRentalFromCartCommand toCommand(Long memberId) {
 		

@@ -1,4 +1,5 @@
 dependencies {
-    // 공통 모듈
-    implementation project(":common")
+
+    implementation project(':common-kafka')
+    implementation 'org.springframework.kafka:spring-kafka'
 }

@@ -1,0 +1,113 @@
+@host = http://localhost:8000
+@access_token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzY1NjI1MTI2LCJleHAiOjE3NjU2Mjg3MjZ9.srSQf2_BJ90EknT-91GgPJ5ePYnJu37P8_tTI9jT1C8
+
+### 회원가입
+
+POST {{host}}/member-service/api/members/signup
+Content-Type: application/json
+
+{
+  "email": "bbb@gmail.com",
+  "password": "!@#asdf1122",
+  "name": "김이김",
+  "phone": "010-3232-3234"
+}
+
+### 내 정보 조회
+
+GET {{host}}/member-service/api/members/profile
+Authorization: Bearer {{access_token}}
+
+### 회원정보 수정
+
+PUT {{host}}/member-service/api/members/profile
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "홍길동",
+  "phone": "010-1234-5678"
+}
+
+### 비밀번호 수정
+
+PATCH {{host}}/member-service/api/members/10/passwords
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "홍길동",
+  "password": "!@#asdf11223"
+}
+
+### 비밀번호 찾기 - 코드 발송
+
+POST {{host}}/member-service/api/auth/password/reset/send
+Content-Type: application/json
+
+{
+  "email": "bbb@gmail.com"
+}
+
+### 비밀번호 찾기 - 재설정
+
+POST {{host}}/member-service/api/auth/password/reset/confirm
+Content-Type: application/json
+
+{
+  "email": "bbb@gmail.com",
+  "code": "123456",
+  "newPassword": "NewPass!23"
+}
+
+### 회원 탈퇴
+
+DELETE {{host}}/member-service/api/members
+Authorization: Bearer {{access_token}}
+
+
+### 내 주소 조회
+
+GET {{host}}/member-service/api/addresses/profile
+Authorization: Bearer {{access_token}}
+
+
+### 내 주소 등록
+
+POST {{host}}/member-service/api/addresses/profile
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "addressLabel": "우리집",
+  "recipientName": "홍길동",
+  "recipientPhone": "010-4444-1234",
+  "type": "MEMBER",
+  "postcode": "06236",
+  "roadAddress": "서울시 강남구 테헤란로 123",
+  "detailAddress": "101동 1001호",
+  "isDefault": true
+}
+
+### 내 주소 수정
+
+PUT {{host}}/member-service/api/addresses/profile/1
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "addressLabel": "회사",
+  "recipientName": "홍길동",
+  "recipientPhone": "010-5555-5555",
+  "type": "MEMBER",
+  "postcode": "04146",
+  "roadAddress": "서울시 마포구 백범로 20",
+  "detailAddress": "2층 물류팀",
+  "isDefault": false
+}
+
+
+### 내 주소 삭제
+
+DELETE {{host}}/member-service/api/addresses/profile/1
+Authorization: Bearer {{access_token}}

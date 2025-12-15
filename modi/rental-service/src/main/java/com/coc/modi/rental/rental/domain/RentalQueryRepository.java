@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface RentalQueryRepository {
 	
-	List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus);
+	List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus, Long memberId);
 	
 	Page<RentalItem> findRentalItemsBySellerAndProduct(Long sellerId,
 													   Long productId,
@@ -23,4 +23,6 @@ public interface RentalQueryRepository {
 													  Pageable pageable);
 	
 	List<Long> findUnavailableProductIds(LocalDate startDate, LocalDate endDate, List<Long> productIds);
+	
+	boolean existsOverlappingRentalItem(Long productId, LocalDate startDate, LocalDate endDate, Long excludeRentalItemId);
 }

@@ -6,10 +6,15 @@ import java.util.List;
 import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.rental.exception.RentalException;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.FutureOrPresent;
+
 public record UnavailableProductsRequest(
-		LocalDate startDate,
-		LocalDate endDate,
-		List<Long> productIds
+		@NotNull @FutureOrPresent LocalDate startDate,
+		@NotNull @FutureOrPresent LocalDate endDate,
+		@NotEmpty List<@NotNull @Positive Long> productIds
 ) {
 	
 	public void vaildate() {

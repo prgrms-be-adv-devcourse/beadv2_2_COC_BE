@@ -15,6 +15,7 @@ public record SellerCreateRequest(
 ) {
 
     public SellerCreateCommand toCommand(Long memberId) {
+        
         return new SellerCreateCommand(memberId, storeName, bizRegNo, storePhone);
     }
 }

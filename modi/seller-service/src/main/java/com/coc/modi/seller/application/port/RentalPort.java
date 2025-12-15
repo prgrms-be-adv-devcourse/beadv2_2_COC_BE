@@ -6,9 +6,9 @@ public interface RentalPort {
 
     RentalListResponse getRentals(Long sellerId,
                                   String status,
-                                  String periodYm,
                                   String startDate,
                                   String endDate,
+                                  Long productId,
                                   Integer page,
                                   Integer size);
 }

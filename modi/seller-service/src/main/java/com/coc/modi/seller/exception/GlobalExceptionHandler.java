@@ -23,6 +23,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<?>> handleBaseException(BaseException ex) {
 		
 		log.warn("Business exception: code={}, message={}", ex.getErrorCode().getCode(), ex.getDetailMessage());
+  
 		return buildResponse(ex.getErrorCode(), ex.getDetailMessage());
 	}
 	
@@ -30,6 +31,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex) {
 		
 		log.warn("Illegal argument: {}", ex.getMessage());
+  
 		return buildResponse(ErrorCode.INVALID_INPUT, ex.getMessage());
 	}
 	
@@ -37,6 +39,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<?>> handleIllegalState(IllegalStateException ex) {
 		
 		log.warn("Illegal state: {}", ex.getMessage());
+  
 		return buildResponse(ErrorCode.CONFLICT, ex.getMessage());
 	}
 	
@@ -52,6 +55,7 @@ public class GlobalExceptionHandler {
 				.orElse(ErrorCode.INVALID_INPUT.getDefaultMessage());
 		
 		log.warn("Validation error: {}", message);
+  
 		return buildResponse(ErrorCode.INVALID_INPUT, message);
 	}
 	
@@ -59,6 +63,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<?>> handleUnexpected(Exception ex) {
 		
 		log.error("Unexpected error", ex);
+  
 		return buildResponse(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.getDefaultMessage());
 	}
 	

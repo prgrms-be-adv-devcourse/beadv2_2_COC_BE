@@ -12,6 +12,7 @@ import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 import com.coc.modi.rental.rental.infrastructure.client.SellerFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -43,7 +44,12 @@ public class RentalDecisionService {
 		
 		Rental rental = rentalItem.getRental();
 		
-		SellerInfoResponse sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
+		SellerInfoResponse sellerInfoResponse;
+		try {
+			sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
+		} catch (FeignException ex) {
+			throw new RentalStatusInvalidException("판매자 정보 조회에 실패했습니다.");
+		}
 		
 		if (!sellerInfoResponse.memberId().equals(memberId)) {
 			
@@ -64,7 +70,7 @@ public class RentalDecisionService {
 		}
 		
 		rentalItem.decide(targetStatus);
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 	}
 	
 }

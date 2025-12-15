@@ -1,5 +1,6 @@
 package com.coc.modi.rental.rental.domain;
 
+import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseEntity;
 
 import jakarta.persistence.*;
@@ -12,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+
 @Getter
 @Entity
 @NoArgsConstructor
@@ -21,6 +24,7 @@ public class Rental extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
 	
 	@OneToMany(mappedBy = "rental", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<RentalItem> items = new ArrayList<>();
@@ -73,65 +77,91 @@ public class Rental extends BaseEntity {
 		this.status = RentalStatus.CANCELED;
 	}
 	
-	public void markReturned() {
-		
-		this.status = RentalStatus.COMPLETED;
-	}
-	
-	public void cancelByMemberRequest() {
-		
-		if (this.status == RentalStatus.CANCELED || this.status == RentalStatus.COMPLETED) {
-			
-			throw new IllegalStateException("이미 취소되었거나 완료된 대여입니다. rentalStatus: " + this.status);
-		}
-		
-		if (items != null) {
-			
-			boolean hasInProgressItem = items.stream().anyMatch(item -> !item.canCancelByRental());
-			
-			if (hasInProgressItem) {
-				
-				throw new IllegalStateException("이미 결제되었거나 진행 중인 상품이 있어 취소할 수 없습니다. rentalId: " + this.id);
-			}
-			
-			items.forEach(RentalItem::cancelByRentalRequest);
-		}
-		
-		markCanceled();
-	}
-	
 	public void updateTotalAmount(BigDecimal totalAmount) {
 		
 		this.totalAmount = totalAmount;
 	}
 	
-	public RentalStatus calculateStatus() {
+	public void recalculateAmountsAndStatus() {
 		
-		if (this.status == RentalStatus.CANCELED) {
+		recalculateTotalAmount();
+		updateStatusFromItems();
+	}
+	
+	public BigDecimal recalculateTotalAmount() {
+		
+		if (items == null || items.isEmpty()) {
 			
-			return RentalStatus.CANCELED;
+			this.totalAmount = BigDecimal.ZERO;
+			return this.totalAmount;
 		}
+		
+		BigDecimal recalculated = items.stream()
+				.filter(this::isChargeableItem)
+				.map(RentalItem::calculateRentalAmount)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		this.totalAmount = recalculated;
+		return this.totalAmount;
+	}
+	
+	private boolean isChargeableItem(RentalItem rentalItem) {
+		
+		if (rentalItem == null) {
+			
+			return false;
+		}
+		
+		if (rentalItem.getCanceledAt() != null) {
+			
+			return false;
+		}
+		
+		RentalItemStatus status = rentalItem.getStatus();
+		
+		return status != RentalItemStatus.CANCELED && status != RentalItemStatus.REJECTED;
+	}
+	
+	public RentalStatus calculateStatus() {
 		
 		if (items == null || items.isEmpty()) {
 			
 			return RentalStatus.REQUESTED;
 		}
 		
-		long totalCount = items.size();
-		long requestedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.REQUESTED).count();
-		long acceptedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.ACCEPTED).count();
-		long rentingCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.RENTING).count();
-		long returnedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.RETURNED).count();
-		long canceledCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.CANCELED).count();
-		long rejectedCount = items.stream().filter(item -> item.getStatus() == RentalItemStatus.REJECTED).count();
+		long canceledOrRejectedCount = items.stream()
+				.filter(item -> item.getStatus() == RentalItemStatus.CANCELED || item.getStatus() == RentalItemStatus.REJECTED)
+				.count();
+		
+		if (canceledOrRejectedCount == items.size()) {
+			
+			return RentalStatus.CANCELED;
+		}
+		
+		List<RentalItem> chargeableItems = items.stream()
+				.filter(this::isChargeableItem)
+				.toList();
+		
+		if (chargeableItems.isEmpty()) {
+			
+			return RentalStatus.CANCELED;
+		}
+		
+		long totalChargeable = chargeableItems.size();
+		long requestedCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.REQUESTED).count();
+		long acceptedCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.ACCEPTED).count();
+		long rentingCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.RENTING).count();
+		long returnedCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.RETURNED).count();
+		long canceledCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.CANCELED).count();
+		long rejectedCount = chargeableItems.stream().filter(item -> item.getStatus() == RentalItemStatus.REJECTED).count();
 		long finishedCount = returnedCount + canceledCount + rejectedCount;
 		
-		if (returnedCount == totalCount) {
+		if (returnedCount == totalChargeable) {
 			
 			return RentalStatus.COMPLETED;
 		}
 		
-		if (finishedCount == totalCount && returnedCount > 0) {
+		if (finishedCount == totalChargeable && returnedCount > 0) {
 			
 			return RentalStatus.COMPLETED;
 		}
@@ -141,27 +171,22 @@ public class Rental extends BaseEntity {
 			return RentalStatus.IN_PROGRESS;
 		}
 		
-		if (canceledCount + rejectedCount == totalCount) {
-			
-			return RentalStatus.CANCELED;
-		}
-		
 		if (this.paidAt != null) {
 			
 			return RentalStatus.PAID;
 		}
 		
-		if (acceptedCount == totalCount && totalCount > 0) {
+		if (acceptedCount == totalChargeable && totalChargeable > 0) {
 			
 			return RentalStatus.ACCEPTED;
 		}
 		
-		if (acceptedCount > 0 && acceptedCount < totalCount) {
+		if (acceptedCount > 0 && acceptedCount < totalChargeable) {
 			
 			return RentalStatus.PARTIALLY_ACCEPTED;
 		}
 		
-		if (requestedCount == totalCount) {
+		if (requestedCount == totalChargeable) {
 			
 			return RentalStatus.REQUESTED;
 		}
@@ -172,11 +197,6 @@ public class Rental extends BaseEntity {
 	public void updateStatusFromItems() {
 		
 		this.status = calculateStatus();
-	}
-	
-	public void updatePaidAt(LocalDateTime paidAt) {
-		
-		markPaid(paidAt);
 	}
 	
 }
