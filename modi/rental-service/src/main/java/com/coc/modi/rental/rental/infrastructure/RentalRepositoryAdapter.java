@@ -27,4 +27,10 @@ public class RentalRepositoryAdapter implements RentalRepository {
 		return rentalJpaRepository.findById(rentalId);
 	}
 	
+	@Override
+	public Optional<Rental> findByIdWithItems(Long rentalId) {
+		
+		return rentalJpaRepository.findByIdWithItems(rentalId);
+	}
+	
 }

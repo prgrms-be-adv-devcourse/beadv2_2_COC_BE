@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: review-service
+  config:
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}

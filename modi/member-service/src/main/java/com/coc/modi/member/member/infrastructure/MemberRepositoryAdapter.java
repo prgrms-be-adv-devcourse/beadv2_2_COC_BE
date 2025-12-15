@@ -22,6 +22,12 @@ public class MemberRepositoryAdapter implements MemberRepository {
 	}
 	
 	@Override
+	public boolean existsByPhone(String phone) {
+		
+		return memberJpaRepository.existsByPhone(phone);
+	}
+	
+	@Override
 	public Optional<Member> findByEmail(String email) {
 		
 		return memberJpaRepository.findByEmail(email);

@@ -2,9 +2,9 @@ package com.coc.modi.member.member.exception;
 
 import com.coc.modi.common.ErrorCode;
 
-public class PasswordMismatchException extends MemberException {
+public class MemberPasswordMismatchException extends MemberException {
 	
-	public PasswordMismatchException(String message) {
+	public MemberPasswordMismatchException(String message) {
 		
 		super(ErrorCode.PASSWORD_MISMATCH, message);
 	}

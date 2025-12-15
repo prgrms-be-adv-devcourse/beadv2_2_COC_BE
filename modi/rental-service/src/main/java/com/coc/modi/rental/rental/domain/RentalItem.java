@@ -1,6 +1,8 @@
 package com.coc.modi.rental.rental.domain;
 
 import com.coc.modi.common.BaseEntity;
+import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 
 import jakarta.persistence.*;
@@ -111,12 +113,12 @@ public class RentalItem extends BaseEntity {
 		
 		if (targetStatus != RentalItemStatus.ACCEPTED && targetStatus != RentalItemStatus.REJECTED) {
 			
-			throw new IllegalArgumentException("허용되지 않은 상태 변경입니다. targetStatus: " + targetStatus);
+			throw new RentalStatusInvalidException("허용되지 않은 상태 변경입니다. targetStatus: " + targetStatus);
 		}
 		
 		if (this.status != RentalItemStatus.REQUESTED) {
 			
-			throw new IllegalStateException("요청 상태에서만 승인/거절이 가능합니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("요청 상태에서만 승인/거절이 가능합니다. rentalItemId: " + this.id);
 		}
 		
 		this.status = targetStatus;
@@ -127,11 +129,11 @@ public class RentalItem extends BaseEntity {
 		}
 	}
 	
-	public void markCanceled() {
+	private void markCanceled() {
 		
 		if (this.status == RentalItemStatus.RETURNED || this.status == RentalItemStatus.RENTING) {
 			
-			throw new IllegalStateException(
+			throw new RentalStatusInvalidException(
 					"이미 진행된 상품은 취소할 수 없습니다. rentalItemId: " + this.id + ", status: " + this.status);
 		}
 		
@@ -139,22 +141,32 @@ public class RentalItem extends BaseEntity {
 		this.canceledAt = LocalDateTime.now();
 	}
 	
-	public void markReturned() {
+	private void markReturned() {
 		
 		if (this.status == RentalItemStatus.CANCELED) {
 			
-			throw new IllegalStateException("취소된 상품은 반납 처리할 수 없습니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("취소된 상품은 반납 처리할 수 없습니다. rentalItemId: " + this.id);
 		}
 		
 		this.status = RentalItemStatus.RETURNED;
 		this.returnedAt = LocalDateTime.now();
 	}
 	
+	public void markPaid() {
+		
+		if (this.status != RentalItemStatus.ACCEPTED) {
+			
+			throw new RentalStatusInvalidException("수락된 상품만 결제 처리가 가능합니다. rentalItemId: " + this.id + ", status: " + this.status);
+		}
+		
+		this.status = RentalItemStatus.PAID;
+	}
+	
 	public void processReturn() {
 		
-		if (this.status != RentalItemStatus.RENTING && this.status != RentalItemStatus.ACCEPTED) {
+		if (this.status != RentalItemStatus.RENTING) {
 			
-			throw new IllegalStateException(
+			throw new RentalStatusInvalidException(
 					"현재 상태에서 반납 처리가 불가능합니다. rentalItemId: " + this.id + ", status: " + this.status);
 		}
 		
@@ -163,15 +175,15 @@ public class RentalItem extends BaseEntity {
 	
 	public BigDecimal processRefund() {
 		
-		if (this.status != RentalItemStatus.ACCEPTED && this.status != RentalItemStatus.RETURNED) {
+		if (this.status != RentalItemStatus.PAID && this.status != RentalItemStatus.RETURNED) {
 			
-			throw new IllegalStateException(
+			throw new RentalStatusInvalidException(
 					"현재 상태에서 환불 처리가 불가능합니다. rentalItemId: " + this.id + ", status: " + this.status);
 		}
 		
 		if (this.status == RentalItemStatus.RETURNED && this.canceledAt != null) {
 			
-			throw new IllegalStateException("이미 환불 처리된 상품입니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("이미 환불 처리된 상품입니다. rentalItemId: " + this.id);
 		}
 		
 		BigDecimal refundAmount = calculateRentalAmount();
@@ -187,16 +199,16 @@ public class RentalItem extends BaseEntity {
 		return refundAmount;
 	}
 	
-	public void markRefundedAfterReturn() {
+	private void markRefundedAfterReturn() {
 		
 		if (this.status != RentalItemStatus.RETURNED) {
 			
-			throw new IllegalStateException("반납된 상품만 환불 완료 처리할 수 있습니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("반납된 상품만 환불 완료 처리할 수 있습니다. rentalItemId: " + this.id);
 		}
 		
 		if (this.canceledAt != null) {
 			
-			throw new IllegalStateException("이미 환불된 상품입니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("이미 환불된 상품입니다. rentalItemId: " + this.id);
 		}
 		
 		this.canceledAt = LocalDateTime.now();
@@ -206,19 +218,19 @@ public class RentalItem extends BaseEntity {
 		
 		if (newEndDate == null) {
 			
-			throw new IllegalArgumentException("연장 종료일이 필요합니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("연장 종료일이 필요합니다. rentalItemId: " + this.id);
 		}
 		
 		if (!newEndDate.isAfter(this.endDate)) {
 			
-			throw new IllegalArgumentException("연장 종료일은 기존 종료일 이후여야 합니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("연장 종료일은 기존 종료일 이후여야 합니다. rentalItemId: " + this.id);
 		}
 		
 		if (this.status == RentalItemStatus.CANCELED
 				|| this.status == RentalItemStatus.RETURNED
 				|| this.status == RentalItemStatus.REJECTED) {
 			
-			throw new IllegalStateException(
+			throw new RentalStatusInvalidException(
 					"취소/반납/거절된 상품은 연장할 수 없습니다. rentalItemId: " + this.id + ", status: " + this.status);
 		}
 		
@@ -226,7 +238,7 @@ public class RentalItem extends BaseEntity {
 		
 		if (extraDays <= 0) {
 			
-			throw new IllegalArgumentException("연장 일수는 1일 이상이어야 합니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("연장 일수는 1일 이상이어야 합니다. rentalItemId: " + this.id);
 		}
 		
 		BigDecimal extraAmount = this.unitPrice
@@ -247,7 +259,7 @@ public class RentalItem extends BaseEntity {
 		
 		if (rentalDays <= 0) {
 			
-			throw new IllegalStateException("대여 종료일이 시작일보다 빠릅니다. rentalItemId: " + this.id);
+			throw new RentalStatusInvalidException("대여 종료일이 시작일보다 빠릅니다. rentalItemId: " + this.id);
 		}
 		
 		return this.unitPrice
@@ -257,27 +269,31 @@ public class RentalItem extends BaseEntity {
 	
 	public void cancelByMemberRequest() {
 		
-		if (this.status == RentalItemStatus.CANCELED) {
+		if (rental == null) {
 			
-			throw new RentalStatusInvalidException("이미 취소된 상품은 취소 할 수 없습니다.");
+			throw new RentalException(ErrorCode.RENTAL_NOT_FOUND);
 		}
 		
-		if (this.status == RentalItemStatus.RETURNED) {
+		if (this.status != RentalItemStatus.REQUESTED && this.status != RentalItemStatus.ACCEPTED) {
 			
-			throw new RentalStatusInvalidException("이미 반납된 상품은 취소 할 수 없습니다.");
-		}
-		
-		if (this.status == RentalItemStatus.REJECTED) {
-			
-			throw new RentalStatusInvalidException("이미 거절된 상품은 취소 할 수 없습니다.");
-		}
-		
-		if (this.rental.getStatus() == RentalStatus.PAID) {
-			
-			throw new RentalStatusInvalidException("이미 결제된 상품은 취소 할 수 없습니다.");
+			throw new RentalStatusInvalidException("취소가 불가능한 상태 입니다.. rentalItemStatus= " + this.status);
 		}
 		
 		markCanceled();
 	}
 	
+	public void startRenting(LocalDate now) {
+		
+		if (this.status != RentalItemStatus.PAID) {
+			
+			throw new RentalStatusInvalidException("결제된 상품만 대여 시작 할 수 있습니다. rentalItemId: " + this.id);
+		}
+		
+		if (now.isAfter(this.startDate)) {
+			
+			throw new RentalStatusInvalidException("시작일 이전에는 대여 시작 할 수 없습니다. rentalItemId: " + this.id);
+		}
+		
+		this.status = RentalItemStatus.RENTING;
+	}
 }

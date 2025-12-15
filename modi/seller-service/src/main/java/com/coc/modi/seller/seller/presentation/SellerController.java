@@ -1,10 +1,11 @@
 package com.coc.modi.seller.seller.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
-import com.coc.modi.seller.seller.application.dto.SellerResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
 import com.coc.modi.seller.seller.presentation.dto.SellerUpdateRequest;
 
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,26 +27,26 @@ public class SellerController {
 	private final SellerService sellerService;
 	
 	@PostMapping("/api/sellers")
-	public ResponseEntity<ApiResponse<SellerResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-																	  Authentication authentication) {
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
+																	  @AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.registerSeller(request.toCommand(memberId));
+		
+		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.getMemberId()));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(Authentication authentication) {
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/api/sellers/self/rentals")
-	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(Authentication authentication,
+	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(@AuthenticationPrincipal CustomMember member,
 																				@RequestParam(value = "productId", required = false) Long productId,
 																				@RequestParam(value = "status") String status,
 																				@RequestParam(value = "startDate") String startDate,
@@ -52,38 +54,38 @@ public class SellerController {
 																				@RequestParam(value = "page", required = false) Integer page,
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(memberId, productId, status, startDate, endDate, page, size);
+		
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.getMemberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
 	
 	@PutMapping("/api/sellers/self")
-	public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(Authentication authentication,
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> updateMySeller(@AuthenticationPrincipal CustomMember member,
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.updateSellerByMemberId(memberId, request.toCommand());
+		
+		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.getMemberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
+	// @GetMapping("/internal/sellers/by-member/{memberId}")
+	// public SellerDetailResponse getSellerByMemberId(@PathVariable Long memberId) {
+	//
+	// 	return sellerService.getSellerByMemberId(memberId);
+	// }
+
 	@GetMapping("/internal/sellers/by-member/{memberId}")
-	public SellerResponse getSellerByMemberId(@PathVariable Long memberId) {
+	public SellerIdResponse getSellerInfo(@PathVariable Long memberId) {
 		
-		return sellerService.getSellerByMemberId(memberId);
-	}
-	
-	@GetMapping("/internal/sellers/member/{memberId}/id")
-	public SellerIdResponse getSellerIdByMemberId(@PathVariable Long memberId) {
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(memberId);
 		
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		
-		return new SellerIdResponse(seller.id());
+		return new SellerIdResponse(seller.sellerId(), seller.memberId());
 	}
 	
 	@GetMapping("/internal/sellers/{sellerId}")
-	public SellerResponse getSellerById(@PathVariable Long sellerId) {
+	public SellerDetailResponse getSellerById(@PathVariable Long sellerId) {
 		
 		return sellerService.getSeller(sellerId);
 	}

@@ -5,13 +5,18 @@ import com.coc.modi.seller.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchRunCommand;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SettlementBatchRunner {
 	
@@ -50,7 +55,7 @@ public class SettlementBatchRunner {
 				try {
 					settlementBatchService.failBatch(batchId);
 				} catch (Exception ignored) {
-					// 상태 롤백 중 실패는 무시
+					log.warn("정산 배치 실패 상태 전환 중 오류가 발생했습니다. batchId={}", batchId, ignored);
 				}
 			}
 			throw new SettlementBatchRunException("정산 배치 실행에 실패했습니다.", e);
@@ -68,10 +73,24 @@ public class SettlementBatchRunner {
 		if (isBlank(command.startDate()) || isBlank(command.endDate())) {
 			throw new SettlementInputInvalidException("startDate와 endDate는 필수입니다.");
 		}
+		LocalDate start = parseDate(command.startDate(), "startDate");
+		LocalDate end = parseDate(command.endDate(), "endDate");
+		if (start.isAfter(end)) {
+			throw new SettlementInputInvalidException("startDate는 endDate보다 이후일 수 없습니다.");
+		}
 	}
 	
 	private boolean isBlank(String value) {
 		
 		return value == null || value.isBlank();
+	}
+
+	private LocalDate parseDate(String value, String fieldName) {
+		
+		try {
+			return LocalDate.parse(value);
+		} catch (DateTimeParseException e) {
+			throw new SettlementInputInvalidException(fieldName + " 형식이 올바르지 않습니다. (yyyy-MM-dd)", e);
+		}
 	}
 }

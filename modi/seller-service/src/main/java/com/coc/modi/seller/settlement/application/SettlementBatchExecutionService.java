@@ -4,7 +4,6 @@ import com.coc.modi.seller.exception.SettlementBatchExecutionNotFoundException;
 import com.coc.modi.seller.exception.SettlementBatchNotFoundException;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecution;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionRepository;
-import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionStatus;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
 import com.coc.modi.seller.settlement.domain.SettlementBatchRepository;
 
@@ -28,7 +27,7 @@ public class SettlementBatchExecutionService {
 		SettlementBatch batch = null;
 		if (batchId != null) {
 			batch = settlementBatchRepository.findById(batchId)
-					.orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. id=" + batchId));
+					.orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. sellerId=" + batchId));
 		}
 		return executionRepository.save(SettlementBatchExecution.start(batchType, batch, params));
 	}
@@ -43,7 +42,7 @@ public class SettlementBatchExecutionService {
 		
 		SettlementBatchExecution execution = executionRepository.findById(executionId)
 				.orElseThrow(() -> new SettlementBatchExecutionNotFoundException(
-						"배치 실행을 찾을 수 없습니다. id=" + executionId));
+						"배치 실행을 찾을 수 없습니다. sellerId=" + executionId));
 		execution.complete(totalCount, successCount, failCount, totalAmount, feeAmount, lastCursor);
 	}
 	
@@ -56,7 +55,7 @@ public class SettlementBatchExecutionService {
 		
 		SettlementBatchExecution execution = executionRepository.findById(executionId)
 				.orElseThrow(() -> new SettlementBatchExecutionNotFoundException(
-						"배치 실행을 찾을 수 없습니다. id=" + executionId));
+						"배치 실행을 찾을 수 없습니다. sellerId=" + executionId));
 		execution.fail(errorMessage, totalCount, successCount, failCount, lastCursor);
 	}
 }

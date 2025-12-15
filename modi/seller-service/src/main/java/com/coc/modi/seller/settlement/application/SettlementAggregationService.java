@@ -37,7 +37,7 @@ public class SettlementAggregationService {
 		final SettlementBatch batch;
 		if (batchId != null) {
 			batch = settlementBatchRepository.findById(batchId)
-					.orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. id=" + batchId));
+					.orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. sellerId=" + batchId));
 		} else {
 			batch = null;
 		}

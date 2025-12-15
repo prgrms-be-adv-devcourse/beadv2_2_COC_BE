@@ -1,5 +1,6 @@
 package com.coc.modi.product.product.application.dto;
 
+import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.search.domain.ProductDocument;
 
@@ -22,6 +23,18 @@ public record ProductListResponse(
 				ProductStatus.valueOf(product.getStatus()),
 				product.getSellerId(),
 				product.getThumbnailUrl()
+		);
+	}
+	
+	public static ProductListResponse fromProduct(Product product, String thumbnailUrl) {
+		
+		return new ProductListResponse(
+				product.getId(),
+				product.getName(),
+				product.getPricePerDay(),
+				product.getStatus(),
+				product.getSellerId(),
+				thumbnailUrl
 		);
 	}
 }
