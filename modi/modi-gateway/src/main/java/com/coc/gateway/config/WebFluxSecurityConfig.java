@@ -46,7 +46,7 @@ public class WebFluxSecurityConfig {
 				"https://*.v0.app",
 				"https://*.vusercontent.net",
 				"https://*.vercel.app",
-				"https://localhost:8000",
+				"https://localhost:8080",
 				"https://*.ngrok-free.dev",
 				"https://*.ngrok.free.app"
 		));
