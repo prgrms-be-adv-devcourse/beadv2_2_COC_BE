@@ -1,4 +1,4 @@
-package com.coc.modi.account.deposit.presentation.dto;
+package com.coc.modi.account.deposit.application.dto;
 
 public record TossConfigResponse(
         String clientKey,

@@ -1,0 +1,112 @@
+### =========================
+### seller-service.http
+### =========================
+
+@baseUrl = http://localhost:8000
+@accessToken = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzY1NjI1MTI2LCJleHAiOjE3NjU2Mjg3MjZ9.srSQf2_BJ90EknT-91GgPJ5ePYnJu37P8_tTI9jT1C8
+
+@periodYm = 2024-12
+@sellerSettlementId = 1
+@batchId = 1
+@memberId = 1
+@sellerId = 1
+
+
+### =========================
+### Seller
+### =========================
+
+
+### Seller 생성
+POST {{baseUrl}}/api/sellers
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "storeName": "테스트상점",
+  "bizRegNo": "123-45-67890",
+  "storePhone": "010-1234-5678"
+}
+
+### 내 Seller 조회
+GET {{baseUrl}}/api/sellers/self
+Authorization: Bearer {{accessToken}}
+
+### 내 렌탈 목록 조회
+GET {{baseUrl}}/api/sellers/self/rentals?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### 내 Seller 수정
+PUT {{baseUrl}}/api/sellers/self
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "storeName": "수정상점",
+  "bizRegNo": "123-45-67890",
+  "storePhone": "010-0000-0000",
+  "status": "ACTIVE"
+}
+
+
+### =========================
+### Settlement (Seller)
+### =========================
+
+### 내 정산 목록 조회
+GET {{baseUrl}}/api/settlements/sellers/self?periodYm={{periodYm}}
+Authorization: Bearer {{accessToken}}
+
+### 내 정산 단건 조회
+GET {{baseUrl}}/api/settlements/sellers/self/{{sellerSettlementId}}
+Authorization: Bearer {{accessToken}}
+
+### 내 정산 라인 조회
+GET {{baseUrl}}/api/settlements/sellers/self/{{sellerSettlementId}}/lines
+Authorization: Bearer {{accessToken}}
+
+### 지급 처리
+POST {{baseUrl}}/api/settlements/sellers/self/{{sellerSettlementId}}/pay?paidAt=2024-12-31T23%3A59%3A59
+Authorization: Bearer {{accessToken}}
+
+### 취소
+POST {{baseUrl}}/api/settlements/sellers/self/{{sellerSettlementId}}/cancel
+Authorization: Bearer {{accessToken}}
+
+
+### =========================
+### Internal - Batch
+### =========================
+### 배치 생성
+POST {{baseUrl}}/internal/settlements/batches
+Content-Type: application/json
+
+{
+  "periodYm": "{{periodYm}}"
+}
+
+### 배치 시작
+POST {{baseUrl}}/internal/settlements/batches/{{batchId}}/start
+
+### 배치 완료
+POST {{baseUrl}}/internal/settlements/batches/{{batchId}}/complete
+
+### 배치 목록 조회
+GET {{baseUrl}}/internal/settlements/batches?periodYm={{periodYm}}
+
+### 배치 단건 조회
+GET {{baseUrl}}/internal/settlements/batches/{{batchId}}
+
+
+### =========================
+### Internal - Seller
+### =========================
+
+### 멤버ID로 Seller 조회
+GET {{baseUrl}}/internal/sellers/by-member/{{memberId}}
+
+### 멤버ID로 Seller ID 조회
+GET {{baseUrl}}/internal/sellers/member/{{memberId}}/id
+
+### Seller ID로 조회
+GET {{baseUrl}}/internal/sellers/{{sellerId}}

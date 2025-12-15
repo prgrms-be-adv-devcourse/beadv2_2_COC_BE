@@ -4,7 +4,7 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
 		name = "seller-service",
@@ -13,6 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 )
 public interface SellerFeignClient {
 	
-	@GetMapping
-	SellerInfoResponse getSellerInfo(@RequestParam("sellerId") Long sellerId);
+	@GetMapping("/{sellerId}")
+	SellerInfoResponse getSellerInfo(@PathVariable Long sellerId);
 }

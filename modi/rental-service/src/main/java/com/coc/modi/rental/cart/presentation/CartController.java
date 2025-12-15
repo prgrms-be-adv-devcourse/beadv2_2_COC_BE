@@ -1,6 +1,7 @@
 package com.coc.modi.rental.cart.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.rental.cart.application.CartCommandService;
 import com.coc.modi.rental.cart.application.CartQueryService;
 import com.coc.modi.rental.cart.application.dto.CartResponse;
@@ -9,6 +10,7 @@ import com.coc.modi.rental.cart.presentation.dto.UpdateCartItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -25,43 +27,35 @@ public class CartController {
     private final CartQueryService cartQueryService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<CartResponse>> getMyCart(Authentication authentication) {
-
-		Long memberId = (Long) authentication.getPrincipal();
+    public ResponseEntity<ApiResponse<CartResponse>> getMyCart(@AuthenticationPrincipal CustomMember member) {
 		
-        return ResponseEntity.ok(ApiResponse.ok(cartQueryService.getCart(memberId)));
+        return ResponseEntity.ok(ApiResponse.ok(cartQueryService.getCart(member.getMemberId())));
     }
 
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<Void>> addItem(@Valid @RequestBody AddCartItemRequest request,
-                                                     Authentication authentication) {
-		
-		Long memberId = (Long) authentication.getPrincipal();
+													 @AuthenticationPrincipal CustomMember member) {
 
-        cartCommandService.addItem(request.toCommand(memberId));
+        cartCommandService.addItem(request.toCommand(member.getMemberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @PutMapping("/me/items/{cartItemId}")
     public ResponseEntity<ApiResponse<Void>> updateItem(@PathVariable @Positive Long cartItemId,
-                                                        Authentication authentication,
+														@AuthenticationPrincipal CustomMember member,
                                                         @Valid @RequestBody UpdateCartItemRequest request) {
-
-		Long memberId = (Long) authentication.getPrincipal();
 		
-        cartCommandService.updateItem(request.toCommand(memberId, cartItemId));
+        cartCommandService.updateItem(request.toCommand(member.getMemberId(), cartItemId));
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/me/items/{cartItemId}")
     public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable @Positive Long cartItemId,
-                                                        Authentication authentication) {
-
-		Long memberId = (Long) authentication.getPrincipal();
+														@AuthenticationPrincipal CustomMember member) {
 		
-        cartCommandService.deleteItem(memberId, cartItemId);
+        cartCommandService.deleteItem(member.getMemberId(), cartItemId);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

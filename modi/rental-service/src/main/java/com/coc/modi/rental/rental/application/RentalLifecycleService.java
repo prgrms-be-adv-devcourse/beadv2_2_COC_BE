@@ -6,23 +6,14 @@ import com.coc.modi.rental.rental.application.dto.ExtendRentalCommand;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalEventType;
 import com.coc.modi.rental.rental.domain.RentalItem;
-import com.coc.modi.rental.rental.domain.RentalItemStatus;
-import com.coc.modi.rental.rental.domain.RentalItemRepository;
-import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.infrastructure.client.AccountFeignClient;
-import com.coc.modi.rental.rental.infrastructure.client.SellerFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
-import com.coc.modi.rental.rental.infrastructure.client.dto.SellerInfoResponse;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
-import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
-import com.coc.modi.rental.rental.exception.RentalItemNotFoundException;
-import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,98 +28,95 @@ import feign.FeignException;
 @RequiredArgsConstructor
 public class RentalLifecycleService {
 	
-	private final RentalRepository rentalRepository;
-	private final RentalItemRepository rentalItemRepository;
-	private final SellerFeignClient sellerFeignClient;
+	private final RentalAppSupport rentalAppSupport;
 	private final AccountFeignClient accountFeignClient;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
 	
 	@Transactional
-	public void cancelRentalItem(Long rentalItemId, Long memberId) { //취소는 결제 전에만
+	public void stratRenting(Long rentalItemId, Long memberId) {
 		
-		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
-				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
+		rentalAppSupport.requireSeller(rentalItem.getSellerId(), memberId);
 		
-		if (!rentalItem.getRental().getMemberId().equals(memberId)) {
-			
-			throw RentalAccessDeniedException.memberMismatch(rentalItem.getRental().getId(), memberId);
-		}
+		rentalItem.startRenting(LocalDate.now());
+		
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
+		rental.recalculateAmountsAndStatus();
+		
+		rentalEventLogService.logEvent(rental, RentalEventType.ITEM_HANDED_OVER,
+				Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(),
+						"itemStatus", rentalItem.getStatus().name(), "rentalStatus", rental.getStatus().name()));
+	}
+	
+	@Transactional
+	public void cancelRentalItem(Long rentalItemId, Long memberId) {
+		
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
+		
+		rentalAppSupport.requireMember(rental, memberId);
 		
 		rentalItem.cancelByMemberRequest();
 		
-		Rental rental = rentalItem.getRental();
 		rental.recalculateAmountsAndStatus();
 		
-		rentalEventLogService.logEvent(rentalItem.getRental(), RentalEventType.RENTAL_CANCELED, Map.of("rentalItemId", rentalItemId, "status", rentalItem.getStatus()
-				.name()));
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_CANCELED, Map.of("rentalId", rental.getId(), "rentalItemid", rentalItemId, "itemStatus", rentalItem.getStatus()
+				.name(), "rentalStatus", rental.getStatus().name()));
 	}
 	
 	@Transactional
 	public RentalReturnResponse completeReturn(RentalReturnCommand command) {
 		
-		RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
-				.orElseThrow(() -> new RentalItemNotFoundException(command.rentalItemId()));
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(command.rentalItemId());
 		
-		SellerInfoResponse sellerInfoResponse;
-		try {
-			sellerInfoResponse = sellerFeignClient.getSellerInfo(rentalItem.getSellerId());
-		} catch (FeignException ex) {
-			throw new RentalStatusInvalidException("판매자 정보 조회에 실패했습니다.");
-		}
+		rentalAppSupport.requireSeller(rentalItem.getSellerId(), command.memberId());
 		
-		if (!sellerInfoResponse.memberId().equals(command.memberId())) {
-			
-			throw RentalAccessDeniedException.sellerMismatch(rentalItem.getSellerId(), command.memberId());
-		}
-		
-		Rental rental = rentalItem.getRental();
-		
-		if (rental == null) {
-			
-			throw new RentalNotFoundException(command.rentalItemId());
-		}
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
 		
 		rentalItem.processReturn();
 		rental.recalculateAmountsAndStatus();
 		
 		BigDecimal damageFee = command.damageFee() == null ? BigDecimal.ZERO : command.damageFee();
 		BigDecimal lateFee = command.lateFee() == null ? BigDecimal.ZERO : command.lateFee();
+		BigDecimal totalFee = damageFee.add(lateFee);
 		
-		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_RETURNED, Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(), "rentalStatus", rental.getStatus()
-				.name(), "itemStatus", rentalItem.getStatus()
-				.name(), "damageFee", damageFee, "lateFee", lateFee, "extraFeeTotal", damageFee.add(lateFee), "damageReason", command.damageReason(), "lateReason", command.lateReason(), "memo", command.memo()));
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_RETURNED,
+				Map.of("rentalId", rental.getId(),
+						"rentalItemId", rentalItem.getId(),
+						"rentalStatus", rental.getStatus().name(),
+						"itemStatus", rentalItem.getStatus().name(),
+						"damageFee", damageFee,
+						"lateFee", lateFee,
+						"extraFeeTotal", totalFee,
+						"damageReason", command.damageReason(),
+						"lateReason", command.lateReason(),
+						"memo", command.memo()));
 		
-		return new RentalReturnResponse(rental.getId(), rentalItem.getId(), rental.getStatus()
-				.name(), damageFee.add(lateFee).toPlainString());
+		return new RentalReturnResponse(
+				rental.getId(),
+				rentalItem.getId(),
+				rentalItem.getStatus().name(),
+				totalFee.toString());
 	}
 	
 	@Transactional
 	public void extendRentalItem(ExtendRentalCommand command) {
 		
-		RentalItem rentalItem = rentalItemRepository.findById(command.rentalItemId())
-				.orElseThrow(() -> new RentalItemNotFoundException(command.rentalItemId()));
-		Rental rental = rentalItem.getRental();
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(command.rentalItemId());
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
 		
-		if (rental == null) {
-			
-			throw new RentalNotFoundException(command.rentalItemId());
-		}
+		rentalAppSupport.requireMember(rental, command.memberId());
 		
-		if (!rental.getMemberId().equals(command.memberId())) {
+		if (!rentalItem.getStatus().isRenting() && !rentalItem.getStatus().isPaid()) {
 			
-			throw RentalAccessDeniedException.memberMismatch(rental.getId(), command.memberId());
-		}
-		
-		if (rentalItem.getStatus() != RentalItemStatus.RENTING && rentalItem.getStatus() != RentalItemStatus.ACCEPTED) {
-			
-			throw new RentalStatusInvalidException(
-					"진행 중이거나 승인된 상품만 연장할 수 있습니다. rentalItemId: " + command.rentalItemId() + ", status: "
-							+ rentalItem.getStatus());
+			throw new RentalStatusInvalidException("연장은 Paid / Renting 상태에서만 가능합니다. rentalItemId= " +
+					rentalItem.getId() + " status= " + rentalItem.getStatus());
 		}
 		
 		LocalDate oldEndDate = rentalItem.getEndDate();
-		validateAvailability(rentalItem.getProductId(), rentalItem.getStartDate(), command.newEndDate(), rentalItem.getId());
+		
+		validateAvailability(rentalItem.getProductId(), oldEndDate.plusDays(1), command.newEndDate(), rentalItem.getId());
 		
 		BigDecimal extraAmount = rentalItem.extendRental(command.newEndDate());
 		
@@ -142,27 +130,25 @@ public class RentalLifecycleService {
 		
 		long extraDays = ChronoUnit.DAYS.between(oldEndDate, command.newEndDate());
 		
-		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_EXTENDED, Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(), "oldEndDate", oldEndDate, "newEndDate", command.newEndDate(), "extraDays", extraDays, "extraAmount", extraAmount, "totalAmount", rental.getTotalAmount()));
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_EXTENDED,
+				Map.of("rentalId", rental.getId(),
+						"rentalItemId", rentalItem.getId(),
+						"oldEndDate", oldEndDate,
+						"newEndDate", command.newEndDate(),
+						"extraDays", extraDays,
+						"extraAmount", extraAmount,
+						"totalAmount", rental.getTotalAmount()));
 	}
 	
 	@Transactional
 	public void refundRentalItem(Long rentalItemId, Long memberId) {
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
 		
-		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
-				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
-		Rental rental = rentalItem.getRental();
-		
-		if (rental == null) {
-			
-			throw new RentalNotFoundException(rentalItemId);
-		}
-		
-		if (!rental.getMemberId().equals(memberId)) {
-			
-			throw RentalAccessDeniedException.memberMismatch(rental.getId(), memberId);
-		}
+		rentalAppSupport.requireMember(rental, memberId);
 		
 		BigDecimal refundAmount = rentalItem.processRefund();
+		
 		try {
 			accountFeignClient.refund(new RefundWalletCommand(memberId, rental.getId(), rentalItem.getId(), refundAmount));
 		} catch (FeignException ex) {
@@ -171,19 +157,19 @@ public class RentalLifecycleService {
 		
 		rental.recalculateAmountsAndStatus();
 		
-		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_REFUNDED, Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(), "status", rental.getStatus()
-				.name(), "itemStatus", rentalItem.getStatus().name(), "refundAmount", refundAmount));
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_REFUNDED,
+				Map.of("rentalId", rental.getId(),
+						"rentalItemId", rentalItem.getId(),
+						"rentalStatus", rental.getStatus().name(),
+						"itemStatus", rentalItem.getStatus().name(),
+						"refundAmount", refundAmount));
 	}
 	
 	private void validateAvailability(Long productId, LocalDate startDate, LocalDate endDate, Long excludeRentalItemId) {
-		
 		boolean hasOverlap = rentalQueryRepository.existsOverlappingRentalItem(productId, startDate, endDate, excludeRentalItemId);
-		
 		if (hasOverlap) {
-			
 			throw new RentalStatusInvalidException(
-					"요청한 기간에 이미 예약된 상품입니다. productId: " + productId + ", startDate: " + startDate + ", endDate: "
-							+ endDate);
+					"요청한 기간에 이미 예약된 상품입니다. productId=" + productId + ", startDate=" + startDate + ", endDate=" + endDate);
 		}
 	}
 }

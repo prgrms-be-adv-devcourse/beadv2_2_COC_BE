@@ -30,9 +30,10 @@ public record MemberPasswordUpdateRequest(
 		)
 		String verificationCode
 ) {
-	public UpdateMemberPasswordCommand toCommand() {
+	public UpdateMemberPasswordCommand toCommand(Long memberId) {
 		
 		return new UpdateMemberPasswordCommand(
+				memberId,
 				name,
 				password,
 				email,

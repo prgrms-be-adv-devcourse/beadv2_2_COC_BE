@@ -5,8 +5,9 @@ import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import java.util.List;
 
@@ -17,8 +18,8 @@ import java.util.List;
 )
 public interface ProductFeignClient {
 	
-	@GetMapping("/bulk")
-	List<ProductResponseDto> getProducts(@RequestParam("productIds") List<Long> productIds);
+	@PostMapping("/bulk")
+	List<ProductResponseDto> getProducts(@RequestBody List<Long> productIds);
 	
 	default ProductResponseDto getProducts(Long productId) {
 		
