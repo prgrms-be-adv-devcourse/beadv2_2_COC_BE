@@ -39,6 +39,7 @@ public enum ErrorCode {
 	ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-ADDRESS-404", "주소 정보를 찾을 수 없습니다."),
 	ADDRESS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER-ADDRESS-400", "등록 가능한 주소 수를 초과했습니다."),
 	AUTH_CODE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-AUTH-400", "이메일 인증 코드가 유효하지 않습니다."),
+	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
 	ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-404", "계정 정보를 찾을 수 없습니다."),
 	ACCOUNT_BALANCE_INSUFFICIENT(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-400", "잔액이 부족합니다."),

@@ -16,6 +16,7 @@ import com.coc.modi.member.member.exception.EmailDuplicatedException;
 import com.coc.modi.member.member.exception.MemberEmailMismatchException;
 import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
+import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
 
@@ -45,9 +46,16 @@ public class MemberService {
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
+		// 중복 이메일인지 확인
 		if (memberRepository.existsByEmail(command.email())) {
 			
 			throw new EmailDuplicatedException(command.email());
+		}
+		
+		// 중복 휴대폰 번호인지 확인
+		if (memberRepository.existsByPhone(command.phone())) {
+			
+			throw new PhoneDuplicatedException(command.phone());
 		}
 		
 		String encodedPassword = passwordEncoder.encode(command.password());

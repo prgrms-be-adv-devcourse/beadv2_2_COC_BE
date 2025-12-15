@@ -29,7 +29,8 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 	private static final List<RentalItemStatus> UNAVAILABLE_STATUSES = List.of(
 			RentalItemStatus.REQUESTED,
 			RentalItemStatus.ACCEPTED,
-			RentalItemStatus.RENTING
+			RentalItemStatus.RENTING,
+			RentalItemStatus.PAID
 	);
 	
 	@Override

@@ -152,6 +152,16 @@ public class RentalItem extends BaseEntity {
 		this.returnedAt = LocalDateTime.now();
 	}
 	
+	public void markPaid() {
+		
+		if (this.status != RentalItemStatus.ACCEPTED) {
+			
+			throw new RentalStatusInvalidException("수락된 상품만 결제 처리가 가능합니다. rentalItemId: " + this.id + ", status: " + this.status);
+		}
+		
+		this.status = RentalItemStatus.PAID;
+	}
+	
 	public void processReturn() {
 		
 		if (this.status != RentalItemStatus.RENTING) {
@@ -165,7 +175,7 @@ public class RentalItem extends BaseEntity {
 	
 	public BigDecimal processRefund() {
 		
-		if (this.status != RentalItemStatus.ACCEPTED && this.status != RentalItemStatus.RETURNED) {
+		if (this.status != RentalItemStatus.PAID && this.status != RentalItemStatus.RETURNED) {
 			
 			throw new RentalStatusInvalidException(
 					"현재 상태에서 환불 처리가 불가능합니다. rentalItemId: " + this.id + ", status: " + this.status);
@@ -272,4 +282,18 @@ public class RentalItem extends BaseEntity {
 		markCanceled();
 	}
 	
+	public void startRenting(LocalDate now) {
+		
+		if (this.status != RentalItemStatus.PAID) {
+			
+			throw new RentalStatusInvalidException("결제된 상품만 대여 시작 할 수 있습니다. rentalItemId: " + this.id);
+		}
+		
+		if (now.isAfter(this.startDate)) {
+			
+			throw new RentalStatusInvalidException("시작일 이전에는 대여 시작 할 수 없습니다. rentalItemId: " + this.id);
+		}
+		
+		this.status = RentalItemStatus.RENTING;
+	}
 }

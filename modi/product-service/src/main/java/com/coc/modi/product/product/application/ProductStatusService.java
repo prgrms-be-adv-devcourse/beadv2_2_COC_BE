@@ -3,14 +3,12 @@ package com.coc.modi.product.product.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.coc.modi.product.product.application.dto.SellerResponse;
+import com.coc.modi.product.product.application.support.SellerIdResolver;
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductRepository;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
-import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.product.infrastructure.client.SellerFeignClient;
 import com.coc.modi.product.search.application.ProductIndexService;
 import com.coc.modi.product.search.application.ProductSearchPort;
 
@@ -22,8 +20,8 @@ public class ProductStatusService {
 	
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
-	private final SellerFeignClient sellerFeignClient;
 	private final ProductIndexService productIndexService;
+	private final SellerIdResolver sellerIdResolver;
 	
 	// 3-6. 상품 활성화
 	@Transactional
@@ -46,25 +44,13 @@ public class ProductStatusService {
 		changeStatus(memberId, productId, ProductStatus.DELETE);
 	}
 	
-	// sellerId 조회
-	private Long getSellerId(Long memberId) {
-		
-		SellerResponse sellerResponse = sellerFeignClient.getSellerIdByMemberId(memberId);
-		
-		if (sellerResponse == null || sellerResponse.sellerId() == null) {
-			throw new ProductInvalidInputException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
-		}
-		
-		return sellerResponse.sellerId();
-	}
-	
 	// 상품 상태 변경
 	private void changeStatus(Long memberId, Long productId, ProductStatus status) {
 		
-		Product product = productRepository.findById(productId)
+		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
-		Long sellerId = getSellerId(memberId);
+		Long sellerId = sellerIdResolver.getSellerId(memberId);
 		
 		if (!sellerId.equals(product.getSellerId())) {
 			throw new ProductAccessDeniedException("상태 변경");
