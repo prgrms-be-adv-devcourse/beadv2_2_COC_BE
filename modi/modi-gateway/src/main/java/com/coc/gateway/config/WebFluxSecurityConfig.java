@@ -42,13 +42,22 @@ public class WebFluxSecurityConfig {
 		
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOriginPatterns(List.of(
+				//front
 				"http://localhost:3000",
 				"https://*.v0.app",
 				"https://*.vusercontent.net",
 				"https://*.vercel.app",
+
+				//gateway
 				"https://localhost:8080",
+
+				//tunneling
 				"https://*.ngrok-free.dev",
-				"https://*.ngrok.free.app"
+				"https://*.ngrok.free.app",
+
+				//domain
+				"https://www.cocmodi.shop",
+				"https://cocmodi.shop"
 		));
 		
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
