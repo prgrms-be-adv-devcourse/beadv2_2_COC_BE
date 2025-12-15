@@ -14,7 +14,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -131,5 +130,14 @@ public class RentalController {
 			@RequestParam(required = false) RentalStatus rentalStatus, @AuthenticationPrincipal CustomMember member) {
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, member.getMemberId())));
+	}
+	
+	@PostMapping("/{rentalItemId}/rent")
+	public ResponseEntity<ApiResponse<Void>> startRenting(@PathVariable Long rentalItemId,
+														  @AuthenticationPrincipal CustomMember member) {
+		
+		rentalLifecycleService.stratRenting(rentalItemId, member.getMemberId());
+		
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

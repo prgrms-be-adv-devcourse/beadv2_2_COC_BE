@@ -34,6 +34,22 @@ public class RentalLifecycleService {
 	private final RentalQueryRepository rentalQueryRepository;
 	
 	@Transactional
+	public void stratRenting(Long rentalItemId, Long memberId) {
+		
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
+		rentalAppSupport.requireSeller(rentalItem.getSellerId(), memberId);
+		
+		rentalItem.startRenting(LocalDate.now());
+		
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
+		rental.recalculateAmountsAndStatus();
+		
+		rentalEventLogService.logEvent(rental, RentalEventType.ITEM_HANDED_OVER,
+				Map.of("rentalId", rental.getId(), "rentalItemId", rentalItem.getId(),
+						"itemStatus", rentalItem.getStatus().name(), "rentalStatus", rental.getStatus().name()));
+	}
+	
+	@Transactional
 	public void cancelRentalItem(Long rentalItemId, Long memberId) {
 		
 		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
@@ -92,9 +108,9 @@ public class RentalLifecycleService {
 		
 		rentalAppSupport.requireMember(rental, command.memberId());
 		
-		if (!rentalItem.getStatus().isRenting()) {
+		if (!rentalItem.getStatus().isRenting() && !rentalItem.getStatus().isPaid()) {
 			
-			throw new RentalStatusInvalidException("연장은 Renting 상태에서만 가능합니다. rentalItemId= " +
+			throw new RentalStatusInvalidException("연장은 Paid / Renting 상태에서만 가능합니다. rentalItemId= " +
 					rentalItem.getId() + " status= " + rentalItem.getStatus());
 		}
 		
