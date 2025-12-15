@@ -82,7 +82,7 @@ project(':common-openapi') {
     dependencies {
 
         implementation 'org.springframework.boot:spring-boot-autoconfigure'
-        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
+//        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
 
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     }
