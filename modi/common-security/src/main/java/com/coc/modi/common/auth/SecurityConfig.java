@@ -52,13 +52,14 @@ public class SecurityConfig {
 				.httpBasic(AbstractHttpConfigurer::disable)
 				.cors(AbstractHttpConfigurer::disable)
 				.csrf(AbstractHttpConfigurer::disable)
-				.formLogin(FormLoginConfigurer::disable)
+				.formLogin(AbstractHttpConfigurer::disable)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.authorizeHttpRequests(auth -> {
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/api/**").permitAll()
-							.requestMatchers("/actuator/**").permitAll();
+							.requestMatchers("/actuator/**").permitAll()
+							.anyRequest().authenticated();
 				});
 		
 		return http.build();

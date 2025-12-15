@@ -1,8 +1,8 @@
 // 모든 서비스 모듈이 공통으로 쓰는 루트 빌드 스크립트.
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.8'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.5.8' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 ext {
@@ -82,7 +82,9 @@ project(':common-openapi') {
     dependencies {
 
         implementation 'org.springframework.boot:spring-boot-autoconfigure'
-        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
+//        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
+        implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.33'
+        implementation 'io.swagger.core.v3:swagger-models:2.2.33'
 
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     }
