@@ -46,7 +46,7 @@ public class RentalPaymentService {
 			throw new RentalStatusInvalidException("결제할 대여 상품이 없습니다. rentalId: " + rentalId);
 		}
 		
-		rental.updateStatusFromItems();
+		rental.recalculateAmountsAndStatus();
 		RentalStatus rentalStatus = rental.getStatus();
 		
 		if (rentalStatus == RentalStatus.CANCELED || rentalStatus == RentalStatus.COMPLETED) {

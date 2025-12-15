@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,11 +15,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
 import com.coc.modi.common.ErrorCode;
+import com.coc.modi.member.member.exception.MemberException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice(basePackages = "com.coc.modi.member")
 public class GlobalExceptionHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+	
+	@ExceptionHandler(MemberException.class)
+	public ResponseEntity<ApiResponse<?>> handleMemberException(MemberException e) {
+		
+		ErrorCode errorCode = e.getErrorCode();
+		String message = e.getDetailMessage();
+		
+		log.warn("Member exception: code={}, message={}", errorCode.getCode(), message);
+		
+		return ResponseEntity
+				.status(errorCode.getStatus())
+				.body(ApiResponse.error(errorCode, message));
+	}
 	
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ApiResponse<?>> handleBaseException(BaseException ex) {
@@ -67,6 +84,19 @@ public class GlobalExceptionHandler {
 		
 		log.error("Unexpected error", ex);
 		return buildResponse(ErrorCode.INTERNAL_ERROR, ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ApiResponse<?>> handleDataIntegrity(DataIntegrityViolationException ex,
+			HttpServletRequest request) {
+
+		if (request.getRequestURI().contains("/api/members/signup")) {
+			log.warn("Duplicate email violation: {}", ex.getMessage());
+			return buildResponse(ErrorCode.EMAIL_DUPLICATED, ErrorCode.EMAIL_DUPLICATED.getDefaultMessage());
+		}
+
+		log.error("Data integrity violation", ex);
+		return buildResponse(ErrorCode.CONFLICT, ErrorCode.CONFLICT.getDefaultMessage());
 	}
 	
 	private ResponseEntity<ApiResponse<?>> buildResponse(ErrorCode errorCode, String message) {

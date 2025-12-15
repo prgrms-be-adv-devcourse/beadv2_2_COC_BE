@@ -30,19 +30,19 @@ public class AddressController {
 
 	// 주소 등록
     @PostMapping("/profile")
-    public ResponseEntity<ApiResponse<?>> createAddress(Authentication authentication,
+    public ResponseEntity<ApiResponse<Void>> createAddress(Authentication authentication,
                                                         @RequestBody AddressCreateRequest request) {
 
         Long memberId = (Long)authentication.getPrincipal();
 		
         addressService.createAddress(request.toCommand(memberId));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }
 
 	// 주소 수정
     @PutMapping("/profile/{addressId}")
-    public ResponseEntity<ApiResponse<?>> updateAddress(Authentication authentication,
+    public ResponseEntity<ApiResponse<Void>> updateAddress(Authentication authentication,
                                                         @PathVariable Long addressId,
                                                         @RequestBody AddressUpdateRequest request) {
 
@@ -50,18 +50,18 @@ public class AddressController {
 		
         addressService.updateAddress(request.toCommand(memberId, addressId));
 
-        return ResponseEntity.ok(ApiResponse.ok());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
 	// 주소 삭제
     @DeleteMapping("/profile/{addressId}")
-    public ResponseEntity<ApiResponse<?>> deleteAddress(Authentication authentication,
+    public ResponseEntity<ApiResponse<Void>> deleteAddress(Authentication authentication,
                                                         @PathVariable Long addressId) {
 
         Long memberId = (Long)authentication.getPrincipal();
 		
         addressService.deleteAddress(memberId, addressId);
 
-        return ResponseEntity.ok(ApiResponse.ok());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

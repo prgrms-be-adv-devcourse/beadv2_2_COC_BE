@@ -34,7 +34,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/api/sellers/me")
+	@GetMapping("/api/sellers/self")
 	public ResponseEntity<ApiResponse<SellerResponse>> getMySeller(Authentication authentication) {
 		
 		Long memberId = (Long)authentication.getPrincipal();
@@ -43,7 +43,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/api/sellers/me/rentals")
+	@GetMapping("/api/sellers/self/rentals")
 	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(Authentication authentication,
 																				@RequestParam(value = "productId", required = false) Long productId,
 																				@RequestParam(value = "status") String status,
@@ -58,7 +58,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
 	
-	@PutMapping("/api/sellers/me")
+	@PutMapping("/api/sellers/self")
 	public ResponseEntity<ApiResponse<SellerResponse>> updateMySeller(Authentication authentication,
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		

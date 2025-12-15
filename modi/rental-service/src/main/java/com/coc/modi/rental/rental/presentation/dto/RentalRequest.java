@@ -4,10 +4,14 @@ import com.coc.modi.rental.rental.application.dto.RentalCreateCommand;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public record RentalRequest(
-		Long productId,
-		LocalDate startDate,
-		LocalDate endDate
+		@NotNull @Positive Long productId,
+		@NotNull @FutureOrPresent LocalDate startDate,
+		@NotNull @FutureOrPresent LocalDate endDate
 ) {
 	public RentalCreateCommand toCommand(Long memberId) {
 		

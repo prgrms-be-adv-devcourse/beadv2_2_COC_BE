@@ -4,9 +4,12 @@ import com.coc.modi.seller.application.port.RentalPort;
 import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
+
 import feign.FeignException;
 import feign.RetryableException;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -62,9 +65,9 @@ public class SettlementBatchJobConfig {
 				.retryLimit(3)
 				.retry(RetryableException.class)
 				.retry(FeignException.ServiceUnavailable.class)
-				.retry(FeignException.GatewayTimeout.class)
+				.retry(FeignException.GatewayTimeout.class) // 일시적 오류(네트워크, 외부 서비스 다운) 시 재시도
 				.backOffPolicy(settlementRetryBackOffPolicy())
-				.skip(FeignException.BadRequest.class)
+				.skip(FeignException.BadRequest.class) // 영구적 오류(데이터 문제) 시 건너뛰기
 				.skip(FeignException.NotFound.class)
 				.skipLimit(50)
 				.listener(settlementSkipListener)
@@ -75,20 +78,18 @@ public class SettlementBatchJobConfig {
 	@Bean
 	@StepScope
 	public SettlementRentalItemReader settlementRentalItemReader(
-			@Value("#{jobParameters['periodYm']}") String periodYm,
 			@Value("#{jobParameters['startDate']}") String startDate,
 			@Value("#{jobParameters['endDate']}") String endDate,
 			@Value("#{jobParameters['sellerId']}") Long sellerId,
 			@Value("#{jobParameters['pageSize']}") Integer pageSize
 	) {
 		
-		if (periodYm == null || periodYm.isBlank()) {
-			throw new IllegalArgumentException("periodYm is required");
+		if (startDate == null || startDate.isBlank() || endDate == null || endDate.isBlank()) {
+			throw new SettlementInputInvalidException("startDate and endDate are required");
 		}
 		return new SettlementRentalItemReader(
 				rentalPort,
 				sellerRepository,
-				periodYm,
 				startDate,
 				endDate,
 				sellerId,
@@ -107,21 +108,27 @@ public class SettlementBatchJobConfig {
 	
 	@Bean
 	@StepScope
-	public SettlementAggregationWriter settlementAggregationWriter() {
-		return new SettlementAggregationWriter(settlementAggregationService);
+	public SettlementAggregationWriter settlementAggregationWriter(
+			@Value("#{jobParameters['batchId']}") Long batchId
+	) {
+		
+		return new SettlementAggregationWriter(settlementAggregationService, batchId);
 	}
 	
 	@Bean
 	public SettlementSkipListener settlementSkipListener() {
+		
 		return new SettlementSkipListener();
 	}
 	
 	@Bean
 	public BackOffPolicy settlementRetryBackOffPolicy() {
+		
 		ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
 		backOffPolicy.setInitialInterval(1000L);
 		backOffPolicy.setMultiplier(2.0);
 		backOffPolicy.setMaxInterval(4000L);
+		
 		return backOffPolicy;
 	}
 }

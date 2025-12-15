@@ -1,4 +1,4 @@
-package com.coc.modi.member.auth.presentation.dto;
+package com.coc.modi.member.auth.application.dto;
 
 public record EmailVerificationConfirmResponse(
 		boolean verified

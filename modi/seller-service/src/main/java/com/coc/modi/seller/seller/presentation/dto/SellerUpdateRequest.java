@@ -20,6 +20,7 @@ public record SellerUpdateRequest(
 ) {
 
     public SellerUpdateCommand toCommand() {
+        
         return new SellerUpdateCommand(storeName, bizRegNo, storePhone, status);
     }
 }

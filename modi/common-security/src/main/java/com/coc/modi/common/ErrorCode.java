@@ -44,6 +44,7 @@ public enum ErrorCode {
 	ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "ACCOUNT-LOCKED-403", "잠긴 계정입니다."),
 	ACCOUNT_UNVERIFIED(HttpStatus.FORBIDDEN, "ACCOUNT-UNVERIFIED-403", "인증되지 않은 계정입니다."),
 	ACCOUNT_TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-TXN-404", "거래 정보를 찾을 수 없습니다."),
+	ACCOUNT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "ACCOUNT-503", "지갑 서비스를 사용할 수 없습니다."),
 	
 	SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-404", "판매자를 찾을 수 없습니다."),
 	SELLER_DUPLICATE(HttpStatus.CONFLICT, "SELLER-409", "이미 등록된 판매자입니다."),
@@ -51,6 +52,7 @@ public enum ErrorCode {
 	SETTLEMENT_BATCH_DUPLICATE(HttpStatus.CONFLICT, "SETTLEMENT-BATCH-409", "이미 생성된 정산 배치입니다."),
 	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-SETTLEMENT-404", "정산서를 찾을 수 없습니다."),
+	SELLER_SETTLEMENT_CONFLICT(HttpStatus.CONFLICT, "SELLER-SETTLEMENT-409", "정산서가 이미 다른 배치로 처리되었습니다."),
 	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다.");
 	
 	private final HttpStatus status;
