@@ -9,8 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
+import java.time.ZoneId;
 
 @Getter
 @NoArgsConstructor
@@ -46,8 +46,8 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String thumbnailUrl;
 	
-	@Field(type = FieldType.Date, format = DateFormat.strict_date_optional_time_nanos)
-	private OffsetDateTime createdAt;
+	@Field(type = FieldType.Date)
+	private Instant createdAt;
 	
 	public ProductDocument(Long id,
 						   String name,
@@ -57,7 +57,7 @@ public class ProductDocument {
 						   Long sellerId,
 						   String category,
 						   String thumbnailUrl,
-						   OffsetDateTime createdAt) {
+						   Instant createdAt) {
 		
 		this.id = id;
 		this.name = name;
@@ -72,9 +72,9 @@ public class ProductDocument {
 	
 	public static ProductDocument from(Product product, String thumbnailUrl) {
 		
-		OffsetDateTime createdAt = null;
+		Instant createdAt = null;
 		if (product.getCreatedAt() != null) {
-			createdAt = product.getCreatedAt().atOffset(ZoneOffset.of("+09:00"));
+			createdAt = product.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toInstant();
 		}
 		
 		return new ProductDocument(

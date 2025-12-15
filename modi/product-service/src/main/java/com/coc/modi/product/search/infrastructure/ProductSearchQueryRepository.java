@@ -7,6 +7,7 @@ import com.coc.modi.product.search.domain.ProductDocument;
 import com.coc.modi.product.search.domain.ProductSortType;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.json.JsonData;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.PageRequest;
@@ -80,34 +81,6 @@ public class ProductSearchQueryRepository {
 					
 					if (StringUtils.hasText(cursor)) {
 						switch (sortType) {
-							case LATEST -> {
-								try {
-									String decoded = new String(
-											Base64.getUrlDecoder().decode(cursor),
-											StandardCharsets.UTF_8
-									);
-									b.filter(f -> f.range(r -> r
-											.date(d -> d
-													.field("createdAt")
-													.lt(decoded))));
-								} catch (NumberFormatException ignored) {
-									// 잘못된 cursor면 그냥 첫 페이지처럼 동작
-								}
-							}
-							case OLDEST -> {
-								try {
-									String decoded = new String(
-											Base64.getUrlDecoder().decode(cursor),
-											StandardCharsets.UTF_8
-									);
-									b.filter(f -> f.range(r -> r
-											.date(d -> d
-													.field("createdAt")
-													.gt(decoded))));
-								} catch (NumberFormatException ignored) {
-									// 잘못된 cursor면 그냥 첫 페이지처럼 동작
-								}
-							}
 							case PRICE_HIGH -> {
 								try {
 									String[] parts = cursor.split(":", 2);
@@ -175,35 +148,25 @@ public class ProductSearchQueryRepository {
 		);
 		
 		switch (sortType) {
-			case LATEST -> builder.withSort(s -> s.field(f -> f
-					.field("createdAt")
-					.order(SortOrder.Desc)
-			));
-			case OLDEST -> builder.withSort(s -> s.field(f -> f
-					.field("createdAt")
-					.order(SortOrder.Asc)
-			));
+			case LATEST -> {
+				builder.withSort(s -> s.field(f -> f.field("createdAt").order(SortOrder.Desc)));
+				builder.withSort(s -> s.field(f -> f.field("id").order(SortOrder.Desc)));
+				
+				applySearchAfterForCreatedAtAndId(builder, cursor);
+			}
+			case OLDEST -> {
+				builder.withSort(s -> s.field(f -> f.field("createdAt").order(SortOrder.Asc)));
+				builder.withSort(s -> s.field(f -> f.field("id").order(SortOrder.Asc)));
+				
+				applySearchAfterForCreatedAtAndId(builder, cursor);
+			}
 			case PRICE_HIGH -> {
-				// 가격 내림차순 + id 내림차순 (tie-breaker)
-				builder.withSort(s -> s.field(f -> f
-						.field("pricePerDay")
-						.order(SortOrder.Desc)
-				));
-				builder.withSort(s -> s.field(f -> f
-						.field("id")
-						.order(SortOrder.Desc)
-				));
+				builder.withSort(s -> s.field(f -> f.field("pricePerDay").order(SortOrder.Desc)));
+				builder.withSort(s -> s.field(f -> f.field("id").order(SortOrder.Desc)));
 			}
 			case PRICE_LOW -> {
-				// 가격 오름차순 + id 오름차순 (tie-breaker)
-				builder.withSort(s -> s.field(f -> f
-						.field("pricePerDay")
-						.order(SortOrder.Asc)
-				));
-				builder.withSort(s -> s.field(f -> f
-						.field("id")
-						.order(SortOrder.Asc)
-				));
+				builder.withSort(s -> s.field(f -> f.field("pricePerDay").order(SortOrder.Asc)));
+				builder.withSort(s -> s.field(f -> f.field("id").order(SortOrder.Asc)));
 			}
 		}
 		
@@ -212,5 +175,25 @@ public class ProductSearchQueryRepository {
 		SearchHits<ProductDocument> hits = operations.search(query, ProductDocument.class);
 		
 		return hits.getSearchHits().stream().map(SearchHit::getContent).toList();
+	}
+	
+	private void applySearchAfterForCreatedAtAndId(NativeQueryBuilder builder, String cursor) {
+		if (!StringUtils.hasText(cursor)) return;
+		
+		try {
+			String decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
+			String[] parts = decoded.split(":", 2);
+			
+			long cursorMillis = Long.parseLong(parts[0]);
+			long cursorId = Long.parseLong(parts[1]);
+			
+			// ✅ sort 순서와 동일하게 search_after도 넣는다 (createdAt, id)
+			builder.withSearchAfter(List.of(
+					JsonData.of(cursorMillis),
+					JsonData.of(cursorId)
+			));
+		} catch (Exception ignored) {
+			// 커서가 잘못되면 첫 페이지처럼 동작
+		}
 	}
 }
