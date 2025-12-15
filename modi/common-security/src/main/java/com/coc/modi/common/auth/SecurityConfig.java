@@ -59,7 +59,7 @@ public class SecurityConfig {
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/api/**").permitAll()
 							.requestMatchers("/actuator/**").permitAll()
-							.anyRequest().denyAll();
+							.anyRequest().permitAll();
 				});
 		
 		return http.build();
