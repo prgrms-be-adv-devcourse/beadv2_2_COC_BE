@@ -49,6 +49,7 @@ public class SecurityConfig {
 				// 	source.registerCorsConfiguration("/**", configuration);
 				// 	configurer.configurationSource(source);
 				// })
+				.httpBasic(AbstractHttpConfigurer::disable)
 				.cors(AbstractHttpConfigurer::disable)
 				.csrf(AbstractHttpConfigurer::disable)
 				.formLogin(FormLoginConfigurer::disable)
@@ -57,7 +58,8 @@ public class SecurityConfig {
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/api/**").permitAll()
-							.requestMatchers("/actuator/**").permitAll();
+							.requestMatchers("/actuator/**").permitAll()
+							.anyRequest().denyAll();
 				});
 		
 		return http.build();
