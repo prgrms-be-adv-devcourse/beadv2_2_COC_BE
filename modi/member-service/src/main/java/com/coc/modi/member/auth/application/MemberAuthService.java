@@ -6,7 +6,7 @@ import com.coc.modi.common.auth.JwtTokenProvider;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
-import com.coc.modi.member.member.exception.PasswordMismatchException;
+import com.coc.modi.member.member.exception.MemberPasswordMismatchException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,7 @@ public class MemberAuthService {
 		
 		if (!passwordEncoder.matches(command.password(), member.getPassword())) {
 			
-			throw new PasswordMismatchException("비밀번호가 일치하지 않습니다.");
+			throw new MemberPasswordMismatchException("비밀번호가 일치하지 않습니다.");
 		}
 		
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name());

@@ -1,6 +1,7 @@
 package com.coc.modi.review.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.review.application.ReviewService;
 import com.coc.modi.review.application.dto.ReviewResponse;
 import com.coc.modi.review.application.dto.ReviewSummaryResponse;
@@ -16,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,34 +39,31 @@ public class ReviewController {
 	
 	// 판매자 리뷰 작성
 	@PostMapping
-	public ResponseEntity<ApiResponse<ReviewResponse>> createReview(Authentication authentication,
+	public ResponseEntity<ApiResponse<ReviewResponse>> createReview(@AuthenticationPrincipal CustomMember member,
 																	@Valid @RequestBody ReviewCreateRequest request) {
-
-		Long memberId = (Long) authentication.getPrincipal();
-		ReviewResponse response = reviewService.createReview(request.toCommand(memberId));
+		
+		ReviewResponse response = reviewService.createReview(request.toCommand(member.getMemberId()));
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
 	}
 	
 	// 리뷰 수정
 	@PatchMapping("/{reviewId}")
-	public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(Authentication authentication,
+	public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(@AuthenticationPrincipal CustomMember member,
 																	@PathVariable Long reviewId,
 																	@Valid @RequestBody ReviewUpdateRequest request) {
-
-		Long memberId = (Long) authentication.getPrincipal();
-		ReviewResponse response = reviewService.updateReview(request.toCommand(reviewId, memberId));
+		
+		ReviewResponse response = reviewService.updateReview(request.toCommand(reviewId, member.getMemberId()));
 
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 	
 	// 리뷰 삭제(소프트 삭제)
 	@DeleteMapping("/{reviewId}")
-	public ResponseEntity<Void> deleteReview(Authentication authentication,
+	public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal CustomMember member,
 											 @PathVariable Long reviewId) {
-
-		Long memberId = (Long) authentication.getPrincipal();
-		reviewService.deleteReview(reviewId, memberId);
+		
+		reviewService.deleteReview(reviewId, member.getMemberId());
 
 		return ResponseEntity.noContent().build();
 	}
@@ -89,11 +88,10 @@ public class ReviewController {
 	
 	// 내가 작성한 리뷰 목록 조회
 	@GetMapping("/me")
-	public ResponseEntity<ApiResponse<List<ReviewSummaryResponse>>> getMyReviews(Authentication authentication,
+	public ResponseEntity<ApiResponse<List<ReviewSummaryResponse>>> getMyReviews(@AuthenticationPrincipal CustomMember member,
 																				 @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
-		Long memberId = (Long) authentication.getPrincipal();
-		List<ReviewSummaryResponse> responses = reviewService.getReviewsByMember(memberId, pageable);
+		
+		List<ReviewSummaryResponse> responses = reviewService.getReviewsByMember(member.getMemberId(), pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}
