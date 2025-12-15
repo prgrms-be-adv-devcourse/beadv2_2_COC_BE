@@ -76,7 +76,7 @@ public class SellerController {
 	// 	return sellerService.getSellerByMemberId(memberId);
 	// }
 
-	@GetMapping("/internal/sellers/{memberId}")
+	@GetMapping("/internal/sellers/by-member/{memberId}")
 	public SellerIdResponse getSellerInfo(@PathVariable Long memberId) {
 		
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(memberId);
