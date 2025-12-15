@@ -3,9 +3,14 @@ package com.coc.modi.product.product.domain;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface ProductRepository {
 	
-	Optional<Product> findById(Long id);
+	Optional<Product> findByIdAndStatusNot(Long id, ProductStatus status);
+	
+	Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable);
 	
 	Product saveAndFlush(Product product);
 	
