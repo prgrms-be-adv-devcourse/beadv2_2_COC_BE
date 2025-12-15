@@ -4,6 +4,7 @@ package com.coc.modi.common.auth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -50,16 +51,16 @@ public class SecurityConfig {
 				// 	configurer.configurationSource(source);
 				// })
 				.httpBasic(AbstractHttpConfigurer::disable)
-				.cors(AbstractHttpConfigurer::disable)
-				.csrf(AbstractHttpConfigurer::disable)
-				.formLogin(FormLoginConfigurer::disable)
+//				.cors(AbstractHttpConfigurer::disable)
+				.csrf(Customizer.withDefaults())
+				.formLogin(AbstractHttpConfigurer::disable)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.authorizeHttpRequests(auth -> {
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/api/**").permitAll()
 							.requestMatchers("/actuator/**").permitAll()
-							.anyRequest().permitAll();
+							.anyRequest().authenticated();
 				});
 		
 		return http.build();
