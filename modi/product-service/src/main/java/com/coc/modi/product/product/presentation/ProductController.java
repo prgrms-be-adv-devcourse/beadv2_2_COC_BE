@@ -1,6 +1,7 @@
 package com.coc.modi.product.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.product.product.application.ProductService;
 import com.coc.modi.product.product.application.ProductStatusService;
 import com.coc.modi.product.product.application.dto.ProductCreateCommand;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,61 +50,51 @@ public class ProductController {
 	
 	// 상품 등록
 	@PostMapping
-	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(Authentication authentication,
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody ProductCreateRequest request) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		ProductCreateCommand command = ProductCreateCommand.toCommand(memberId, request);
+		ProductCreateCommand command = ProductCreateCommand.toCommand(member.getMemberId(), request);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(productService.createProduct(command)));
 	}
 	
 	// 상품 수정
 	@PutMapping("/{productId}")
-	public ResponseEntity<ApiResponse<ProductDetailResponse>> updateProduct(Authentication authentication,
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> updateProduct(@AuthenticationPrincipal CustomMember member,
 																			@PathVariable("productId") Long productId,
 																			@Valid @RequestBody ProductUpdateRequest request) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		ProductUpdateCommand command = ProductUpdateCommand.toCommand(memberId, productId, request);
+		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.getMemberId(), productId, request);
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
 	}
 	
 	// 상품 활성화
 	@PatchMapping("/{productId}/active")
-	public ResponseEntity<ApiResponse<Void>> activeProduct(Authentication authentication,
+	public ResponseEntity<ApiResponse<Void>> activeProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		productStatusService.activeProduct(memberId, productId);
+		productStatusService.activeProduct(member.getMemberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 상품 숨김
 	@PatchMapping("/{productId}/inactive")
-	public ResponseEntity<ApiResponse<Void>> disableProduct(Authentication authentication,
-														 @PathVariable("productId") Long productId) {
+	public ResponseEntity<ApiResponse<Void>> disableProduct(@AuthenticationPrincipal CustomMember member,
+														    @PathVariable("productId") Long productId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		productStatusService.disableProduct(memberId, productId);
+		productStatusService.disableProduct(member.getMemberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	// 상품 삭제
 	@DeleteMapping("/{productId}")
-	public ResponseEntity<ApiResponse<Void>> deleteProduct(Authentication authentication,
-														@PathVariable("productId") Long productId) {
+	public ResponseEntity<ApiResponse<Void>> deleteProduct(@AuthenticationPrincipal CustomMember member,
+														   @PathVariable("productId") Long productId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		
-		productStatusService.deleteProduct(memberId, productId);
+		productStatusService.deleteProduct(member.getMemberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

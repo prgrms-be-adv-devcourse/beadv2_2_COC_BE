@@ -1,11 +1,12 @@
 package com.coc.modi.seller.settlement.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.settlement.application.SellerSettlementService;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.seller.application.dto.SellerResponse;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.exception.SettlementInputInvalidException;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,55 +38,52 @@ public class SellerSettlementController {
 	private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	
 	@GetMapping("/api/settlements/sellers/self")
-	public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(Authentication authentication,
+	public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(@AuthenticationPrincipal CustomMember member,
 																						@RequestParam(value = "periodYm", required = false) String periodYm,
 																						Pageable pageable) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.id(), periodYm, pageable);
+		
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		Page<SellerSettlementResponse> settlements = sellerSettlementService.getSellerSettlements(seller.sellerId(), periodYm, pageable);
 		return ResponseEntity.ok(ApiResponse.ok(settlements));
 	}
 	
 	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}")
-	public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(Authentication authentication,
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(@AuthenticationPrincipal CustomMember member,
 																				 @PathVariable Long sellerSettlementId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.id(), sellerSettlementId);
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerSettlementResponse settlement = sellerSettlementService.getSellerSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
 	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}/lines")
-	public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(Authentication authentication,
+	public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(@AuthenticationPrincipal CustomMember member,
 																								@PathVariable Long sellerSettlementId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.id(), sellerSettlementId);
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
 	
 	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/pay")
-	public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(Authentication authentication,
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(@AuthenticationPrincipal CustomMember member,
 																				 @PathVariable Long sellerSettlementId,
 																				 @RequestParam(value = "paidAt", required = false) String paidAt) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
+		
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
 		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
-		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.id(), sellerSettlementId, paidAtValue);
+		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.sellerId(), sellerSettlementId, paidAtValue);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
 	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/cancel")
-	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(Authentication authentication,
+	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(@AuthenticationPrincipal CustomMember member,
 																					@PathVariable Long sellerSettlementId) {
 		
-		Long memberId = (Long)authentication.getPrincipal();
-		SellerResponse seller = sellerService.getSellerByMemberId(memberId);
-		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.id(), sellerSettlementId);
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
