@@ -7,10 +7,16 @@ public enum RentalItemStatus {
 	REJECTED,   // 판매자 거절
 	RENTING,    // 대여 중
 	RETURNED,   // 반납 완료
-	CANCELED;    // 사용자가 해당 아이템만 취소
+	CANCELED,    // 사용자가 해당 아이템만 취소
+	PAID;
 	
 	public boolean isRenting() {
 		
 		return this == RENTING;
+	}
+	
+	public boolean isPaid() {
+		
+		return this == PAID;
 	}
 }

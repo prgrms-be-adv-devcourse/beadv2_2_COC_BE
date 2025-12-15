@@ -3,6 +3,8 @@ package com.coc.modi.rental.rental.application;
 import com.coc.modi.rental.rental.application.dto.PayRentalResponse;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalEventType;
+import com.coc.modi.rental.rental.domain.RentalItem;
+import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
@@ -32,6 +34,7 @@ public class RentalPaymentService {
 	
 	@Transactional
 	public PayRentalResponse completePayment(Long rentalId, Long memberId) {
+		
 		Rental rental = rentalRepository.findById(rentalId)
 				.orElseThrow(() -> new RentalNotFoundException(rentalId));
 		
@@ -48,11 +51,13 @@ public class RentalPaymentService {
 		
 		RentalStatus rentalStatus = rental.getStatus();
 		if (rentalStatus == RentalStatus.CANCELED || rentalStatus == RentalStatus.COMPLETED) {
-			throw new RentalStatusInvalidException("취소/완료된 대여는 결제 불가. rentalId=" + rentalId + ", status=" + rentalStatus);
+			throw new RentalStatusInvalidException(
+					"취소/완료된 대여는 결제 불가. rentalId=" + rentalId + ", status=" + rentalStatus);
 		}
 		
 		if (rentalStatus != RentalStatus.ACCEPTED) {
-			throw new RentalStatusInvalidException("모든 아이템이 승인(ACCEPTED)일 때만 결제 가능. rentalId=" + rentalId + ", status=" + rentalStatus);
+			throw new RentalStatusInvalidException(
+					"모든 아이템이 승인(ACCEPTED)일 때만 결제 가능. rentalId=" + rentalId + ", status=" + rentalStatus);
 		}
 		
 		BigDecimal totalAmount = rental.getTotalAmount();
@@ -65,6 +70,10 @@ public class RentalPaymentService {
 		}
 		
 		LocalDateTime paidAt = LocalDateTime.now();
+		
+		rental.getItems().stream()
+				.filter(item -> item.getStatus() == RentalItemStatus.ACCEPTED)
+				.forEach(RentalItem::markPaid);
 		rental.markPaid(paidAt);
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.PAID,
