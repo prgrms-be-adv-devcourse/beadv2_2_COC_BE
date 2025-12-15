@@ -2,11 +2,11 @@ package com.coc.modi.member.auth.application;
 
 import com.coc.modi.member.auth.application.dto.MemberLoginCommand;
 import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
-import com.coc.modi.common.auth.JwtTokenProvider;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.MemberPasswordMismatchException;
+import com.coc.modi.member.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 

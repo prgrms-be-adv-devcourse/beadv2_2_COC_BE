@@ -17,7 +17,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +52,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody ProductCreateRequest request) {
 		
-		ProductCreateCommand command = ProductCreateCommand.toCommand(member.getMemberId(), request);
+		ProductCreateCommand command = ProductCreateCommand.toCommand(member.memberId(), request);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(productService.createProduct(command)));
 	}
@@ -64,7 +63,7 @@ public class ProductController {
 																			@PathVariable("productId") Long productId,
 																			@Valid @RequestBody ProductUpdateRequest request) {
 		
-		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.getMemberId(), productId, request);
+		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.memberId(), productId, request);
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
 	}
@@ -74,7 +73,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> activeProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.activeProduct(member.getMemberId(), productId);
+		productStatusService.activeProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -84,7 +83,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> disableProduct(@AuthenticationPrincipal CustomMember member,
 														    @PathVariable("productId") Long productId) {
 		
-		productStatusService.disableProduct(member.getMemberId(), productId);
+		productStatusService.disableProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -94,7 +93,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> deleteProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.deleteProduct(member.getMemberId(), productId);
+		productStatusService.deleteProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

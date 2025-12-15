@@ -1,15 +1,16 @@
-package com.coc.modi.common.auth;
+package com.coc.modi.member.security;
+
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
@@ -19,8 +20,8 @@ public class JwtTokenProvider {
     private final long refreshTokenValidityInMs;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
-                            @Value("${jwt.access-token-expiration}") long accessTokenValidityInMs,
-                            @Value("${jwt.refresh-token-expiration}") long refreshTokenValidityInMs) {
+							@Value("${jwt.access-token-expiration}") long accessTokenValidityInMs,
+							@Value("${jwt.refresh-token-expiration}") long refreshTokenValidityInMs) {
 		
         this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidityInMs = accessTokenValidityInMs;

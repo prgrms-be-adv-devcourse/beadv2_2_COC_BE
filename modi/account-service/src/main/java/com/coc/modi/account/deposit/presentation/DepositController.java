@@ -29,7 +29,7 @@ public class DepositController {
     public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@Valid @RequestBody DepositRequest request,
 																	   @AuthenticationPrincipal CustomMember member) {
 
-        DepositResponse response = depositService.requestDeposit(request.toCommand(member.getMemberId()));
+        DepositResponse response = depositService.requestDeposit(request.toCommand(member.memberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -61,7 +61,7 @@ public class DepositController {
     public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@Valid @RequestBody DepositCancelRequest request,
 																	  @AuthenticationPrincipal CustomMember member) {
 
-        DepositResponse response = depositService.cancelDeposit(request.toCommand(member.getMemberId()));
+        DepositResponse response = depositService.cancelDeposit(request.toCommand(member.memberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }

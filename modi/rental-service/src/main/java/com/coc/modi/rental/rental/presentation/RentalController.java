@@ -40,7 +40,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@Valid @RequestBody RentalFromCartRequest rentalFromCartRequest,
 																  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalCreationService.createRentalFromCart(rentalFromCartRequest.toCommand(member.getMemberId()));
+		rentalCreationService.createRentalFromCart(rentalFromCartRequest.toCommand(member.memberId()));
 		
 		return ResponseEntity.status(201).body(ApiResponse.ok(null));
 	}
@@ -49,7 +49,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<Void>> createRental(@Valid @RequestBody RentalRequest rentalRequest,
 														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalCreationService.createRental(rentalRequest.toCommand(member.getMemberId()));
+		rentalCreationService.createRental(rentalRequest.toCommand(member.memberId()));
 		
 		return ResponseEntity.status(201).body(ApiResponse.ok(null));
 	}
@@ -58,7 +58,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<Void>> acceptRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
 															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalDecisionService.acceptRentalItem(rentalItemId, member.getMemberId());
+		rentalDecisionService.acceptRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -67,7 +67,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<Void>> rejectRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
 															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalDecisionService.rejectRentalItem(rentalItemId, member.getMemberId());
+		rentalDecisionService.rejectRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -76,14 +76,14 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<PayRentalResponse>> completePayment(@PathVariable(name = "rentalId") @Positive Long rentalId,
 																		  @AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalPaymentService.completePayment(rentalId, member.getMemberId())));
+		return ResponseEntity.ok(ApiResponse.ok(rentalPaymentService.completePayment(rentalId, member.memberId())));
 	}
 	
 	@PatchMapping("/{rentalItemId}/cancel")
 	public ResponseEntity<ApiResponse<Void>> cancelRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
 															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.cancelRentalItem(rentalItemId, member.getMemberId());
+		rentalLifecycleService.cancelRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -94,14 +94,14 @@ public class RentalController {
 																			@Valid @RequestBody RentalReturnRequest rentalReturnRequest) {
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalLifecycleService.completeReturn(
-				rentalReturnRequest.toCommand(rentalItemId, member.getMemberId()))));
+				rentalReturnRequest.toCommand(rentalItemId, member.memberId()))));
 	}
 	
 	@PostMapping("/{rentalItemId}/refund")
 	public ResponseEntity<ApiResponse<Void>> refundRental(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
 														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.refundRentalItem(rentalItemId, member.getMemberId());
+		rentalLifecycleService.refundRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -111,7 +111,7 @@ public class RentalController {
 														  @AuthenticationPrincipal CustomMember member,
 														  @Valid @RequestBody ExtendRentalRequest request) {
 		
-		rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, member.getMemberId()));
+		rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, member.memberId()));
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -120,7 +120,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<RentalResponse>> getRentalDetails(@PathVariable(name = "rentalId") @Positive Long rentalId,
 																		@AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId, member.getMemberId())));
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId, member.memberId())));
 	}
 	
 	@GetMapping
@@ -129,14 +129,14 @@ public class RentalController {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 			@RequestParam(required = false) RentalStatus rentalStatus, @AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, member.getMemberId())));
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, member.memberId())));
 	}
 	
 	@PostMapping("/{rentalItemId}/rent")
 	public ResponseEntity<ApiResponse<Void>> startRenting(@PathVariable Long rentalItemId,
 														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.stratRenting(rentalItemId, member.getMemberId());
+		rentalLifecycleService.stratRenting(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
