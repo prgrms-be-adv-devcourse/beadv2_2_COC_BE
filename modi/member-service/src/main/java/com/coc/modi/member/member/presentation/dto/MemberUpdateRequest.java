@@ -15,9 +15,10 @@ public record MemberUpdateRequest(
 		)
 		String phone
 ) {
-	public UpdateMemberCommand toCommand() {
+	public UpdateMemberCommand toCommand(Long memberId) {
 		
 		return new UpdateMemberCommand(
+				memberId,
 				name,
 				phone
 		);
