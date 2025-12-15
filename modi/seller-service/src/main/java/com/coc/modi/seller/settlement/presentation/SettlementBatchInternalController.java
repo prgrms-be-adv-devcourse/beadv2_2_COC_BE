@@ -1,16 +1,5 @@
 package com.coc.modi.seller.settlement.presentation;
 
-import com.coc.modi.common.ApiResponse;
-import com.coc.modi.seller.settlement.application.SettlementBatchService;
-import com.coc.modi.seller.settlement.application.SettlementBatchRunner;
-import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
-import com.coc.modi.seller.settlement.presentation.dto.SettlementBatchCreateRequest;
-import com.coc.modi.seller.settlement.presentation.dto.SettlementBatchRunRequest;
-
-import lombok.RequiredArgsConstructor;
-
-import jakarta.validation.Valid;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,13 +10,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.coc.modi.common.ApiResponse;
+import com.coc.modi.seller.settlement.application.SettlementBatchService;
+import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
+import com.coc.modi.seller.settlement.presentation.dto.SettlementBatchCreateRequest;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/settlements/batches")
 public class SettlementBatchInternalController {
 	
 	private final SettlementBatchService settlementBatchService;
-	private final SettlementBatchRunner settlementBatchRunner;
 	
 	@PostMapping
 	public ApiResponse<SettlementBatchResponse> createBatch(@Valid @RequestBody SettlementBatchCreateRequest request) {
@@ -57,14 +53,6 @@ public class SettlementBatchInternalController {
 	@GetMapping("/{batchId}")
 	public ApiResponse<SettlementBatchResponse> getBatch(@PathVariable Long batchId) {
 		
-		return ApiResponse.ok(settlementBatchService.getBatch(batchId));
-	}
-	
-	@PostMapping("/{batchId}/run")
-	public ApiResponse<SettlementBatchResponse> runBatch(@PathVariable Long batchId,
-														 @Valid @RequestBody SettlementBatchRunRequest request) {
-		
-		settlementBatchRunner.run(batchId, request.toCommand());
 		return ApiResponse.ok(settlementBatchService.getBatch(batchId));
 	}
 }
