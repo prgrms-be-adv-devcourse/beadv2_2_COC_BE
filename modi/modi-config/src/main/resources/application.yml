@@ -40,7 +40,6 @@ spring:
           password: ${GIT_PAT}
         default-label: main
 
-
 eureka:
   client:
     service-url:
