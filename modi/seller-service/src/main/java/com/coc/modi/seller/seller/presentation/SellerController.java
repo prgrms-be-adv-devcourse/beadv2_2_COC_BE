@@ -35,20 +35,15 @@ public class SellerController {
 	private final SellerProductService sellerProductService;
 	
 	@PostMapping
-	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
+	public ResponseEntity<ApiResponse<String>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
 																		   @AuthenticationPrincipal CustomMember member) {
-		
-		
-		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
 
-  
 		return ResponseEntity.ok(ApiResponse.ok(sellerService.registerSeller(request.toCommand(member.memberId()))));
 	}
 	
 	@GetMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
-		
-		
+
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
@@ -63,8 +58,7 @@ public class SellerController {
 																				@RequestParam(value = "endDate") String endDate,
 																				@RequestParam(value = "page", required = false) Integer page,
 																				@RequestParam(value = "size", required = false) Integer size) {
-		
-		
+
 		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.memberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
@@ -73,8 +67,7 @@ public class SellerController {
 	@PutMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> updateMySeller(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody SellerUpdateRequest request) {
-		
-		
+
 		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
@@ -85,6 +78,7 @@ public class SellerController {
 																		  @AuthenticationPrincipal CustomMember member) {
 
 		ProductSummaryResponse response = sellerProductService.getProductSummary(productId);
+
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 }

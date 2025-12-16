@@ -67,3 +67,4 @@ jobs:
             done
 
             docker compose up -d
+            docker system prune -f
