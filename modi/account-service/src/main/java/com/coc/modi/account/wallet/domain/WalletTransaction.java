@@ -1,5 +1,6 @@
 package com.coc.modi.account.wallet.domain;
 
+import com.coc.modi.account.deposit.domain.PgDeposit;
 import com.coc.modi.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -31,8 +32,9 @@ public class WalletTransaction extends BaseEntity {
     @Column(name = "balance_after", nullable = false, precision = 18, scale = 2)
     private BigDecimal balanceAfter;
 
-    @Column(name = "related_pg_deposit_id")
-    private Long relatedPgDepositId;
+	@OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "pg_deposit_id")
+    private PgDeposit pgDeposit;
 
     @Column(name = "related_rental_id")
     private Long relatedRentalId;
@@ -54,7 +56,7 @@ public class WalletTransaction extends BaseEntity {
             WalletTransactionType txType,
             BigDecimal amount,
             BigDecimal balanceAfter,
-            Long relatedPgDepositId,
+            PgDeposit pgDeposit,
             Long relatedRentalId,
             Long relatedRentalItemId,
             Long relatedSettlementId,
@@ -69,7 +71,7 @@ public class WalletTransaction extends BaseEntity {
         tx.txType = txType;
         tx.amount = amount;
         tx.balanceAfter = balanceAfter;
-        tx.relatedPgDepositId = relatedPgDepositId;
+        tx.pgDeposit = pgDeposit;
         tx.relatedRentalId = relatedRentalId;
         tx.relatedRentalItemId = relatedRentalItemId;
         tx.relatedSettlementId = relatedSettlementId;
