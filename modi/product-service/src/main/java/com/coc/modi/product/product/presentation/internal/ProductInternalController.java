@@ -29,8 +29,8 @@ public class ProductInternalController {
 	}
 	
 	@GetMapping
-	public List<ProductInternalSellerResponse> getProductsByIds(@RequestParam("productIds") List<Long> productIds) {
+	public ProductInternalSellerResponse getProductsById(@RequestParam("productId") Long productId) {
 		
-		return productService.getProductByIds(productIds);
+		return productService.getProductById(productId);
 	}
 }
