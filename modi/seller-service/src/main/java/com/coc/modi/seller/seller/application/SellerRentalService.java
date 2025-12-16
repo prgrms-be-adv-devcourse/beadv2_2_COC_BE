@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.coc.modi.seller.seller.infrastructure.client.rental.RentalClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SellerRentalService {
 
-    private final RentalClient rentalClient;
+    private final RentalFeignClient rentalFeignClient;
 
     public List<SellerRentalResponse> getSellerRentals(Long sellerId,
                                                        Long productId,
@@ -24,7 +24,7 @@ public class SellerRentalService {
                                                        String endDate,
                                                        Integer page,
                                                        Integer size) {
-        RentalListResponse response = rentalClient.getRentals(
+        RentalListResponse response = rentalFeignClient.getRentals(
                 sellerId,
                 productId,
                 status,

@@ -11,7 +11,7 @@ import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListRes
         url = "${rental-service.url}",
         path = "/internal/rentals"
 )
-public interface RentalClient {
+public interface RentalFeignClient {
 
     @GetMapping
     RentalListResponse getRentals(@RequestParam("sellerId") Long sellerId,

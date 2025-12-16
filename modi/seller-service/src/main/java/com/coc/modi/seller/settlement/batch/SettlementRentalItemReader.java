@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.seller.infrastructure.client.rental.RentalClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.domain.Seller;
@@ -24,7 +24,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	private static final String STATUS_RETURNED = "RETURNED";
 	
-	private final RentalClient rentalClient;
+	private final RentalFeignClient rentalFeignClient;
 	private final SellerRepository sellerRepository;
 	private final String startDate;
 	private final String endDate;
@@ -37,14 +37,14 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	private String lastCursor;
 	private final Deque<RentalItemInfo> buffer = new ArrayDeque<>();
 	
-	public SettlementRentalItemReader(RentalClient rentalClient,
+	public SettlementRentalItemReader(RentalFeignClient rentalFeignClient,
 									  SellerRepository sellerRepository,
 									  String startDate,
 									  String endDate,
 									  Long targetSellerId,
 									  Integer pageSize) {
 		
-		this.rentalClient = rentalClient;
+		this.rentalFeignClient = rentalFeignClient;
 		this.sellerRepository = sellerRepository;
 		this.startDate = startDate;
 		this.endDate = endDate;
@@ -81,7 +81,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 			
 			if (buffer.isEmpty()) {
 				Long currentSellerId = sellerIds.get(sellerIndex);
-				RentalListResponse response = rentalClient.getRentals(
+				RentalListResponse response = rentalFeignClient.getRentals(
 						currentSellerId,
 						null,
 						STATUS_RETURNED,
