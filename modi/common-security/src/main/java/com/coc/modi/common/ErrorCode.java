@@ -30,14 +30,13 @@ public enum ErrorCode {
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
 	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다."),
 	
+	MEMBER_WITHDRAWN(HttpStatus.BAD_REQUEST, "MEMBER-WITHDRAWN", "탈퇴한 회원입니다."),
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-404", "회원 정보를 찾을 수 없습니다."),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-EMAIL-409", "이미 사용 중인 이메일입니다."),
-	NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-NICKNAME-409", "이미 사용 중인 닉네임입니다."),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-PASSWORD-400", "비밀번호가 일치하지 않습니다."),
 	NAME_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-NAME-400", "이름이 일치하지 않습니다."),
 	EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-EMAIL-400", "이메일이 일치하지 않습니다."),
 	ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-ADDRESS-404", "주소 정보를 찾을 수 없습니다."),
-	ADDRESS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "MEMBER-ADDRESS-400", "등록 가능한 주소 수를 초과했습니다."),
 	AUTH_CODE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-AUTH-400", "이메일 인증 코드가 유효하지 않습니다."),
 	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
