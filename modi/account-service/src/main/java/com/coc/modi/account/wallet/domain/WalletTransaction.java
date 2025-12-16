@@ -45,6 +45,9 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(length = 255)
     private String description;
+	
+	@Column(name = "payment_key", length = 100)
+	private String paymentKey;
 
     public static WalletTransaction create(
             MemberWallet wallet,
@@ -55,7 +58,8 @@ public class WalletTransaction extends BaseEntity {
             Long relatedRentalId,
             Long relatedRentalItemId,
             Long relatedSettlementId,
-            String description
+            String description,
+			String paymentKey
     ) {
 
         WalletTransaction tx = new WalletTransaction();
@@ -70,6 +74,7 @@ public class WalletTransaction extends BaseEntity {
         tx.relatedRentalItemId = relatedRentalItemId;
         tx.relatedSettlementId = relatedSettlementId;
         tx.description = description;
+		tx.paymentKey = paymentKey;
 
         return tx;
     }

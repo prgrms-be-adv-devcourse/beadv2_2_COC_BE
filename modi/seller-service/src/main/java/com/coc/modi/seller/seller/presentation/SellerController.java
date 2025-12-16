@@ -34,15 +34,15 @@ public class SellerController {
 	private final SellerService sellerService;
 	private final SellerProductService sellerProductService;
 	
-	
 	@PostMapping
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
 																		   @AuthenticationPrincipal CustomMember member) {
 		
 		
 		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
+
   
-		return ResponseEntity.ok(ApiResponse.ok(seller));
+		return ResponseEntity.ok(ApiResponse.ok(sellerService.registerSeller(request.toCommand(member.memberId()))));
 	}
 	
 	@GetMapping("/self")
