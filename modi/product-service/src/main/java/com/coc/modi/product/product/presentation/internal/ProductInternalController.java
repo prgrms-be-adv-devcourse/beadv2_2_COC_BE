@@ -7,10 +7,10 @@ import com.coc.modi.product.product.application.dto.ProductInternalSellerRespons
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,8 +28,8 @@ public class ProductInternalController {
 		return productService.getProductsByIds(productIds);
 	}
 	
-	@GetMapping
-	public ProductInternalSellerResponse getProductsById(@RequestParam("productId") Long productId) {
+	@GetMapping("/{productId}")
+	public ProductInternalSellerResponse getProductsById(@PathVariable("productId") Long productId) {
 		
 		return productService.getProductById(productId);
 	}
