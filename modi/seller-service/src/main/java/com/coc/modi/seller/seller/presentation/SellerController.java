@@ -3,7 +3,7 @@ package com.coc.modi.seller.seller.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
