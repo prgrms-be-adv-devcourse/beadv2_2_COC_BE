@@ -11,12 +11,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 
+@Getter
 @Component
 public class JwtTokenProvider {
 	
     private final Key signingKey;
-    private final long accessTokenValidityInMs;
+	private final long accessTokenValidityInMs;
     private final long refreshTokenValidityInMs;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
@@ -27,20 +29,22 @@ public class JwtTokenProvider {
         this.accessTokenValidityInMs = accessTokenValidityInMs;
         this.refreshTokenValidityInMs = refreshTokenValidityInMs;
     }
+	
+	public String generateAccessToken(Long memberId, String role, String name, String email){
 
-    public String generateAccessToken(Long memberId, String role){
-
-        return generateToken(memberId, role, accessTokenValidityInMs);
+        return generateToken(memberId, role, name, email, accessTokenValidityInMs);
     }
 
-    public String generateRefreshToken(Long memberId, String role){
+    public String generateRefreshToken(Long memberId, String role, String name, String email){
 
-        return generateToken(memberId, role, refreshTokenValidityInMs);
+        return generateToken(memberId, role, name, email, refreshTokenValidityInMs);
     }
 
 
     public String generateToken(Long memberId,
                                 String role,
+								String name,
+								String email,
                                 long validityInMs){
 
         Date now = new Date();
@@ -49,6 +53,8 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(memberId.toString())
                 .claim("role", role)
+				.claim("name", name)
+				.claim("email", email)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -85,5 +91,14 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
+	
+	public String getName(String refreshToken) {
+		
+		return getClaims(refreshToken).get("name").toString();
+	}
+	
+	public String getEmail(String refreshToken) {
+		
+		return getClaims(refreshToken).get("email").toString();
+	}
 }
