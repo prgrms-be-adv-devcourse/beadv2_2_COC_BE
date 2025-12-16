@@ -23,7 +23,7 @@ public class TossPaymentsClient {
 
     // Toss 결제 승인 API 호출
     public TossPaymentApprovalResponse approvePayment(String paymentKey,
-                                                      String orderId,
+                                                      Long orderId,
                                                       BigDecimal amount) {
 
         // 1. 요청 URL
