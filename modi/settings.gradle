@@ -11,8 +11,8 @@ include(
         'rental-service',
         'seller-service',
         'member-service',
-        'review-service',
-        'notification-service',
+//        'review-service',
+//        'notification-service',
         'modi-gateway',
         'modi-discovery',
         'modi-config'
