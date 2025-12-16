@@ -41,8 +41,6 @@ public class ProductSearchQueryRepository {
 		NativeQueryBuilder builder = NativeQuery.builder();
 		builder.withQuery(q -> q
 				.bool(b -> {
-					// status ACTIVE 필터
-					b.filter(f -> f.term(t -> t.field("status").value(ProductStatus.ACTIVE.name())));
 					
 					// 키워드 필터(name, description)
 					if (StringUtils.hasText(cond.keyword())) {

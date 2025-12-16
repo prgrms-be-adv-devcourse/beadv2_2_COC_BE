@@ -21,7 +21,7 @@ public class CustomMember implements UserDetails {
 		this.role = role;
 	}
 	
-	public Long getMemberId() {
+	public Long memberId() {
 		
 		return memberId;
 	}

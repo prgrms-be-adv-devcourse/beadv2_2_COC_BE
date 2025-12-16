@@ -1,19 +1,21 @@
-package com.coc.modi.seller.application;
-
-import com.coc.modi.seller.application.dto.SellerRentalResponse;
-import com.coc.modi.seller.application.port.RentalPort;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+package com.coc.modi.seller.seller.application;
 
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class SellerRentalService {
 
-    private final RentalPort rentalPort;
+    private final RentalFeignClient rentalFeignClient;
 
     public List<SellerRentalResponse> getSellerRentals(Long sellerId,
                                                        Long productId,
@@ -22,12 +24,12 @@ public class SellerRentalService {
                                                        String endDate,
                                                        Integer page,
                                                        Integer size) {
-        RentalListResponse response = rentalPort.getRentals(
+        RentalListResponse response = rentalFeignClient.getRentals(
                 sellerId,
+                productId,
                 status,
                 startDate,
                 endDate,
-                productId,
                 page != null ? page : 0,
                 size != null ? size : 20
         );

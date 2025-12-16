@@ -27,7 +27,7 @@ public class AddressController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getProfileAddresses(@AuthenticationPrincipal CustomMember member) {
 		
-        return ResponseEntity.ok(ApiResponse.ok(addressService.getProfileAddresses(member.getMemberId())));
+        return ResponseEntity.ok(ApiResponse.ok(addressService.getProfileAddresses(member.memberId())));
     }
 
 	// 주소 등록
@@ -35,7 +35,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<Void>> createAddress(@AuthenticationPrincipal CustomMember member,
 														   @Valid @RequestBody AddressCreateRequest request) {
 		
-        addressService.createAddress(request.toCommand(member.getMemberId()));
+        addressService.createAddress(request.toCommand(member.memberId()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }
@@ -46,7 +46,7 @@ public class AddressController {
                                                            @PathVariable Long addressId,
                                                            @Valid @RequestBody AddressUpdateRequest request) {
 		
-        addressService.updateAddress(request.toCommand(member.getMemberId(), addressId));
+        addressService.updateAddress(request.toCommand(member.memberId(), addressId));
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
@@ -56,7 +56,7 @@ public class AddressController {
     public ResponseEntity<ApiResponse<Void>> deleteAddress(@AuthenticationPrincipal CustomMember member,
                                                            @PathVariable Long addressId) {
 		
-        addressService.deleteAddress(member.getMemberId(), addressId);
+        addressService.deleteAddress(member.memberId(), addressId);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
