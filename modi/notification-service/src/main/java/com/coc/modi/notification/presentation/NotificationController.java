@@ -21,6 +21,6 @@ public class NotificationController {
 	@GetMapping("/stream")
 	public SseEmitter stream(@AuthenticationPrincipal CustomMember member) {
 		
-		return notificationSseService.subscribe(member.getMemberId());
+		return notificationSseService.subscribe(member.memberId());
 	}
 }

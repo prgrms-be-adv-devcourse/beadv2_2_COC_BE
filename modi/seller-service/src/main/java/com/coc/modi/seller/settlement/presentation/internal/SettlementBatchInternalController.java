@@ -1,4 +1,4 @@
-package com.coc.modi.seller.settlement.presentation;
+package com.coc.modi.seller.settlement.presentation.internal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
