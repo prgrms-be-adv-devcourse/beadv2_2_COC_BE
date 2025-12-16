@@ -1,5 +1,8 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.common.ErrorCode;
+import com.coc.modi.member.auth.application.EmailVerificationService;
+import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
@@ -11,10 +14,14 @@ import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
+import com.coc.modi.member.member.exception.MemberEmailMismatchException;
+import com.coc.modi.member.member.exception.MemberException;
+import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
-import com.coc.modi.member.member.exception.PasswordMismatchException;
+import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
+import com.coc.modi.member.security.JwtTokenProvider;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -35,23 +42,25 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccountFeignClient accountFeignClient;
-	private final MemberValidationService memberValidationService;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationService emailVerificationService;
+	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
-		memberValidationService.validateEmail(command.email());
-		
+		// 중복 이메일인지 확인
 		if (memberRepository.existsByEmail(command.email())) {
 			
 			throw new EmailDuplicatedException(command.email());
 		}
 		
-		memberValidationService.validatePassword(command.password());
-		
-		memberValidationService.validatePhone(command.phone());
+		// 중복 휴대폰 번호인지 확인
+		if (memberRepository.existsByPhone(command.phone())) {
+			
+			throw new PhoneDuplicatedException(command.phone());
+		}
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		
@@ -60,7 +69,7 @@ public class MemberService {
 				encodedPassword,
 				command.name(),
 				command.phone(),
-				MemberRole.USER
+				MemberRole.MEMBER
 		);
 		
 		Member saved = memberRepository.save(member);
@@ -90,10 +99,9 @@ public class MemberService {
 	
 	// 회원 정보 수정
 	@Transactional
-	public MemberProfileResponse updateProfile(Long memberId,
-											   UpdateMemberCommand command) {
+	public MemberProfileResponse updateProfile(UpdateMemberCommand command) {
 		
-		Member member = getMemberOrThrow(memberId);
+		Member member = getMemberOrThrow(command.memberId());
 		
 		if (command.name() != null && !command.name().isBlank()) {
 			
@@ -101,8 +109,6 @@ public class MemberService {
 		}
 		
 		if (command.phone() != null && !command.phone().isBlank()) {
-			
-			memberValidationService.validatePhone(command.phone());
 			
 			member.changePhone(command.phone());
 		}
@@ -112,38 +118,29 @@ public class MemberService {
 	
 	// 비밀번호 수정
 	@Transactional
-	public void updatePassword(Long authenticatedMemberId,
-							   Long memberId,
-							   UpdateMemberPasswordCommand command) {
+	public void updatePassword(UpdateMemberPasswordCommand command) {
 		
-		if (!authenticatedMemberId.equals(memberId)) {
-			
-			throw new PasswordMismatchException("본인만 비밀번호를 변경할 수 있습니다.");
-		}
-		
-		Member member = getMemberOrThrow(memberId);
-		
-		// 이메일 유효성 검사
-		memberValidationService.validateEmail(command.email());
+		Member member = getMemberOrThrow(command.memberId());
 		
 		if (!member.getEmail().equals(command.email())) {
 			
-			throw new PasswordMismatchException("이메일이 일치하지 않습니다.");
+			throw new MemberEmailMismatchException("이메일이 일치하지 않습니다.");
 		}
 		
 		if (command.name() == null || command.name().isBlank()) {
 			
-			throw new PasswordMismatchException("이름을 입력해주세요.");
+			throw new MemberNameMismatchException("이름을 입력해주세요.");
 		}
 		
 		if (!member.getName().equals(command.name())) {
 			
-			throw new PasswordMismatchException("이름이 일치하지 않습니다.");
+			throw new MemberNameMismatchException("이름이 일치하지 않습니다.");
 		}
 		
-		validateVerificationCode(command.email(), command.verificationCode());
+		// 이메일 검증 코드 발송
+		emailVerificationService.sendVerificationEmail(new SendEmailVerificationCommand(member.getEmail()));
 		
-		memberValidationService.validatePassword(command.password());
+		validateVerificationCode(command.email(), command.verificationCode());
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
 		
@@ -192,4 +189,18 @@ public class MemberService {
 		emailVerificationCodeStore.deleteCode(email);
 	}
 	
+	@Transactional
+	public String updateRoleToSeller(Long memberId) {
+		
+		Member member = getMemberOrThrow(memberId);
+		
+		if (member.getRole() == MemberRole.SELLER) {
+			
+			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
+		}
+		
+		member.updateRole(MemberRole.SELLER);
+		
+		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
+	}
 }

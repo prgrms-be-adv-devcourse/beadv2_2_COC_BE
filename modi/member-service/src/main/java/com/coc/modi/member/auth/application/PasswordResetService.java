@@ -4,7 +4,6 @@ import com.coc.modi.member.auth.application.dto.PasswordResetConfirmCommand;
 import com.coc.modi.member.auth.application.dto.PasswordResetSendCommand;
 import com.coc.modi.member.auth.infrastructure.PasswordResetCodeStore;
 import com.coc.modi.member.auth.infrastructure.mail.EmailSender;
-import com.coc.modi.member.member.application.MemberValidationService;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
@@ -28,15 +27,12 @@ public class PasswordResetService {
 	
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final MemberValidationService memberValidationService;
 	private final PasswordResetCodeStore passwordResetCodeStore;
 	private final EmailSender emailSender;
 	private final SecureRandom secureRandom = new SecureRandom();
 	
     @Transactional
     public void sendResetCode(PasswordResetSendCommand command) {
-		
-		memberValidationService.validateEmail(command.email());
 		
 		Member member = memberRepository.findByEmail(command.email())
 				.orElseThrow(() -> new MemberNotFoundException(command.email()));
@@ -51,9 +47,6 @@ public class PasswordResetService {
     // 비밀번호 재설정
     @Transactional
     public void resetPassword(PasswordResetConfirmCommand command) {
-		
-		memberValidationService.validateEmail(command.email());
-		memberValidationService.validatePassword(command.newPassword());
 		
 		String storedCode = passwordResetCodeStore.getCode(command.email());
 		

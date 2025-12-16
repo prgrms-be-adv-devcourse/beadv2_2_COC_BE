@@ -4,6 +4,7 @@ import com.coc.modi.member.member.domain.Address;
 import com.coc.modi.member.member.domain.AddressType;
 
 public record AddressResponse(
+		Long addressId,
         String addressLabel,
         String recipientName,
         String recipientPhone,
@@ -16,6 +17,7 @@ public record AddressResponse(
     public static AddressResponse from(Address address) {
 
         return new AddressResponse(
+				address.getId(),
                 address.getAddressLabel(),
                 address.getRecipientName(),
                 address.getRecipientPhone(),

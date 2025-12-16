@@ -1,12 +1,14 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.exception.SettlementBatchDuplicateException;
 import com.coc.modi.seller.exception.SettlementBatchNotFoundException;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
 import com.coc.modi.seller.settlement.domain.SettlementBatchRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,51 +20,65 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SettlementBatchService {
-
-    private final SettlementBatchRepository settlementBatchRepository;
-
-    @Transactional
-    public SettlementBatchResponse createBatch(SettlementBatchCreateCommand command) {
-        settlementBatchRepository.findByPeriodYm(command.periodYm())
-                .ifPresent(batch -> {
-                    throw new SettlementBatchDuplicateException("이미 생성된 정산 배치입니다. periodYm=" + command.periodYm());
-                });
-
-        SettlementBatch batch = SettlementBatch.create(command.periodYm());
-        SettlementBatch saved = settlementBatchRepository.save(batch);
-        return SettlementBatchResponse.from(saved);
-    }
-
-    @Transactional
-    public SettlementBatchResponse startBatch(Long batchId) {
-        SettlementBatch batch = findBatch(batchId);
-        batch.start(LocalDateTime.now());
-        return SettlementBatchResponse.from(batch);
-    }
-
-    @Transactional
-    public SettlementBatchResponse completeBatch(Long batchId) {
-        SettlementBatch batch = findBatch(batchId);
-        batch.complete(LocalDateTime.now());
-        return SettlementBatchResponse.from(batch);
-    }
-
-    public SettlementBatchResponse getBatch(Long batchId) {
-        SettlementBatch batch = findBatch(batchId);
-        return SettlementBatchResponse.from(batch);
-    }
-
-    public Page<SettlementBatchResponse> getBatches(String periodYm, Pageable pageable) {
-        if (periodYm != null && !periodYm.isBlank()) {
-            return settlementBatchRepository.findByPeriodYm(periodYm, pageable)
-                    .map(SettlementBatchResponse::from);
-        }
-        return settlementBatchRepository.findAll(pageable)
-                .map(SettlementBatchResponse::from);
-    }
-
-    private SettlementBatch findBatch(Long batchId) {
-        return settlementBatchRepository.findById(batchId)
-                .orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. id=" + batchId));
-    }
+	
+	private final SettlementBatchRepository settlementBatchRepository;
+	
+	@Transactional
+	public SettlementBatchResponse createBatch(SettlementBatchCreateCommand command) {
+		
+		if (command == null || command.periodYm() == null || command.periodYm().isBlank()) {
+			throw new SettlementInputInvalidException("periodYm은 필수입니다.");
+		}
+		
+		SettlementBatch batch = settlementBatchRepository.findByPeriodYm(command.periodYm())
+				.orElseGet(() -> settlementBatchRepository.save(SettlementBatch.create(command.periodYm())));
+		
+		return SettlementBatchResponse.from(batch);
+	}
+	
+	@Transactional
+	public SettlementBatchResponse startBatch(Long batchId) {
+		
+		SettlementBatch batch = findBatch(batchId);
+		batch.start(LocalDateTime.now());
+		return SettlementBatchResponse.from(batch);
+	}
+	
+	@Transactional
+	public SettlementBatchResponse completeBatch(Long batchId) {
+		
+		SettlementBatch batch = findBatch(batchId);
+		batch.complete(LocalDateTime.now());
+		return SettlementBatchResponse.from(batch);
+	}
+	
+	@Transactional
+	public SettlementBatchResponse failBatch(Long batchId) {
+		
+		SettlementBatch batch = findBatch(batchId);
+		batch.fail();
+		return SettlementBatchResponse.from(batch);
+	}
+	
+	public SettlementBatchResponse getBatch(Long batchId) {
+		
+		SettlementBatch batch = findBatch(batchId);
+		return SettlementBatchResponse.from(batch);
+	}
+	
+	public Page<SettlementBatchResponse> getBatches(String periodYm, Pageable pageable) {
+		
+		if (periodYm != null && !periodYm.isBlank()) {
+			return settlementBatchRepository.findByPeriodYm(periodYm, pageable)
+					.map(SettlementBatchResponse::from);
+		}
+		return settlementBatchRepository.findAll(pageable)
+				.map(SettlementBatchResponse::from);
+	}
+	
+	private SettlementBatch findBatch(Long batchId) {
+		
+		return settlementBatchRepository.findById(batchId)
+				.orElseThrow(() -> new SettlementBatchNotFoundException("정산 배치를 찾을 수 없습니다. sellerId=" + batchId));
+	}
 }
