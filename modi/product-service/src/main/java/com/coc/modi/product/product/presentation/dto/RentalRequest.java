@@ -6,6 +6,6 @@ import java.util.List;
 public record RentalRequest(
 		LocalDate startDate,
 		LocalDate endDate,
-		List<Long> ProductIds
+		List<Long> productIds
 ) {
 }

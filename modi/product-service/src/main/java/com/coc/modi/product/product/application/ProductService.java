@@ -3,6 +3,7 @@ package com.coc.modi.product.product.application;
 import com.coc.modi.product.product.application.dto.ProductBulkResponse;
 import com.coc.modi.product.product.application.dto.ProductCreateCommand;
 import com.coc.modi.product.product.application.dto.ProductDetailResponse;
+import com.coc.modi.product.product.application.dto.ProductInternalSellerResponse;
 import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,7 +67,7 @@ public class ProductService {
 		Map<Long, String> thumbnailUrlMap = productImageRepository.findUrlMapByIds(thumbnailIds);
 		
 		return products.map(p -> ProductListResponse.fromProduct(p, thumbnailUrlMap.get(p.getThumbnailImageId())));
-	
+		
 	}
 	
 	// 3-2. 상품 상세 조회
@@ -150,6 +152,44 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public List<ProductBulkResponse> getProductsByIds(List<Long> productIds) {
 		
+		Map<Long, Product> productMap = getProductMapByIds(productIds);
+		
+		return productIds.stream()
+				.map(productMap::get)
+				.map(ProductBulkResponse::from)
+				.toList();
+	}
+	
+	// 내부 api
+	@Transactional(readOnly = true)
+	public List<ProductInternalSellerResponse> getProductByIds(List<Long> productIds) {
+		
+		Map<Long, Product> productMap = getProductMapByIds(productIds);
+		
+		Map<Long, String> thumbnailUrlMap = productImageRepository.findUrlMapByIds(
+				productMap.values().stream()
+						.map(Product::getThumbnailImageId)
+						.toList());
+		
+		return productIds.stream()
+				.map(productMap::get)
+				.map(p -> ProductInternalSellerResponse.from(
+						p,
+						thumbnailUrlMap.get(p.getThumbnailImageId())
+				))
+				.toList();
+	}
+	
+	private Map<Long, Product> getProductMapByIds(List<Long> productIds) {
+		
+		List<Product> products = findProductsByIds(productIds);
+		
+		return products.stream()
+				.collect(Collectors.toMap(Product::getId, Function.identity(), (existing, ignore) -> existing));
+	}
+	
+	private List<Product> findProductsByIds(List<Long> productIds) {
+		
 		if (productIds == null || productIds.isEmpty()) {
 			throw new ProductInvalidInputException("조회할 상품 ID가 없습니다.");
 		}
@@ -167,8 +207,6 @@ public class ProductService {
 					throw new ProductNotFoundException(id);
 				});
 		
-		return products.stream()
-				.map(ProductBulkResponse::from)
-				.toList();
+		return products;
 	}
 }
