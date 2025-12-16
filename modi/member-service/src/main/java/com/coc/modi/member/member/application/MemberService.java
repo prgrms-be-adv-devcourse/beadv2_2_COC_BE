@@ -21,6 +21,7 @@ import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
+import com.coc.modi.member.security.JwtTokenProvider;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class MemberService {
 	private final AccountFeignClient accountFeignClient;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationService emailVerificationService;
+	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
@@ -188,7 +190,7 @@ public class MemberService {
 	}
 	
 	@Transactional
-	public void updateRole(Long memberId) {
+	public String updateRoleToSeller(Long memberId) {
 		
 		Member member = getMemberOrThrow(memberId);
 		
@@ -196,5 +198,9 @@ public class MemberService {
 			
 			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
 		}
+		
+		member.updateRole(MemberRole.SELLER);
+		
+		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
 	}
 }
