@@ -1,22 +1,29 @@
 package com.coc.modi.seller.seller.presentation;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
 import com.coc.modi.seller.seller.presentation.dto.SellerUpdateRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +37,7 @@ public class SellerController {
 																	  @AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.getMemberId()));
+		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -39,7 +46,7 @@ public class SellerController {
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -54,7 +61,7 @@ public class SellerController {
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
 		
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.getMemberId(), productId, status, startDate, endDate, page, size);
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.memberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
@@ -64,7 +71,7 @@ public class SellerController {
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		
 		
-		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.getMemberId(), request.toCommand());
+		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
