@@ -35,19 +35,14 @@ public class SellerController {
 	private final SellerProductService sellerProductService;
 	
 	@PostMapping
-	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
+	public ResponseEntity<ApiResponse<String>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
 																			@AuthenticationPrincipal CustomMember member) {
 		
-		
-		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
-
-  
 		return ResponseEntity.ok(ApiResponse.ok(sellerService.registerSeller(request.toCommand(member.memberId()))));
 	}
 	
 	@GetMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
-		
 		
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
   
@@ -81,8 +76,7 @@ public class SellerController {
 	}
 
 	@GetMapping("/products/{productId}")
-	public ResponseEntity<ApiResponse<ProductSummaryResponse>> getProduct(@PathVariable Long productId,
-																		  @AuthenticationPrincipal CustomMember member) {
+	public ResponseEntity<ApiResponse<ProductSummaryResponse>> getProduct(@PathVariable Long productId) {
 
 		ProductSummaryResponse response = sellerProductService.getProductSummary(productId);
 		return ResponseEntity.ok(ApiResponse.ok(response));
