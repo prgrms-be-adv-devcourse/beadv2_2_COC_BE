@@ -22,7 +22,7 @@ public class SecurityConfig {
 	
 	private static final String[] SWAGGER_WHITELIST = {
 			
-			"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-resources",
+			"/swagger-ui/index.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-resources",
 			"/webjars/**"
 		
 	};
@@ -49,15 +49,17 @@ public class SecurityConfig {
 				// 	source.registerCorsConfiguration("/**", configuration);
 				// 	configurer.configurationSource(source);
 				// })
+				.httpBasic(AbstractHttpConfigurer::disable)
 				.cors(AbstractHttpConfigurer::disable)
 				.csrf(AbstractHttpConfigurer::disable)
-				.formLogin(FormLoginConfigurer::disable)
+				.formLogin(AbstractHttpConfigurer::disable)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.authorizeHttpRequests(auth -> {
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/api/**").permitAll()
-							.requestMatchers("/actuator/**").permitAll();
+							.requestMatchers("/actuator/**").permitAll()
+							.anyRequest().authenticated();
 				});
 		
 		return http.build();

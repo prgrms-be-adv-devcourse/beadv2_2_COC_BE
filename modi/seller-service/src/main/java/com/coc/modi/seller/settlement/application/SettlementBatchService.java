@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.exception.SettlementBatchDuplicateException;
 import com.coc.modi.seller.exception.SettlementBatchNotFoundException;
+import com.coc.modi.seller.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
@@ -26,14 +26,14 @@ public class SettlementBatchService {
 	@Transactional
 	public SettlementBatchResponse createBatch(SettlementBatchCreateCommand command) {
 		
-		settlementBatchRepository.findByPeriodYm(command.periodYm())
-				.ifPresent(batch -> {
-					throw new SettlementBatchDuplicateException("이미 생성된 정산 배치입니다. periodYm=" + command.periodYm());
-				});
+		if (command == null || command.periodYm() == null || command.periodYm().isBlank()) {
+			throw new SettlementInputInvalidException("periodYm은 필수입니다.");
+		}
 		
-		SettlementBatch batch = SettlementBatch.create(command.periodYm());
-		SettlementBatch saved = settlementBatchRepository.save(batch);
-		return SettlementBatchResponse.from(saved);
+		SettlementBatch batch = settlementBatchRepository.findByPeriodYm(command.periodYm())
+				.orElseGet(() -> settlementBatchRepository.save(SettlementBatch.create(command.periodYm())));
+		
+		return SettlementBatchResponse.from(batch);
 	}
 	
 	@Transactional
