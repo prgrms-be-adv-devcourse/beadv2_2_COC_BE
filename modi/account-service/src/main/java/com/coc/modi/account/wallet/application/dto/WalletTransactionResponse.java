@@ -11,11 +11,11 @@ public record WalletTransactionResponse(
         BigDecimal amount,
         BigDecimal balanceAfter,
         Long relatedRentalId,
-        Long relatedPgDepositId,
         Long relatedSettlementId,
         String description,
         LocalDateTime createdAt,
-		String paymentKey
+		String paymentKey,
+		String pgTid
 ) {
 
     public static WalletTransactionResponse from(WalletTransaction tx) {
@@ -25,11 +25,11 @@ public record WalletTransactionResponse(
                 tx.getAmount(),
                 tx.getBalanceAfter(),
                 tx.getRelatedRentalId(),
-                tx.getRelatedPgDepositId(),
                 tx.getRelatedSettlementId(),
                 tx.getDescription(),
                 tx.getCreatedAt(),
-				tx.getPaymentKey()
+				tx.getPaymentKey(),
+				tx.getPgDeposit().getPgTid()
         );
     }
 }
