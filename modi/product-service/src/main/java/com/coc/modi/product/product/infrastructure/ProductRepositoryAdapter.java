@@ -26,6 +26,12 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 	
 	@Override
+	public Optional<Product> findById(Long id) {
+		
+		return productJpaRepository.findById(id);
+	}
+	
+	@Override
 	public Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable) {
 		
 		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, status, pageable);

@@ -10,6 +10,7 @@ import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
 import com.coc.modi.product.product.application.support.SellerIdResolver;
 import com.coc.modi.product.product.domain.Product;
+import com.coc.modi.product.product.domain.ProductImage;
 import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
@@ -162,22 +163,16 @@ public class ProductService {
 	
 	// 내부 api
 	@Transactional(readOnly = true)
-	public List<ProductInternalSellerResponse> getProductByIds(List<Long> productIds) {
+	public ProductInternalSellerResponse getProductById(Long productId) {
 		
-		Map<Long, Product> productMap = getProductMapByIds(productIds);
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
-		Map<Long, String> thumbnailUrlMap = productImageRepository.findUrlMapByIds(
-				productMap.values().stream()
-						.map(Product::getThumbnailImageId)
-						.toList());
+		String thumbnailImageUrl = productImageRepository.findById(product.getThumbnailImageId())
+				.map(ProductImage::getUrl)
+				.orElse(null);
 		
-		return productIds.stream()
-				.map(productMap::get)
-				.map(p -> ProductInternalSellerResponse.from(
-						p,
-						thumbnailUrlMap.get(p.getThumbnailImageId())
-				))
-				.toList();
+		return ProductInternalSellerResponse.from(product, thumbnailImageUrl);
 	}
 	
 	private Map<Long, Product> getProductMapByIds(List<Long> productIds) {
