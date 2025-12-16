@@ -30,7 +30,7 @@ public class SellerController {
 																	  @AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.getMemberId()));
+		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -39,7 +39,7 @@ public class SellerController {
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -54,7 +54,7 @@ public class SellerController {
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
 		
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.getMemberId(), productId, status, startDate, endDate, page, size);
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.memberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
@@ -64,7 +64,7 @@ public class SellerController {
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		
 		
-		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.getMemberId(), request.toCommand());
+		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}

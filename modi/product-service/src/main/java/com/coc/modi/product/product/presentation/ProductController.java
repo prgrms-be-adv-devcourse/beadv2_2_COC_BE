@@ -54,7 +54,7 @@ public class ProductController {
 																						direction = Sort.Direction.DESC
 																				) Pageable pageable) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.getMemberId(), pageable)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.memberId(), pageable)));
 	}
 	
 	// 상품 상세 조회
@@ -62,7 +62,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
 																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.getMemberId(), productId)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
 	}
 	
 	// 상품 등록

@@ -98,7 +98,7 @@ public class WebFluxSecurityConfig {
 						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()
 						.pathMatchers(HttpMethod.POST, "/seller-service/api/sellers").hasRole("MEMBER")
-						.pathMatchers("/seller-service/api/seller/**").hasRole("SELLER")
+						.pathMatchers("/seller-service/api/sellers/**").hasRole("SELLER")
 						.pathMatchers("/*/api/**").hasRole("MEMBER")
 						.pathMatchers("/*/actuator/**").permitAll()
 						.anyExchange().denyAll()

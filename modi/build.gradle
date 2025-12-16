@@ -124,6 +124,8 @@ configure([
 
         implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+        implementation 'io.github.openfeign:feign-httpclient'
+
         // 타입 안전한 JPA 쿼리를 위한 Querydsl.
         implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
         annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"

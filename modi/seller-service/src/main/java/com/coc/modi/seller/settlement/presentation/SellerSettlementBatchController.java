@@ -41,7 +41,7 @@ public class SellerSettlementBatchController {
 	public ResponseEntity<ApiResponse<SettlementBatchResponse>> sellerSettlementRun(@AuthenticationPrincipal CustomMember member,
 																					 @Valid @RequestBody SellerSettlementBatchRunRequest request) {
 		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
 		YearMonth period = parsePeriod(request.periodYm());
 		String startDate = resolveDate(request.startDate(), period.atDay(1).toString());
 		String endDate = resolveDate(request.endDate(), period.atEndOfMonth().toString());
