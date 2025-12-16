@@ -15,7 +15,8 @@ public record DepositResponse(
         String orderId,
         LocalDateTime requestedAt,
         LocalDateTime approvedAt,
-        String failedReason
+        String failedReason,
+		String paymentKey
 ) {
 
     public static DepositResponse from(PgDeposit pgDeposit) {
@@ -29,7 +30,8 @@ public record DepositResponse(
                 pgDeposit.getPgTid(),
                 pgDeposit.getRequestedAt(),
                 pgDeposit.getApprovedAt(),
-                pgDeposit.getFailedReason()
+                pgDeposit.getFailedReason(),
+				pgDeposit.getPaymentKey()
         );
     }
 }

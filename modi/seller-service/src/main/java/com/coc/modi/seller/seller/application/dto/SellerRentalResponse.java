@@ -1,4 +1,4 @@
-package com.coc.modi.seller.application.dto;
+package com.coc.modi.seller.seller.application.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

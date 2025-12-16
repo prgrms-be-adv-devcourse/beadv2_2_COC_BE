@@ -29,14 +29,14 @@ public class CartController {
     @GetMapping()
     public ResponseEntity<ApiResponse<CartResponse>> getMyCart(@AuthenticationPrincipal CustomMember member) {
 		
-        return ResponseEntity.ok(ApiResponse.ok(cartQueryService.getCart(member.getMemberId())));
+        return ResponseEntity.ok(ApiResponse.ok(cartQueryService.getCart(member.memberId())));
     }
 
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<Void>> addItem(@Valid @RequestBody AddCartItemRequest request,
 													 @AuthenticationPrincipal CustomMember member) {
 
-        cartCommandService.addItem(request.toCommand(member.getMemberId()));
+        cartCommandService.addItem(request.toCommand(member.memberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
@@ -46,7 +46,7 @@ public class CartController {
 														@AuthenticationPrincipal CustomMember member,
                                                         @Valid @RequestBody UpdateCartItemRequest request) {
 		
-        cartCommandService.updateItem(request.toCommand(member.getMemberId(), cartItemId));
+        cartCommandService.updateItem(request.toCommand(member.memberId(), cartItemId));
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
@@ -55,7 +55,7 @@ public class CartController {
     public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable @Positive Long cartItemId,
 														@AuthenticationPrincipal CustomMember member) {
 		
-        cartCommandService.deleteItem(member.getMemberId(), cartItemId);
+        cartCommandService.deleteItem(member.memberId(), cartItemId);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

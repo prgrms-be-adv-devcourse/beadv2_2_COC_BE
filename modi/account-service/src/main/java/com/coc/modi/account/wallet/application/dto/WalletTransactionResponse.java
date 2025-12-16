@@ -14,7 +14,8 @@ public record WalletTransactionResponse(
         Long relatedPgDepositId,
         Long relatedSettlementId,
         String description,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+		String paymentKey
 ) {
 
     public static WalletTransactionResponse from(WalletTransaction tx) {
@@ -27,7 +28,8 @@ public record WalletTransactionResponse(
                 tx.getRelatedPgDepositId(),
                 tx.getRelatedSettlementId(),
                 tx.getDescription(),
-                tx.getCreatedAt()
+                tx.getCreatedAt(),
+				tx.getPaymentKey()
         );
     }
 }

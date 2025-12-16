@@ -1,27 +1,17 @@
 package com.coc.modi.member.auth.application.dto;
 
+import org.springframework.http.ResponseCookie;
+
 import com.coc.modi.member.member.domain.Member;
 
 public record MemberLoginResponse(
 		String accessToken,
-		String refreshToken,
-		MemberData member
+		MemberData member,
+		ResponseCookie refreshCookie
 ) {
-	public static MemberLoginResponse of(
-			String accessToken,
-			String refreshToken,
-			Member member
-	) {
-		
-		return new MemberLoginResponse(
-				accessToken,
-				refreshToken,
-				MemberData.from(member)
-		);
-	}
 	
 	public record MemberData(
-			Long id,
+			Long memberId,
 			String email,
 			String name,
 			String role
