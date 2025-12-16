@@ -77,7 +77,8 @@ public class WalletCommandService {
                 command.relatedRentalId(),
                 command.relatedRentalItemId(),
                 command.relatedSettlementId(),
-                command.description()
+                command.description(),
+				command.paymentKey()
         );
 
         // 4. 예치금 잔액 변경
