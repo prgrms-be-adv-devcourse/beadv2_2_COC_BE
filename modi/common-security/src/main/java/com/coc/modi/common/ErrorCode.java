@@ -40,6 +40,8 @@ public enum ErrorCode {
 	AUTH_CODE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-AUTH-400", "이메일 인증 코드가 유효하지 않습니다."),
 	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
+	ACCOUNT_BALENCE_REMAIN(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-REMAIN-400", "지갑에 잔액이 남아있습니다."),
+	ACCOUNT_BALENCE_CHECK(HttpStatus.NOT_FOUND, "ACCOUNT-BALANCE-404", "지갑 잔액 체크에 실패했습니다"),
 	ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-404", "지갑 정보를 찾을 수 없습니다."),
 	ACCOUNT_BALANCE_INSUFFICIENT(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-400", "잔액이 부족합니다."),
 	ACCOUNT_ALREADY_EXISTS(HttpStatus.CONFLICT, "ACCOUNT-409", "지갑이 이미존재합니다."),
