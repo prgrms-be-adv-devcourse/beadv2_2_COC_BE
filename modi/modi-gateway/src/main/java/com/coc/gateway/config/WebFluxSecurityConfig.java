@@ -1,5 +1,6 @@
 package com.coc.gateway.config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,12 +18,13 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+
+import com.coc.gateway.security.GlobalAuthHeaderFilter;
 import com.coc.gateway.security.JwtTokenProvider;
 
 import lombok.Setter;
@@ -42,21 +44,17 @@ public class WebFluxSecurityConfig {
 		
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOriginPatterns(List.of(
-				//front
+				"http://localhost:8000", //local test
 				"http://localhost:3000",
 				"https://*.v0.app",
 				"https://*.vusercontent.net",
 				"https://*.vercel.app",
+				"https://www.cocmodi.shop",
 
 				//gateway
 				"https://localhost:8080",
 
 				//tunneling
-				"https://*.ngrok-free.dev",
-				"https://*.ngrok.free.app",
-
-				//domain
-				"https://www.cocmodi.shop",
 				"https://cocmodi.shop"
 		));
 		
@@ -72,11 +70,17 @@ public class WebFluxSecurityConfig {
 	}
 	
 	@Bean
+	public GlobalAuthHeaderFilter globalAuthHeaderFilter() {
+		
+		return new GlobalAuthHeaderFilter();
+	}
+	
+	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(
-			ServerHttpSecurity http,
-			AuthenticationWebFilter jwtAuthWebFilter
 			
-	) {
+			ServerHttpSecurity http,
+			AuthenticationWebFilter jwtAuthWebFilter,
+			GlobalAuthHeaderFilter globalAuthHeaderFilter) {
 		
 		return http
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -85,10 +89,22 @@ public class WebFluxSecurityConfig {
 				.httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
 				.authorizeExchange(ex -> ex
 						.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.pathMatchers(
+								"/swagger-ui/**",
+								"/v3/api-docs/**",
+								"/*/v3/api-docs/**",
+								"/member-service/api/auth/**",
+								"/member-service/api/members/signup"
+						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()
-						.anyExchange().authenticated()
+						.pathMatchers(HttpMethod.POST, "/seller-service/api/sellers").hasRole("MEMBER")
+						.pathMatchers("/seller-service/api/sellers/**").hasRole("SELLER")
+						.pathMatchers("/*/api/**").hasRole("MEMBER")
+						.pathMatchers("/*/actuator/**").permitAll()
+						.anyExchange().denyAll()
 				)
 				.addFilterAt(jwtAuthWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+				.addFilterAfter(globalAuthHeaderFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.build();
 	}
 	
@@ -130,9 +146,17 @@ public class WebFluxSecurityConfig {
 			
 			Long memberId = jwtTokenProvider.getMemberId(token);
 			String role = jwtTokenProvider.getRole(token);
-			GrantedAuthority authority = new SimpleGrantedAuthority(role);
 			
-			return Mono.just(new UsernamePasswordAuthenticationToken(memberId, token, List.of(authority)));
+			List<GrantedAuthority> authorities = new ArrayList<>();
+			
+			authorities.add(new SimpleGrantedAuthority("ROLE_MEMBER"));
+			
+			if ("SELLER".equalsIgnoreCase(role)) {
+				
+				authorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
+			}
+			
+			return Mono.just(new UsernamePasswordAuthenticationToken(memberId, token, authorities));
 		};
 	}
 }

@@ -1,5 +1,6 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.EmailVerificationService;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
@@ -14,11 +15,13 @@ import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
 import com.coc.modi.member.member.exception.MemberEmailMismatchException;
+import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
+import com.coc.modi.member.security.JwtTokenProvider;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,7 @@ public class MemberService {
 	private final AccountFeignClient accountFeignClient;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationService emailVerificationService;
+	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
@@ -65,7 +69,7 @@ public class MemberService {
 				encodedPassword,
 				command.name(),
 				command.phone(),
-				MemberRole.USER
+				MemberRole.MEMBER
 		);
 		
 		Member saved = memberRepository.save(member);
@@ -185,4 +189,18 @@ public class MemberService {
 		emailVerificationCodeStore.deleteCode(email);
 	}
 	
+	@Transactional
+	public String updateRoleToSeller(Long memberId) {
+		
+		Member member = getMemberOrThrow(memberId);
+		
+		if (member.getRole() == MemberRole.SELLER) {
+			
+			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
+		}
+		
+		member.updateRole(MemberRole.SELLER);
+		
+		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
+	}
 }
