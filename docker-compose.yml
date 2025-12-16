@@ -1,0 +1,212 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: modi-postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - msa-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-discovery:
+    image: modi-discovery:latest
+    container_name: modi-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-config:
+    image: modi-config:latest
+    container_name: modi-config
+    depends_on:
+      - modi-discovery
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-gateway:
+    image: modi-gateway:latest
+    container_name: modi-gateway
+    depends_on:
+      - modi-config
+      - modi-discovery
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - msa-net
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks:
+      - msa-net
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    networks:
+      - msa-net
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: unless-stopped
+    networks:
+      - msa-net
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    expose:
+      - "9092"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: unless-stopped
+    networks:
+      - msa-net
+    expose:
+      - "2181"
+
+  account-service:
+    image: account-service:latest
+    container_name: account-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  product-service:
+    image: product-service:latest
+    container_name: product-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  rental-service:
+    image: rental-service:latest
+    container_name: rental-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  seller-service:
+    image: seller-service:latest
+    container_name: seller-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  member-service:
+    image: member-service:latest
+    container_name: member-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+#  review-service:
+#    image: review-service:latest
+#    container_name: review-service
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    ports:
+#      - "8080"
+#    env_file:
+#      - .env
+#    restart: always
+#    networks:
+#      - msa-net
+#
+#  notification-service:
+#    image: notification-service:latest
+#    container_name: notification-service
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    ports:
+#      - "8080"
+#    env_file:
+#      - .env
+#    restart: always
+#    networks:
+#      - msa-net
+
+networks:
+  msa-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  es-data:

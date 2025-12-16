@@ -46,14 +46,16 @@ public class WebFluxSecurityConfig {
 		config.setAllowedOriginPatterns(List.of(
 				"http://localhost:8000", //local test
 				"http://localhost:3000",
-				"http://192.168.219.103:8000",
 				"https://*.v0.app",
 				"https://*.vusercontent.net",
 				"https://*.vercel.app",
 				"https://www.cocmodi.shop",
-				"https://cocmodi.shop",
-				"https://*.ngrok-free.dev",
-				"https://*.ngrok.free.app"
+
+				//gateway
+				"https://localhost:8080",
+
+				//tunneling
+				"https://cocmodi.shop"
 		));
 		
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
@@ -157,6 +159,5 @@ public class WebFluxSecurityConfig {
 			return Mono.just(new UsernamePasswordAuthenticationToken(memberId, token, authorities));
 		};
 	}
-	
 }
  

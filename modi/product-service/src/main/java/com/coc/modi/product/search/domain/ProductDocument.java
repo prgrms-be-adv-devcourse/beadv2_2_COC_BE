@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 
 @Getter
 @NoArgsConstructor
-@Document(indexName = "products", createIndex = false) // ES 인덱스 이름
+@Document(indexName = "products", createIndex = true) // ES 인덱스 이름
 public class ProductDocument {
 	
 	@Id

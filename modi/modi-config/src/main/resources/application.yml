@@ -1,0 +1,47 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: modi-config
+  cloud:
+    config:
+      server:
+        overrides:
+          spring.datasource.url: ${DB_URL}
+          spring.datasource.username: ${DB_USER}
+          spring.datasource.password: ${DB_PASSWORD}
+          toss.payments.client-key: ${TOSS_CLIENT_KEY}
+          toss.payments.secret-key: ${TOSS_SECRET_KEY}
+          toss.api-url: ${TOSS_API_URL}
+          toss.success-url: ${TOSS_SUCCESS_URL}
+          toss.fail-url: ${TOSS_FAIL_URL}
+          jwt.secret: ${JWT_SECRET}
+          spring.mail.username: ${EMAIL_ADDRESS}
+          spring.mail.password: ${EMAIL_PASSWORD}
+          spring.data.redis.host: ${REDIS_HOST}
+          spring.data.redis.port: ${REDIS_PORT}
+          mail.from-address: ${EMAIL_ADDRESS}
+          product-service.url: ${PRODUCT_SERVICE_URL}
+          account-service.url: ${ACCOUNT_SERVICE_URL}
+          rental-service.url: ${RENTAL_SERVICE_URL}
+          rental-service.base-url: ${RENTAL_SERVICE_URL}
+          member-service.url: ${MEMBER_SERVICE_URL}
+          seller-service.url: ${SELLER_SERVICE_URL}
+          eureka.client.service-url.defaultZone: ${EUREKA_URI}
+          spring.elasticsearch.uris: ${ELASTIC_URL}
+          cloud.aws.s3.bucket: ${S3_BUCKET_NAME}
+          cloud.aws.region.static: ${S3_REGION}
+          cloud.aws.credentials.accessKey: ${S3_ACCESS_KEY}
+          cloud.aws.credentials.secretKey: ${S3_SECRET_KEY}
+        git:
+          uri: ${GIT_URI}
+          username: ${GIT_USER}
+          password: ${GIT_PAT}
+        default-label: main
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}

@@ -1,5 +1,6 @@
 package com.coc.modi.rental.cart.domain;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class Cart {
 
     private Long memberId;
