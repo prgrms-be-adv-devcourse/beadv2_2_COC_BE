@@ -74,6 +74,11 @@ public class MemberAuthService {
 		String name = jwtTokenProvider.getName(refreshToken);
 		String email = jwtTokenProvider.getEmail(refreshToken);
 		
+		if (!refreshTokenService.matches(memberId, refreshToken)) {
+			
+			throw new MemberException(ErrorCode.UNAUTHORIZED);
+		}
+		
 		String newAccessToken = jwtTokenProvider.generateAccessToken(memberId, role, name, email);
 		String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId, role, name, email);
 		
