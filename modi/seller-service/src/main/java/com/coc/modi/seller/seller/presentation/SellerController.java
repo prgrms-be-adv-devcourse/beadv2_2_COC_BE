@@ -28,13 +28,14 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping
+@RequestMapping("/api/sellers")
 public class SellerController {
 	
 	private final SellerService sellerService;
 	private final SellerProductService sellerProductService;
 	
-	@PostMapping("/api/sellers")
+	
+	@PostMapping
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
 																		   @AuthenticationPrincipal CustomMember member) {
 		
@@ -44,7 +45,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/api/sellers/self")
+	@GetMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
 		
@@ -53,7 +54,8 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
-	@GetMapping("/api/sellers/self/rentals")
+	//추후 Query로 변경 고려
+	@GetMapping("/self/rentals")
 	public ResponseEntity<ApiResponse<List<SellerRentalResponse>>> getMyRentals(@AuthenticationPrincipal CustomMember member,
 																				@RequestParam(value = "productId", required = false) Long productId,
 																				@RequestParam(value = "status") String status,
@@ -68,7 +70,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
 	
-	@PutMapping("/api/sellers/self")
+	@PutMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> updateMySeller(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody SellerUpdateRequest request) {
 		
@@ -78,7 +80,7 @@ public class SellerController {
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 
-	@GetMapping("/api/sellers/products/{productId}")
+	@GetMapping("/products/{productId}")
 	public ResponseEntity<ApiResponse<ProductSummaryResponse>> getProduct(@PathVariable Long productId,
 																		  @AuthenticationPrincipal CustomMember member) {
 
