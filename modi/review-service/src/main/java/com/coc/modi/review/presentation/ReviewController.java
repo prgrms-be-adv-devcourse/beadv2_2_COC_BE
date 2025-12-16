@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -42,7 +41,7 @@ public class ReviewController {
 	public ResponseEntity<ApiResponse<ReviewResponse>> createReview(@AuthenticationPrincipal CustomMember member,
 																	@Valid @RequestBody ReviewCreateRequest request) {
 		
-		ReviewResponse response = reviewService.createReview(request.toCommand(member.getMemberId()));
+		ReviewResponse response = reviewService.createReview(request.toCommand(member.memberId()));
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
 	}
@@ -53,7 +52,7 @@ public class ReviewController {
 																	@PathVariable Long reviewId,
 																	@Valid @RequestBody ReviewUpdateRequest request) {
 		
-		ReviewResponse response = reviewService.updateReview(request.toCommand(reviewId, member.getMemberId()));
+		ReviewResponse response = reviewService.updateReview(request.toCommand(reviewId, member.memberId()));
 
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
@@ -63,7 +62,7 @@ public class ReviewController {
 	public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal CustomMember member,
 											 @PathVariable Long reviewId) {
 		
-		reviewService.deleteReview(reviewId, member.getMemberId());
+		reviewService.deleteReview(reviewId, member.memberId());
 
 		return ResponseEntity.noContent().build();
 	}
@@ -91,7 +90,7 @@ public class ReviewController {
 	public ResponseEntity<ApiResponse<List<ReviewSummaryResponse>>> getMyReviews(@AuthenticationPrincipal CustomMember member,
 																				 @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 		
-		List<ReviewSummaryResponse> responses = reviewService.getReviewsByMember(member.getMemberId(), pageable);
+		List<ReviewSummaryResponse> responses = reviewService.getReviewsByMember(member.memberId(), pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}
