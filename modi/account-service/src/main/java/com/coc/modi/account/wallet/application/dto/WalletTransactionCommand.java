@@ -1,5 +1,6 @@
 package com.coc.modi.account.wallet.application.dto;
 
+import com.coc.modi.account.deposit.domain.PgDeposit;
 import com.coc.modi.account.wallet.domain.WalletTransactionType;
 
 import java.math.BigDecimal;
@@ -8,7 +9,7 @@ public record WalletTransactionCommand(
         Long memberId,
         WalletTransactionType txType,
         BigDecimal amount,
-        Long relatedPgDepositId,
+		PgDeposit pgDeposit,
         Long relatedRentalId,
         Long relatedRentalItemId,
         Long relatedSettlementId,
@@ -18,7 +19,7 @@ public record WalletTransactionCommand(
 
     public static WalletTransactionCommand forDepositCharge(
             Long memberId,
-            Long pgDepositId,
+            PgDeposit pgDeposit,
             BigDecimal amount,
 			String paymentKey
     ) {
@@ -27,8 +28,8 @@ public record WalletTransactionCommand(
                 memberId,
                 WalletTransactionType.DEPOSIT_CHARGE,
                 amount,
-                pgDepositId,
-                null,
+				pgDeposit,
+				null,
                 null,
                 null,
                 "예치금 충전",
@@ -46,7 +47,7 @@ public record WalletTransactionCommand(
                 memberId,
                 WalletTransactionType.RENTAL_PAYMENT,
                 amount,
-                null,
+				null,
                 rentalId,
                 null,
                 null,
@@ -67,7 +68,7 @@ public record WalletTransactionCommand(
                 memberId,
                 WalletTransactionType.RENTAL_REFUND,
                 amount,
-                null,
+				null,
                 rentalId,
                 rentalItemId,
                 null,
@@ -78,7 +79,7 @@ public record WalletTransactionCommand(
 
     public static WalletTransactionCommand forDepositCancel(
             Long memberId,
-            Long depositId,
+            PgDeposit pgDeposit,
             BigDecimal amount,
 			String paymentKey
     ){
@@ -87,8 +88,8 @@ public record WalletTransactionCommand(
                 memberId,
                 WalletTransactionType.DEPOSIT_CANCEL,
                 amount,
-                depositId,
-                null,
+				pgDeposit,
+				null,
                 null,
                 null,
                 "예치금 충전 취소",

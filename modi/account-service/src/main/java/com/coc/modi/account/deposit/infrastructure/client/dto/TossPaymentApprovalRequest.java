@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 // Toss에서 요청하는 결제 승인 파라미터
 public record TossPaymentApprovalRequest(
         String paymentKey,
-        Long orderId,
+        String orderId,
         BigDecimal amount
 ) {
 }
