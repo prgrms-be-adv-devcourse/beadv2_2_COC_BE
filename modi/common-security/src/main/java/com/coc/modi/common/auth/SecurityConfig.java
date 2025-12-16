@@ -50,6 +50,8 @@ public class SecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(auth ->
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
+							.requestMatchers("/toss-payment.html").permitAll()
+							.requestMatchers("/payments/**").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 							.requestMatchers("/internal/**").permitAll()
