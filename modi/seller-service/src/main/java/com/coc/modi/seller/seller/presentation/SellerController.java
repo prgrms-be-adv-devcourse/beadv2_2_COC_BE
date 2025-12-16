@@ -34,23 +34,20 @@ public class SellerController {
 	private final SellerService sellerService;
 	private final SellerProductService sellerProductService;
 	
-	
 	@PostMapping
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
-																		   @AuthenticationPrincipal CustomMember member) {
-		
+																			@AuthenticationPrincipal CustomMember member) {
 		
 		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
-  
+		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
 	@GetMapping("/self")
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
-		
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
-  
+		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
 	
@@ -64,7 +61,6 @@ public class SellerController {
 																				@RequestParam(value = "page", required = false) Integer page,
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
-		
 		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.memberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
@@ -74,16 +70,14 @@ public class SellerController {
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> updateMySeller(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody SellerUpdateRequest request) {
 		
-		
 		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
-
+	
 	@GetMapping("/products/{productId}")
-	public ResponseEntity<ApiResponse<ProductSummaryResponse>> getProduct(@PathVariable Long productId,
-																		  @AuthenticationPrincipal CustomMember member) {
-
+	public ResponseEntity<ApiResponse<ProductSummaryResponse>> getProduct(@PathVariable Long productId) {
+		
 		ProductSummaryResponse response = sellerProductService.getProductSummary(productId);
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
