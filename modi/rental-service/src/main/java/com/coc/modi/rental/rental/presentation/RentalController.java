@@ -1,6 +1,7 @@
 package com.coc.modi.rental.rental.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.rental.rental.application.*;
 import com.coc.modi.rental.rental.application.dto.PayRentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
@@ -13,14 +14,20 @@ import org.springframework.format.annotation.DateTimeFormat;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/rentals")
+@Validated
 public class RentalController {
 	
 	private final RentalCreationService rentalCreationService;
@@ -30,98 +37,107 @@ public class RentalController {
 	private final RentalQueryService rentalQueryService;
 	
 	@PostMapping("/carts")
-	public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@RequestBody RentalFromCartRequest rentalFromCartRequest,
-																  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> createRentalFromCart(@Valid @RequestBody RentalFromCartRequest rentalFromCartRequest,
+																  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalCreationService.createRentalFromCart(rentalFromCartRequest.toCommand(memberId));
+		rentalCreationService.createRentalFromCart(rentalFromCartRequest.toCommand(member.memberId()));
 		
 		return ResponseEntity.status(201).body(ApiResponse.ok(null));
 	}
 	
 	@PostMapping
-	public ResponseEntity<ApiResponse<Void>> createRental(@RequestBody RentalRequest rentalRequest,
-														  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> createRental(@Valid @RequestBody RentalRequest rentalRequest,
+														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalCreationService.createRental(rentalRequest.toCommand(memberId));
+		rentalCreationService.createRental(rentalRequest.toCommand(member.memberId()));
 		
 		return ResponseEntity.status(201).body(ApiResponse.ok(null));
 	}
 	
 	@PatchMapping("/{rentalItemId}/accept")
-	public ResponseEntity<ApiResponse<Void>> acceptRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> acceptRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalDecisionService.acceptRentalItem(rentalItemId, memberId);
+		rentalDecisionService.acceptRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	@PatchMapping("/{rentalItemId}/reject")
-	public ResponseEntity<ApiResponse<Void>> rejectRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> rejectRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalDecisionService.rejectRentalItem(rentalItemId, memberId);
+		rentalDecisionService.rejectRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	@PostMapping("/{rentalId}/pay")
-	public ResponseEntity<ApiResponse<PayRentalResponse>> completePayment(@PathVariable(name = "rentalId") Long rentalId,
-																		  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<PayRentalResponse>> completePayment(@PathVariable(name = "rentalId") @Positive Long rentalId,
+																		  @AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalPaymentService.completePayment(rentalId, memberId)));
+		return ResponseEntity.ok(ApiResponse.ok(rentalPaymentService.completePayment(rentalId, member.memberId())));
 	}
 	
 	@PatchMapping("/{rentalItemId}/cancel")
-	public ResponseEntity<ApiResponse<Void>> cancelRentalItem(@PathVariable(name = "rentalItemId") Long rentalItemId,
-															  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> cancelRentalItem(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+															  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.cancelRentalItem(rentalItemId, memberId);
+		rentalLifecycleService.cancelRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	@PostMapping("/{rentalItemId}/return")
-	public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(@PathVariable(name = "rentalItemId") Long rentalItemId,
-																			@RequestParam Long memberId,
-																			@RequestBody RentalReturnRequest rentalReturnRequest) {
+	public ResponseEntity<ApiResponse<RentalReturnResponse>> completeReturn(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+																			@AuthenticationPrincipal CustomMember member,
+																			@Valid @RequestBody RentalReturnRequest rentalReturnRequest) {
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalLifecycleService.completeReturn(
-				rentalReturnRequest.toCommand(rentalItemId, memberId))));
+				rentalReturnRequest.toCommand(rentalItemId, member.memberId()))));
 	}
 	
 	@PostMapping("/{rentalItemId}/refund")
-	public ResponseEntity<ApiResponse<Void>> refundRental(@PathVariable(name = "rentalItemId") Long rentalItemId,
-														  @RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<Void>> refundRental(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.refundRentalItem(rentalItemId, memberId);
+		rentalLifecycleService.refundRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	@PostMapping("/{rentalItemId}/extend")
-	public ResponseEntity<ApiResponse<Void>> extendRental(@PathVariable(name = "rentalItemId") Long rentalItemId,
-														  @RequestParam Long memberId,
-														  @RequestBody ExtendRentalRequest request) {
+	public ResponseEntity<ApiResponse<Void>> extendRental(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
+														  @AuthenticationPrincipal CustomMember member,
+														  @Valid @RequestBody ExtendRentalRequest request) {
 		
-		rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, memberId));
+		rentalLifecycleService.extendRentalItem(request.toCommand(rentalItemId, member.memberId()));
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 	
 	@GetMapping("/{rentalId}")
-	public ResponseEntity<ApiResponse<RentalResponse>> getRentalDetails(@PathVariable(name = "rentalId") Long rentalId,
-																		@RequestParam Long memberId) {
+	public ResponseEntity<ApiResponse<RentalResponse>> getRentalDetails(@PathVariable(name = "rentalId") @Positive Long rentalId,
+																		@AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId)));
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.getRentalDetails(rentalId, member.memberId())));
 	}
 	
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<RentalResponse>>> searchRentals(
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-			@RequestParam(required = false) RentalStatus rentalStatus) {
+			@RequestParam(required = false) RentalStatus rentalStatus, @AuthenticationPrincipal CustomMember member) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus)));
+		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, member.memberId())));
+	}
+	
+	@PostMapping("/{rentalItemId}/rent")
+	public ResponseEntity<ApiResponse<Void>> startRenting(@PathVariable Long rentalItemId,
+														  @AuthenticationPrincipal CustomMember member) {
+		
+		rentalLifecycleService.stratRenting(rentalItemId, member.memberId());
+		
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

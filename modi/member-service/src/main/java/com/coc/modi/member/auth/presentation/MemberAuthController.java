@@ -1,18 +1,25 @@
 package com.coc.modi.member.auth.presentation;
 
-import com.coc.modi.member.auth.application.MemberAuthService;
-import com.coc.modi.member.auth.application.EmailVerificationService;
-import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
-import com.coc.modi.member.auth.presentation.dto.*;
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.member.auth.application.EmailVerificationService;
+import com.coc.modi.member.auth.application.MemberAuthService;
+import com.coc.modi.member.auth.application.PasswordResetService;
+import com.coc.modi.member.auth.application.dto.LogoutResponse;
+import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
+import com.coc.modi.member.auth.application.dto.TokenReissueResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmRequest;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationConfirmResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationConfirmResponse;
 import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendRequest;
-import com.coc.modi.member.auth.presentation.dto.EmailVerificationSendResponse;
+import com.coc.modi.member.auth.application.dto.EmailVerificationSendResponse;
 import com.coc.modi.member.auth.presentation.dto.MemberLoginRequest;
+import com.coc.modi.member.auth.presentation.dto.PasswordResetConfirmRequest;
+import com.coc.modi.member.auth.presentation.dto.PasswordResetRequest;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,19 +33,24 @@ public class MemberAuthController {
 	
 	private final MemberAuthService memberAuthService;
 	private final EmailVerificationService emailVerificationService;
+	private final PasswordResetService passwordResetService;
 	
 	// 로그인
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<MemberLoginResponse>> login(@RequestBody MemberLoginRequest request) {
+	public ResponseEntity<ApiResponse<?>> login(@Valid @RequestBody MemberLoginRequest request,
+												HttpServletRequest httpServletRequest) {
 		
-		MemberLoginResponse response = memberAuthService.login(request.toCommand());
+		boolean secureCookie = httpServletRequest.isSecure();
+		MemberLoginResponse response = memberAuthService.login(request.toCommand(), secureCookie);
 		
-		return ResponseEntity.ok(ApiResponse.ok(response));
+		return ResponseEntity.ok()
+				.header(HttpHeaders.SET_COOKIE, response.refreshCookie().toString())
+				.body(ApiResponse.ok(response.accessToken()));
 	}
 	
 	// 이메일 인증 코드 발송
 	@PostMapping("/email/verify/send")
-	public ResponseEntity<ApiResponse<EmailVerificationSendResponse>> sendEmailVerification(@RequestBody EmailVerificationSendRequest request) {
+	public ResponseEntity<ApiResponse<EmailVerificationSendResponse>> sendEmailVerification(@Valid @RequestBody EmailVerificationSendRequest request) {
 		
 		EmailVerificationSendResponse response = emailVerificationService.sendVerificationEmail(request.toCommand());
 		
@@ -47,10 +59,49 @@ public class MemberAuthController {
 	
 	// 이메일 인증 코드 검증
 	@PostMapping("/email/verify/confirm")
-	public ResponseEntity<ApiResponse<EmailVerificationConfirmResponse>> confirmEmailVerification(@RequestBody EmailVerificationConfirmRequest request) {
+	public ResponseEntity<ApiResponse<EmailVerificationConfirmResponse>> confirmEmailVerification(@Valid @RequestBody EmailVerificationConfirmRequest request) {
 		
 		EmailVerificationConfirmResponse response = emailVerificationService.confirmVerification(request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+	
+	// 비밀번호 재설정 코드 발송
+	@PostMapping("/password/reset/send")
+	public ResponseEntity<ApiResponse<Void>> sendPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+		
+		passwordResetService.sendResetCode(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(null));
+	}
+	
+	// 비밀번호 재설정
+	@PostMapping("/password/reset/confirm")
+	public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
+		
+		passwordResetService.resetPassword(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(null));
+	}
+	
+	@PostMapping("/reissue")
+	public ResponseEntity<ApiResponse<?>> reissue(HttpServletRequest request) {
+		
+		boolean secureCookie = request.isSecure();
+		TokenReissueResponse response = memberAuthService.reissue(request, secureCookie);
+		
+		return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, response.responseCookie().toString())
+				.body(ApiResponse.ok(response.accessToken()));
+	}
+	
+	@PostMapping("/logout")
+	public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest servletRequest) {
+		
+		boolean secureCookie = servletRequest.isSecure();
+		LogoutResponse response = memberAuthService.logout(servletRequest, secureCookie);
+		
+		return ResponseEntity.ok()
+				.header(HttpHeaders.SET_COOKIE, response.clear().toString())
+				.body(ApiResponse.ok(null));
 	}
 }

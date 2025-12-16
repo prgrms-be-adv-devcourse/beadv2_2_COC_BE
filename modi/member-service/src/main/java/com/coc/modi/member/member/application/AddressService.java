@@ -1,7 +1,6 @@
 package com.coc.modi.member.member.application;
 
 import com.coc.modi.member.member.application.dto.AddressCreateCommand;
-import com.coc.modi.member.member.application.dto.AddressListResponse;
 import com.coc.modi.member.member.application.dto.AddressResponse;
 import com.coc.modi.member.member.application.dto.AddressUpdateCommand;
 import com.coc.modi.member.member.domain.Address;
@@ -26,14 +25,12 @@ public class AddressService {
 
 	// 내 주소 조회
     @Transactional(readOnly = true)
-    public AddressListResponse getProfileAddresses(Long memberId) {
-
-        List<AddressResponse> addressResponses = addressRepository.findByMemberId(memberId)
-                .stream()
-                .map(AddressResponse::from)
-                .toList();
-
-        return AddressListResponse.from(addressResponses);
+    public List<AddressResponse> getProfileAddresses(Long memberId) {
+		
+        return addressRepository.findByMemberId(memberId)
+				.stream()
+				.map(AddressResponse::from)
+				.toList();
     }
 
 	// 내 주소 등록

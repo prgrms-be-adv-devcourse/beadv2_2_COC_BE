@@ -13,6 +13,6 @@ import com.coc.modi.product.product.application.dto.SellerResponse;
 )
 public interface SellerFeignClient {
 	
-	@GetMapping("/member/{memberId}/id")
-	SellerResponse findSellerById(@PathVariable("memberId") Long memberId);
+	@GetMapping("/by-member/{memberId}")
+	SellerResponse getSellerIdByMemberId(@PathVariable("memberId") Long memberId);
 }

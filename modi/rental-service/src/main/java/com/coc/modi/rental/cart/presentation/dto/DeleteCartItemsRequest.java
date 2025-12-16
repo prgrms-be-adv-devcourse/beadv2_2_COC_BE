@@ -4,9 +4,13 @@ import com.coc.modi.rental.cart.application.dto.RemoveCartItemsCommand;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public record DeleteCartItemsRequest(
-        Long memberId,
-        List<Long> cartItemIds
+		@NotNull @Positive Long memberId,
+		@NotEmpty List<@NotNull @Positive Long> cartItemIds
 ) {
 
     public RemoveCartItemsCommand toCommand() {

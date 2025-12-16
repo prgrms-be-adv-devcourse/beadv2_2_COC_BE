@@ -6,8 +6,12 @@ import com.coc.modi.rental.cart.application.dto.UpdateCartItemCommand;
 import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
+import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
+
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +32,7 @@ public class CartCommandService {
     public void addItem(AddCartItemCommand command) {
 
         validateDate(command.startDate(), command.endDate());
-        ProductResponseDto product = productFeignClient.getProducts(command.productId());
+        ProductResponseDto product = fetchProduct(command.productId());
 
         validateProductActive(product);
 
@@ -77,6 +81,15 @@ public class CartCommandService {
 
             throw new IllegalArgumentException("현재 판매중인 상품이 아닙니다. productId: "
                     + (product == null ? null : product.productId()));
+        }
+    }
+
+    private ProductResponseDto fetchProduct(Long productId) {
+
+        try {
+            return productFeignClient.getProducts(productId);
+        } catch (FeignException ex) {
+            throw new RentalException(ErrorCode.PRODUCT_INTERNAL_ERROR, "상품 서비스 호출에 실패했습니다.");
         }
     }
 }

@@ -1,11 +1,12 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.application.port.RentalPort;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
+
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
@@ -23,9 +24,8 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	private static final String STATUS_RETURNED = "RETURNED";
 	
-	private final RentalPort rentalPort;
+	private final RentalFeignClient rentalFeignClient;
 	private final SellerRepository sellerRepository;
-	private final String periodYm;
 	private final String startDate;
 	private final String endDate;
 	private final Long targetSellerId;
@@ -37,17 +37,15 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	private String lastCursor;
 	private final Deque<RentalItemInfo> buffer = new ArrayDeque<>();
 	
-	public SettlementRentalItemReader(RentalPort rentalPort,
+	public SettlementRentalItemReader(RentalFeignClient rentalFeignClient,
 									  SellerRepository sellerRepository,
-									  String periodYm,
 									  String startDate,
 									  String endDate,
 									  Long targetSellerId,
 									  Integer pageSize) {
 		
-		this.rentalPort = rentalPort;
+		this.rentalFeignClient = rentalFeignClient;
 		this.sellerRepository = sellerRepository;
-		this.periodYm = periodYm;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.targetSellerId = targetSellerId;
@@ -56,6 +54,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void open(ExecutionContext executionContext) throws ItemStreamException {
+		
 		this.sellerIds = loadSellerIds();
 		if (executionContext.containsKey(SELLER_INDEX)) {
 			this.sellerIndex = executionContext.getInt(SELLER_INDEX);
@@ -82,12 +81,12 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 			
 			if (buffer.isEmpty()) {
 				Long currentSellerId = sellerIds.get(sellerIndex);
-				RentalListResponse response = rentalPort.getRentals(
+				RentalListResponse response = rentalFeignClient.getRentals(
 						currentSellerId,
+						null,
 						STATUS_RETURNED,
 						startDate,
 						endDate,
-						null,
 						page,
 						pageSize
 				);
@@ -110,6 +109,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	@Override
 	public void update(ExecutionContext executionContext) throws ItemStreamException {
+		
 		executionContext.putInt(SELLER_INDEX, sellerIndex);
 		executionContext.putInt(PAGE, page);
 		executionContext.putString(LAST_CURSOR, lastCursor);
@@ -142,6 +142,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	}
 	
 	private void moveToNextSeller() {
+		
 		sellerIndex++;
 		page = 0;
 		lastCursor = null;

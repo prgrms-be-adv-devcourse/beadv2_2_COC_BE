@@ -7,7 +7,6 @@ import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.domain.QRental;
 import com.coc.modi.rental.rental.domain.QRentalItem;
-import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -27,14 +26,22 @@ import java.util.List;
 public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 	
 	private final JPAQueryFactory queryFactory;
+	private static final List<RentalItemStatus> UNAVAILABLE_STATUSES = List.of(
+			RentalItemStatus.REQUESTED,
+			RentalItemStatus.ACCEPTED,
+			RentalItemStatus.RENTING,
+			RentalItemStatus.PAID
+	);
 	
 	@Override
-	public List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus) {
+	public List<Rental> search(LocalDate startDate, LocalDate endDate, RentalStatus rentalStatus, Long memberId) {
 		
 		QRental rental = QRental.rental;
 		QRentalItem rentalItem = QRentalItem.rentalItem;
 		
 		BooleanBuilder builder = new BooleanBuilder();
+		
+		builder.and(rental.memberId.eq(memberId));
 		
 		if (startDate != null) {
 			builder.and(rentalItem.startDate.goe(startDate));
@@ -156,22 +163,41 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 	
 		QRentalItem rentalItem = QRentalItem.rentalItem;
 		
-		List<RentalItemStatus> unavailableStatuses = List.of(
-				RentalItemStatus.REQUESTED,
-				RentalItemStatus.ACCEPTED,
-				RentalItemStatus.RENTING
-		);
-		
 		return queryFactory
 				.select(rentalItem.productId)
 				.from(rentalItem)
 				.where(
 						rentalItem.productId.in(productIds),
-						rentalItem.status.in(unavailableStatuses),
+						rentalItem.status.in(UNAVAILABLE_STATUSES),
 						rentalItem.startDate.loe(endDate),
 						rentalItem.endDate.goe(startDate)
 				)
 				.distinct()
 				.fetch();
+	}
+	
+	@Override
+	public boolean existsOverlappingRentalItem(Long productId, LocalDate startDate, LocalDate endDate, Long excludeRentalItemId) {
+		
+		QRentalItem rentalItem = QRentalItem.rentalItem;
+		
+		BooleanBuilder builder = new BooleanBuilder();
+		builder.and(rentalItem.productId.eq(productId));
+		builder.and(rentalItem.status.in(UNAVAILABLE_STATUSES));
+		builder.and(rentalItem.startDate.loe(endDate));
+		builder.and(rentalItem.endDate.goe(startDate));
+		
+		if (excludeRentalItemId != null) {
+			
+			builder.and(rentalItem.id.ne(excludeRentalItemId));
+		}
+		
+		Integer exists = queryFactory
+				.selectOne()
+				.from(rentalItem)
+				.where(builder)
+				.fetchFirst();
+		
+		return exists != null;
 	}
 }

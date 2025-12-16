@@ -1,8 +1,8 @@
 // 모든 서비스 모듈이 공통으로 쓰는 루트 빌드 스크립트.
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.8'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.5.8' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 ext {
@@ -77,14 +77,25 @@ project(':common-security') {
         implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     }
 }
+
+
+project(':common-kafka') {
+
+    dependencies {
+
+        implementation 'org.springframework.kafka:spring-kafka'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    }
+}
+
 project(':common-openapi') {
 
     dependencies {
 
-        implementation 'org.springframework.boot:spring-boot-autoconfigure'
-        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
-
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
     }
 }
 
@@ -113,6 +124,8 @@ configure([
 
         implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+        implementation 'io.github.openfeign:feign-httpclient'
+
         // 타입 안전한 JPA 쿼리를 위한 Querydsl.
         implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
         annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
@@ -128,7 +141,5 @@ configure([
         implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
         implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-        // API 문서와 보안/JWT 지원.
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
     }
 }

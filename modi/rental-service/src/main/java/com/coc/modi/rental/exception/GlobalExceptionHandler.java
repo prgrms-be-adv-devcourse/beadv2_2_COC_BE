@@ -3,6 +3,7 @@ package com.coc.modi.rental.exception;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseException;
 import com.coc.modi.common.ErrorCode;
+import com.coc.modi.rental.rental.exception.RentalException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.validation.BindException;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,6 +23,20 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 	
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+	
+	
+	@ExceptionHandler(RentalException.class)
+	public ResponseEntity<ApiResponse<?>> handleRentalException(RentalException ex) {
+		
+		ErrorCode errorCode = ex.getErrorCode();
+		String message = ex.getDetailMessage();
+		
+		log.warn("Rental exception: code={}, message={}", errorCode.getCode(), message);
+		
+		return ResponseEntity
+				.status(errorCode.getStatus())
+				.body(ApiResponse.error(errorCode, message));
+	}
 	
 	@ExceptionHandler(BaseException.class)
 	public ResponseEntity<ApiResponse<?>> handleBaseException(BaseException ex) {
@@ -59,6 +77,37 @@ public class GlobalExceptionHandler {
 				.orElse(ErrorCode.INVALID_INPUT.getDefaultMessage());
 		
 		log.warn("Validation error: {}", message);
+		return buildResponse(ErrorCode.INVALID_INPUT, message);
+	}
+	
+	@ExceptionHandler(BindException.class)
+	public ResponseEntity<ApiResponse<?>> handleBindException(BindException ex) {
+		
+		String message = Optional.ofNullable(ex.getBindingResult())
+				.map(bindingResult -> bindingResult.getFieldErrors()
+						.stream()
+						.map(error -> error.getField() + ": " + error.getDefaultMessage())
+						.collect(Collectors.joining(", ")))
+				.filter(str -> !str.isBlank())
+				.orElse(ErrorCode.INVALID_INPUT.getDefaultMessage());
+		
+		log.warn("Bind error: {}", message);
+		return buildResponse(ErrorCode.INVALID_INPUT, message);
+	}
+	
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ApiResponse<?>> handleConstraintViolation(ConstraintViolationException ex) {
+		
+		String message = ex.getConstraintViolations().stream()
+				.map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+				.collect(Collectors.joining(", "));
+		
+		if (message.isBlank()) {
+			
+			message = ErrorCode.INVALID_INPUT.getDefaultMessage();
+		}
+		
+		log.warn("Constraint violation: {}", message);
 		return buildResponse(ErrorCode.INVALID_INPUT, message);
 	}
 	

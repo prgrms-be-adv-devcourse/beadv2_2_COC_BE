@@ -1,7 +1,5 @@
 package com.coc.modi.rental.rental.presentation;
 
-import java.util.List;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,23 +15,27 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfoListRe
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/rentals")
+@Validated
 public class RentalInternalController {
 	
 	private final RentalQueryService queryService;
 
 	@GetMapping
-	public RentalItemInfoListResponse getRentalItemList(@ModelAttribute RentalInternalSearchCondition condition,
+	public RentalItemInfoListResponse getRentalItemList(@Valid @ModelAttribute RentalInternalSearchCondition condition,
 															  Pageable pageable) {
 		
 		return queryService.getRentalItemList(condition, pageable);
 	}
 	
 	@PostMapping("/unavailable-products")
-	public UnavailableProductsResponse getUnavailableProducts(@RequestBody UnavailableProductsRequest unavailableProductsRequest) {
+	public UnavailableProductsResponse getUnavailableProducts(@Valid @RequestBody UnavailableProductsRequest unavailableProductsRequest) {
 		
 		return queryService.getUnavailableProducts(unavailableProductsRequest);
 	}

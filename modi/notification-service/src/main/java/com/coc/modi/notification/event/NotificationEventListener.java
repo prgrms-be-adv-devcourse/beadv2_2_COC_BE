@@ -3,8 +3,9 @@ package com.coc.modi.notification.event;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import com.coc.modi.common.NotificationEvent;
 import com.coc.modi.notification.application.NotificationApplicationService;
+import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.topic.KafkaTopics;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +16,7 @@ public class NotificationEventListener {
 	private final NotificationApplicationService notificationApplicationService;
 	
 	@KafkaListener(
-			topics = "notification-events",
+			topics = KafkaTopics.NOTIFICATION_EVENTS,
 			groupId = "notification-service",
 			containerFactory = "notificationKafkaListenerContainerFactory"
 	)
