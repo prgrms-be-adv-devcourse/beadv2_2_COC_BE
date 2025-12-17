@@ -29,7 +29,7 @@
 
     async function notifyFailure() {
         try {
-            const response = await fetch('/account-service/api/v1/payments/fail', {
+            const response = await fetch('/account-service/api/deposits/payments/fail', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
