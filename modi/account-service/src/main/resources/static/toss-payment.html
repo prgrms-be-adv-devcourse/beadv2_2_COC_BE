@@ -47,7 +47,7 @@
                 : `Bearer ${token}`;
 
             // 서버에서 설정값 가져오기
-            const configRes = await fetch('/api/deposits/pg/config', {
+            const configRes = await fetch('/account-service/api/deposits/pg/config', {
                 headers: {
                     'Authorization': authorization
                 }
@@ -59,7 +59,7 @@
             document.getElementById('pay-button').addEventListener('click', async function () {
                 try {
                     // 서버에 결제 요청 생성
-                    const requestRes = await fetch('/api/deposits/pg/request', {
+                    const requestRes = await fetch('/account-service/api/deposits/pg/request', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -74,8 +74,8 @@
                         amount: order.amount,
                         orderId: order.orderId,
                         orderName: '예치금 충전',
-                        successUrl: config.successUrl,
-                        failUrl: config.failUrl
+                        successUrl: "http://localhost:8000/account-service/payments/success.html",
+                        failUrl: "http://localhost:8000/account-service/payments/fail.html"
                     });
                 } catch (e) {
                     console.error('결제 요청 준비 실패:', e);
