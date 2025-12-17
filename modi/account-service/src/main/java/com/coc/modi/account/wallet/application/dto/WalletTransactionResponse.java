@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record WalletTransactionResponse(
+		
         WalletTransactionType txType,
         BigDecimal amount,
         BigDecimal balanceAfter,
@@ -19,7 +20,11 @@ public record WalletTransactionResponse(
 ) {
 
     public static WalletTransactionResponse from(WalletTransaction tx) {
-
+		
+		var pgDeposit = tx.getPgDeposit(); // null일 수 있음
+		
+		String pgTid = pgDeposit != null ? pgDeposit.getPgTid() : null;
+		
         return new WalletTransactionResponse(
                 tx.getTxType(),
                 tx.getAmount(),
@@ -29,7 +34,7 @@ public record WalletTransactionResponse(
                 tx.getDescription(),
                 tx.getCreatedAt(),
 				tx.getPaymentKey(),
-				tx.getPgDeposit().getPgTid()
+				pgTid
         );
     }
 }

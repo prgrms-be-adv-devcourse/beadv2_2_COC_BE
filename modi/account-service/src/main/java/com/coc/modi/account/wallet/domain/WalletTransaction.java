@@ -9,7 +9,11 @@ import java.math.BigDecimal;
 
 @Getter
 @Entity
-@Table(name = "wallet_transaction", schema = "public")
+@Table(
+		name = "wallet_transaction",
+		schema = "public",
+		uniqueConstraints = @UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"})
+)
 public class WalletTransaction extends BaseEntity {
 
     @Id
@@ -31,8 +35,8 @@ public class WalletTransaction extends BaseEntity {
 
     @Column(name = "balance_after", nullable = false, precision = 18, scale = 2)
     private BigDecimal balanceAfter;
-
-	@OneToOne(cascade = CascadeType.ALL)
+	
+	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pg_deposit_id")
     private PgDeposit pgDeposit;
 
