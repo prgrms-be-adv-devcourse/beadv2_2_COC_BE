@@ -88,7 +88,7 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit.getId(), deposit.getAmount(), deposit.getPaymentKey());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -149,7 +149,7 @@ public class DepositService {
         walletCommandService.createTransactionAndUpdateBalance(
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
-                        deposit.getId(),
+                        deposit,
                         cancelAmount,
 						deposit.getPaymentKey()
                 )
