@@ -31,6 +31,7 @@ public enum ErrorCode {
 	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다."),
 	
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-404", "회원 정보를 찾을 수 없습니다."),
+	MEMER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "MEMBER-403", "사용 불가능한 회원입니다."),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-EMAIL-409", "이미 사용 중인 이메일입니다."),
 	NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-NICKNAME-409", "이미 사용 중인 닉네임입니다."),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-PASSWORD-400", "비밀번호가 일치하지 않습니다."),

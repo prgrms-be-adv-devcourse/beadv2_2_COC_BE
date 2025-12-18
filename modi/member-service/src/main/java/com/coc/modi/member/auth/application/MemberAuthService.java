@@ -9,6 +9,8 @@ import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.member.auth.application.dto.TokenReissueResponse;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.domain.MemberStatus;
+import com.coc.modi.member.member.exception.MemberAccessDeniedException;
 import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.MemberPasswordMismatchException;
@@ -39,6 +41,16 @@ public class MemberAuthService {
 		if (!passwordEncoder.matches(command.password(), member.getPassword())) {
 			
 			throw new MemberPasswordMismatchException("비밀번호가 일치하지 않습니다.");
+		}
+		
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			
+			throw new MemberAccessDeniedException("탈퇴한 회원입니다.");
+		}
+		
+		if (member.getStatus() == MemberStatus.INACTIVE) {
+			
+			throw new MemberAccessDeniedException("정지된 회원입니다.");
 		}
 		
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
