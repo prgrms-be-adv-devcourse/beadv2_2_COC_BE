@@ -6,6 +6,7 @@ import com.coc.modi.rental.rental.application.*;
 import com.coc.modi.rental.rental.application.dto.PayRentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.application.dto.RentalReturnResponse;
+import com.coc.modi.rental.rental.application.dto.UnavailableDatesResponse;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.presentation.dto.*;
 
@@ -19,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -93,8 +95,7 @@ public class RentalController {
 																			@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody RentalReturnRequest rentalReturnRequest) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(rentalLifecycleService.completeReturn(
-				rentalReturnRequest.toCommand(rentalItemId, member.memberId()))));
+		return ResponseEntity.ok(ApiResponse.ok(rentalLifecycleService.completeReturn(rentalReturnRequest.toCommand(rentalItemId, member.memberId()))));
 	}
 	
 	@PostMapping("/{rentalItemId}/refund")
@@ -124,10 +125,10 @@ public class RentalController {
 	}
 	
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<RentalResponse>>> searchRentals(
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-			@RequestParam(required = false) RentalStatus rentalStatus, @AuthenticationPrincipal CustomMember member) {
+	public ResponseEntity<ApiResponse<List<RentalResponse>>> searchRentals(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+																		   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+																		   @RequestParam(required = false) RentalStatus rentalStatus,
+																		   @AuthenticationPrincipal CustomMember member) {
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentalQueryService.searchRentals(startDate, endDate, rentalStatus, member.memberId())));
 	}
@@ -139,5 +140,14 @@ public class RentalController {
 		rentalLifecycleService.stratRenting(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
+	}
+	
+	@GetMapping("/{productId}/unavailable-dates")
+	public ResponseEntity<ApiResponse<UnavailableDatesResponse>> getUnavailableDates(@PathVariable Long productId,
+																					 @RequestParam("ym") @DateTimeFormat(pattern = "yyyy-MM") YearMonth ym) {
+		
+		List<LocalDate> dates = rentalQueryService.findUnavailableDates(productId, ym);
+		
+		return ResponseEntity.ok(ApiResponse.ok(new UnavailableDatesResponse(productId, ym, dates)));
 	}
 }
