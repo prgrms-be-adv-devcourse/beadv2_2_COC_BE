@@ -70,6 +70,12 @@ public class MemberAuthService {
 		}
 		
 		Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+		
+		if (!refreshTokenService.matches(memberId, refreshToken)) {
+			
+			throw new MemberException(ErrorCode.UNAUTHORIZED);
+		}
+		
 		String role = jwtTokenProvider.getRole(refreshToken);
 		String name = jwtTokenProvider.getName(refreshToken);
 		String email = jwtTokenProvider.getEmail(refreshToken);
@@ -94,7 +100,11 @@ public class MemberAuthService {
 		if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
 			
 			Long memberId = jwtTokenProvider.getMemberId(refreshToken);
-			refreshTokenService.delete(memberId);
+			
+			if (refreshTokenService.matches(memberId, refreshToken)) {
+				
+				refreshTokenService.delete(memberId);
+			}
 		}
 		
 		return new LogoutResponse(refreshCookieManager.clear(secureCookie));
