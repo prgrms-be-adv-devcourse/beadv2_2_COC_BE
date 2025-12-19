@@ -12,10 +12,9 @@ import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.exception.RentalException;
-import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
+import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -35,7 +34,7 @@ public class RentalCreationService {
 	
 	private final RentalRepository rentalRepository;
 	private final CartRepository cartRepository;
-	private final ProductFeignClient productFeignClient;
+	private final ProductClientAdapter productClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
 	
@@ -144,11 +143,7 @@ public class RentalCreationService {
 	
 	private List<ProductResponseDto> fetchProducts(List<Long> productIds) {
 		
-		try {
-			return productFeignClient.getProducts(productIds);
-		} catch (FeignException ex) {
-			throw new RentalException(ErrorCode.PRODUCT_INTERNAL_ERROR, "상품 서비스 호출에 실패했습니다.");
-		}
+		return productClientAdapter.getProducts(productIds);
 	}
 	
 	private void validateRentalPeriod(LocalDate startDate, LocalDate endDate, String ref) {

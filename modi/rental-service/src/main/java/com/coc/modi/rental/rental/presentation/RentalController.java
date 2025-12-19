@@ -102,7 +102,7 @@ public class RentalController {
 	public ResponseEntity<ApiResponse<Void>> refundRental(@PathVariable(name = "rentalItemId") @Positive Long rentalItemId,
 														  @AuthenticationPrincipal CustomMember member) {
 		
-		rentalLifecycleService.refundRentalItem(rentalItemId, member.memberId());
+		rentalPaymentService.refundRentalItem(rentalItemId, member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

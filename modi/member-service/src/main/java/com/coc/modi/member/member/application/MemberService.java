@@ -20,9 +20,8 @@ import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
-import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
+import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +39,7 @@ public class MemberService {
 	
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final AccountFeignClient accountFeignClient;
+	private final AccountClientAdapter accountClientAdapter;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationService emailVerificationService;
 	
@@ -75,8 +74,8 @@ public class MemberService {
 		// 회원 지갑 생성 요청
 		try {
 			
-			accountFeignClient.createWallet(saved.getId());
-		} catch (FeignException ex) {
+			accountClientAdapter.createWallet(saved.getId());
+		} catch (Exception ex) {
 			
 			log.error("Failed to create wallet for memberId={}", saved.getId(), ex);
 			
