@@ -1,9 +1,9 @@
 package com.coc.modi.seller.seller.application;
 
-import com.coc.modi.seller.application.SellerRentalService;
-import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.exception.SellerDuplicateException;
 import com.coc.modi.seller.exception.SellerNotFoundException;
+import com.coc.modi.seller.infrastructure.client.member.MemberFeignClient;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
@@ -20,8 +20,9 @@ public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final SellerRentalService sellerRentalService;
-
-    @Transactional(readOnly = true)
+	private final MemberFeignClient memberFeignClient;
+	
+	@Transactional(readOnly = true)
     public SellerDetailResponse getSeller(Long sellerId) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + sellerId));
@@ -30,6 +31,7 @@ public class SellerService {
 
     @Transactional(readOnly = true)
     public SellerDetailResponse getSellerByMemberId(Long memberId) {
+		
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. memberId=" + memberId));
         return SellerDetailResponse.from(seller);
@@ -37,6 +39,7 @@ public class SellerService {
 
     @Transactional
     public SellerDetailResponse registerSeller(SellerCreateCommand command) {
+		
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new SellerDuplicateException("이미 등록된 판매자입니다. memberId=" + command.memberId());
         }
@@ -49,6 +52,9 @@ public class SellerService {
         );
 
         Seller saved = sellerRepository.save(seller);
+		
+		memberFeignClient.changeMemberRole(seller.getMemberId());
+		
         return SellerDetailResponse.from(saved);
     }
 
@@ -77,8 +83,10 @@ public class SellerService {
                                                    String endDate,
                                                    Integer page,
                                                    Integer size) {
+		
         Seller seller = sellerRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. memberId=" + memberId));
+		
         return sellerRentalService.getSellerRentals(
                 seller.getId(),
                 productId,

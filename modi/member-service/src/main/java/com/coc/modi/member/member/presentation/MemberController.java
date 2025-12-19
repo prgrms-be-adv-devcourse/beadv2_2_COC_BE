@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +36,7 @@ public class MemberController {
 	@GetMapping("/profile")
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> getProfile(@AuthenticationPrincipal CustomMember member) {
 		
-		MemberProfileResponse response = memberService.getProfile(member.getMemberId());
+		MemberProfileResponse response = memberService.getProfile(member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
@@ -47,7 +46,7 @@ public class MemberController {
 	public ResponseEntity<ApiResponse<MemberProfileResponse>> updateProfile(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody MemberUpdateRequest request) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(memberService.updateProfile(request.toCommand(member.getMemberId()))));
+		return ResponseEntity.ok(ApiResponse.ok(memberService.updateProfile(request.toCommand(member.memberId()))));
 	}
 	
 	// 비밀번호 수정
@@ -56,7 +55,7 @@ public class MemberController {
 															@Valid @RequestBody MemberPasswordUpdateRequest request) {
 		
 		
-		memberService.updatePassword(request.toCommand(member.getMemberId()));
+		memberService.updatePassword(request.toCommand(member.memberId()));
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -65,7 +64,7 @@ public class MemberController {
 	@DeleteMapping
 	public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal CustomMember member) {
 		
-		memberService.deleteMember(member.getMemberId());
+		memberService.deleteMember(member.memberId());
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

@@ -1,5 +1,6 @@
 package com.coc.modi.member.member.application;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.EmailVerificationService;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
@@ -14,8 +15,10 @@ import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
 import com.coc.modi.member.member.exception.MemberEmailMismatchException;
+import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
+import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
 
@@ -45,9 +48,16 @@ public class MemberService {
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
+		// 중복 이메일인지 확인
 		if (memberRepository.existsByEmail(command.email())) {
 			
 			throw new EmailDuplicatedException(command.email());
+		}
+		
+		// 중복 휴대폰 번호인지 확인
+		if (memberRepository.existsByPhone(command.phone())) {
+			
+			throw new PhoneDuplicatedException(command.phone());
 		}
 		
 		String encodedPassword = passwordEncoder.encode(command.password());
@@ -57,7 +67,7 @@ public class MemberService {
 				encodedPassword,
 				command.name(),
 				command.phone(),
-				MemberRole.USER
+				MemberRole.MEMBER
 		);
 		
 		Member saved = memberRepository.save(member);
@@ -177,4 +187,14 @@ public class MemberService {
 		emailVerificationCodeStore.deleteCode(email);
 	}
 	
+	@Transactional
+	public void updateRole(Long memberId) {
+		
+		Member member = getMemberOrThrow(memberId);
+		
+		if (member.getRole() == MemberRole.SELLER) {
+			
+			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
+		}
+	}
 }

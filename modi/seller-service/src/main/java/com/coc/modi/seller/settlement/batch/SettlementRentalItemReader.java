@@ -1,8 +1,8 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.application.port.RentalPort;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalListResponse;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
@@ -24,7 +24,7 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	
 	private static final String STATUS_RETURNED = "RETURNED";
 	
-	private final RentalPort rentalPort;
+	private final RentalFeignClient rentalFeignClient;
 	private final SellerRepository sellerRepository;
 	private final String startDate;
 	private final String endDate;
@@ -37,14 +37,14 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 	private String lastCursor;
 	private final Deque<RentalItemInfo> buffer = new ArrayDeque<>();
 	
-	public SettlementRentalItemReader(RentalPort rentalPort,
+	public SettlementRentalItemReader(RentalFeignClient rentalFeignClient,
 									  SellerRepository sellerRepository,
 									  String startDate,
 									  String endDate,
 									  Long targetSellerId,
 									  Integer pageSize) {
 		
-		this.rentalPort = rentalPort;
+		this.rentalFeignClient = rentalFeignClient;
 		this.sellerRepository = sellerRepository;
 		this.startDate = startDate;
 		this.endDate = endDate;
@@ -81,12 +81,12 @@ public class SettlementRentalItemReader implements ItemStreamReader<RentalItemIn
 			
 			if (buffer.isEmpty()) {
 				Long currentSellerId = sellerIds.get(sellerIndex);
-				RentalListResponse response = rentalPort.getRentals(
+				RentalListResponse response = rentalFeignClient.getRentals(
 						currentSellerId,
+						null,
 						STATUS_RETURNED,
 						startDate,
 						endDate,
-						null,
 						page,
 						pageSize
 				);

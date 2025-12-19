@@ -3,27 +3,33 @@ package com.coc.modi.product.product.application;
 import com.coc.modi.product.product.application.dto.ProductBulkResponse;
 import com.coc.modi.product.product.application.dto.ProductCreateCommand;
 import com.coc.modi.product.product.application.dto.ProductDetailResponse;
+import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.product.application.support.SellerIdResolver;
 import com.coc.modi.product.product.domain.Product;
+import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.product.application.dto.SellerResponse;
-import com.coc.modi.product.product.infrastructure.client.SellerFeignClient;
 import com.coc.modi.product.search.application.ProductIndexService;
 import com.coc.modi.product.search.application.ProductSearchPort;
 import com.coc.modi.product.search.domain.ProductSortType;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,8 +39,9 @@ public class ProductService {
 	
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
-	private final SellerFeignClient sellerFeignClient;
+	private final SellerIdResolver sellerIdResolver;
 	private final ProductIndexService productIndexService;
+	private final ProductImageRepository productImageRepository;
 	
 	// 3-1. 상품 목록 조회 검색 기능
 	@Transactional(readOnly = true)
@@ -46,12 +53,37 @@ public class ProductService {
 		return productSearchPort.searchProducts(condition, cursor, size, sortType);
 	}
 	
+	// 사용자의 판매 리스트 조회
+	public Page<ProductListResponse> searchSellerProducts(Long memberId, Pageable pageable) {
+		
+		Long sellerId = sellerIdResolver.getSellerId(memberId);
+		
+		Page<Product> products = productRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+		
+		List<Long> thumbnailIds = products.getContent().stream().map(Product::getThumbnailImageId).toList();
+		
+		Map<Long, String> thumbnailUrlMap = productImageRepository.findUrlMapByIds(thumbnailIds);
+		
+		return products.map(p -> ProductListResponse.fromProduct(p, thumbnailUrlMap.get(p.getThumbnailImageId())));
+	
+	}
+	
 	// 3-2. 상품 상세 조회
 	@Transactional(readOnly = true)
-	public ProductDetailResponse getProductDetail(Long productId) {
+	public ProductDetailResponse getProductDetail(Long memberId, Long productId) {
 		
-		Product product = productRepository.findById(productId)
+		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
+		
+		if (product.getStatus() == ProductStatus.INACTIVE) {
+			
+			Long sellerId = sellerIdResolver.getSellerId(memberId);
+			
+			if (!Objects.equals(product.getSellerId(), sellerId)) {
+				
+				throw new ProductAccessDeniedException("접근");
+			}
+		}
 		
 		return ProductDetailResponse.from(product);
 	}
@@ -60,7 +92,7 @@ public class ProductService {
 	@Transactional
 	public ProductDetailResponse createProduct(ProductCreateCommand command) {
 		
-		Long sellerId = getSellerId(command.memberId());
+		Long sellerId = sellerIdResolver.getSellerId(command.memberId());
 		
 		Product product = Product.create(
 				sellerId,
@@ -83,9 +115,9 @@ public class ProductService {
 	@Transactional
 	public ProductDetailResponse updateProduct(ProductUpdateCommand command) {
 		
-		Long sellerId = getSellerId(command.memberId());
+		Long sellerId = sellerIdResolver.getSellerId(command.memberId());
 		
-		Product product = productRepository.findById(command.productId())
+		Product product = productRepository.findByIdAndStatusNot(command.productId(), ProductStatus.DELETE)
 				.orElseThrow(() -> new ProductNotFoundException(command.productId()));
 		
 		if (!sellerId.equals(product.getSellerId())) {
@@ -97,51 +129,21 @@ public class ProductService {
 				command.pricePerDay(),
 				command.category());
 		
-		boolean hasNewImage = false;
-		
 		//이미지 변경 사항 반영 (null값인 경우 이미지 변동사항 없음)
 		if (command.images() != null) {
-			
-			hasNewImage = command.images().stream().anyMatch(spec -> spec.imageId() == null);
 			
 			product.syncImages(command.images().stream()
 					.map(ProductImageSpec::from)
 					.toList());
 		}
 		
-		if (hasNewImage) {
-			
-			productRepository.flush();
-		}
+		productRepository.flush();
 		
 		product.refreshThumbnailImage();
 		
 		productIndexService.index(product);
 		
 		return ProductDetailResponse.from(product);
-	}
-	
-	// sellerId 조회
-	private Long getSellerId(Long memberId) {
-		
-		try {
-			SellerResponse sellerResponse =
-					sellerFeignClient.getSellerIdByMemberId(memberId);
-			
-			if (sellerResponse == null || sellerResponse.sellerId() == null) {
-				throw new ProductInvalidInputException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
-			}
-			
-			return sellerResponse.sellerId();
-			
-		} catch (feign.FeignException.NotFound e) {
-			
-			throw new ProductInvalidInputException("판매자 정보가 등록되지 않았습니다. memberId: " + memberId);
-			
-		} catch (feign.FeignException e) {
-			
-			throw new ProductInvalidInputException("판매자 서비스 호출 중 오류가 발생했습니다.");
-		}
 	}
 	
 	// 내부 api

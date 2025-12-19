@@ -13,15 +13,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProductIndexService {
 	
-	private final ProductSearchPort searchPort;
-	private final ProductImageRepository imageRepository;
+	private final ProductSearchPort productSearchPort;
+	private final ProductImageRepository productImageRepository;
 	
 	public void index(Product product) {
 		
 		String thumbnailUrl = resolveThumbnailUrl(product);
 		ProductDocument doc = ProductDocument.from(product, thumbnailUrl);
 		
-		searchPort.index(doc);
+		productSearchPort.index(doc);
 	}
 	
 	public String resolveThumbnailUrl(Product product) {
@@ -33,7 +33,7 @@ public class ProductIndexService {
 			return null;
 		}
 		
-		return imageRepository.findById(thumbnailId)
+		return productImageRepository.findById(thumbnailId)
 				.map(ProductImage::getUrl)
 				.orElse(null);
 	}

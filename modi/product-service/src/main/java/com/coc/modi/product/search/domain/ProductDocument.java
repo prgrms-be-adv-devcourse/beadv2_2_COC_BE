@@ -11,10 +11,11 @@ import org.springframework.data.elasticsearch.annotations.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 @Getter
 @NoArgsConstructor
-@Document(indexName = "products", createIndex = false) // ES 인덱스 이름
+@Document(indexName = "products", createIndex = true) // ES 인덱스 이름
 public class ProductDocument {
 	
 	@Id
@@ -46,7 +47,7 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String thumbnailUrl;
 	
-	@Field(type = FieldType.Date, format = DateFormat.strict_date_optional_time_nanos)
+	@Field(type = FieldType.Date, format = DateFormat.date_time)
 	private OffsetDateTime createdAt;
 	
 	public ProductDocument(Long id,
@@ -74,7 +75,9 @@ public class ProductDocument {
 		
 		OffsetDateTime createdAt = null;
 		if (product.getCreatedAt() != null) {
-			createdAt = product.getCreatedAt().atOffset(ZoneOffset.of("+09:00"));
+			createdAt = product.getCreatedAt()
+					.atOffset(ZoneOffset.ofHours(9))
+					.truncatedTo(ChronoUnit.MILLIS);
 		}
 		
 		return new ProductDocument(

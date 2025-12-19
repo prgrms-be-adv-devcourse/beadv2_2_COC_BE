@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.application.port.RentalPort;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
 import com.coc.modi.seller.exception.SettlementInputInvalidException;
@@ -32,7 +32,7 @@ public class SettlementBatchJobConfig {
 	private final SettlementBatchJobListener jobListener;
 	private final SettlementBatchStepListener stepListener;
 	private final SettlementAggregationService settlementAggregationService;
-	private final RentalPort rentalPort;
+	private final RentalFeignClient rentalFeignClient;
 	private final SellerRepository sellerRepository;
 	
 	@Value("${settlement.batch.chunk-size:50}")
@@ -88,7 +88,7 @@ public class SettlementBatchJobConfig {
 			throw new SettlementInputInvalidException("startDate and endDate are required");
 		}
 		return new SettlementRentalItemReader(
-				rentalPort,
+				rentalFeignClient,
 				sellerRepository,
 				startDate,
 				endDate,
