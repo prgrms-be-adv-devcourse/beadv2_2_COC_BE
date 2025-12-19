@@ -38,10 +38,10 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 	@Value("${cloud.aws.s3.dir:}")
 	private String dir;
 	
-	@Value("${product.upload.max-bytes:5242880}")
+	@Value("${product.upload.max-bytes:512000}")
 	private long maxBytes;
 	
-	@Value("#{${product.upload.allowed-mime:{'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp'}}}")
+	@Value("#{${product.upload.allowed-mime:{'image/webp':'.webp'}}}")
 	private Map<String, String> allowedMime;
 	
 	private static final Pattern DIR_PATTERN = Pattern.compile("^[a-zA-Z0-9/_-]{1,50}$");
@@ -55,12 +55,12 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 		
 		byte[] bytes = toBytes(file);
 		
-		String detectedMime = detectMime(bytes, file.getOriginalFilename());
+		String detectedMime = detectMime(bytes);
 		String ext = allowedMime.get(detectedMime);
 		
 		if (ext == null) {
 			
-			throw new ProductInvalidInputException("허용되지 않는 파일 형식: " + detectedMime);
+			throw new ProductInvalidInputException("이미지는 WebP 형식만 업로드할 수 있습니다.");
 		}
 		
 		String key = buildKey(safeDirName, ext);
@@ -92,11 +92,11 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 		}
 	}
 	
-	private String detectMime(byte[] bytes, String originalFilename) {
+	private String detectMime(byte[] bytes) {
 		
 		try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
 			
-			return TIKA.detect(bais, originalFilename);
+			return TIKA.detect(bais);
 		} catch (IOException e) {
 			
 			throw new ProductInvalidInputException("파일 MIME 판정에 실패했습니다.");
