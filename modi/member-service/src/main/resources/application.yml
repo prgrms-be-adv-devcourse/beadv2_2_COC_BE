@@ -2,7 +2,7 @@ spring:
   application:
     name: member-service
   config:
-    import: "optional:configserver:"
+    import: configserver:http://localhost:8888
 
   cloud:
     config:
@@ -13,4 +13,4 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URI}
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
