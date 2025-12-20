@@ -33,7 +33,8 @@ services:
     image: ghcr.io/hyeonguk2/modi-config:dev-cicd
     container_name: modi-config
     depends_on:
-      - modi-discovery
+      modi-discovery:
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -51,8 +52,10 @@ services:
     image: ghcr.io/hyeonguk2/modi-gateway:dev-cicd
     container_name: modi-gateway
     depends_on:
-      - modi-config
-      - modi-discovery
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
     env_file:
       - .env
     ports:
@@ -111,6 +114,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      modi-config:
+          condition: service_healthy
     expose:
       - "8080"
     env_file:
@@ -124,6 +129,8 @@ services:
     container_name: product-service
     depends_on:
       postgres:
+        condition: service_healthy
+      modi-config:
         condition: service_healthy
     expose:
       - "8080"
@@ -139,6 +146,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      modi-config:
+        condition: service_healthy
     expose:
       - "8080"
     env_file:
@@ -152,6 +161,8 @@ services:
     container_name: seller-service
     depends_on:
       postgres:
+        condition: service_healthy
+      modi-config:
         condition: service_healthy
     expose:
       - "8080"
@@ -167,6 +178,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      modi-config:
+        condition: service_healthy
     expose:
       - "8080"
     env_file:
@@ -181,6 +194,8 @@ services:
 #    depends_on:
 #      postgres:
 #        condition: service_healthy
+#      modi-config:
+#        condition: service_healthy
 #    ports:
 #      - "8080"
 #    env_file:
@@ -194,6 +209,8 @@ services:
 #    container_name: notification-service
 #    depends_on:
 #      postgres:
+#        condition: service_healthy
+#      modi-config:
 #        condition: service_healthy
 #    ports:
 #      - "8080"
