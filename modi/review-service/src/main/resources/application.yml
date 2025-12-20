@@ -14,3 +14,10 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URI}
+
+openai:
+  api-key: #추가해야됨
+  model: chatgpt-5-nano
+  summary:
+    max-length: 200
+

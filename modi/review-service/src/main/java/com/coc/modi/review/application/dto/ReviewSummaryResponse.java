@@ -5,24 +5,24 @@ import com.coc.modi.review.domain.Review;
 import java.time.LocalDateTime;
 
 public record ReviewSummaryResponse(
-		Long id,
+		Long reviewId,
 		Long rentalItemId,
 		Long sellerId,
 		Long memberId,
 		Short rating,
-		String content,
+		String summary,
 		LocalDateTime createdAt
 ) {
 
 	public static ReviewSummaryResponse from(Review review) {
 		
 		return new ReviewSummaryResponse(
-				review.getId(),
+				review.getReviewId(),
 				review.getRentalItemId(),
 				review.getSellerId(),
 				review.getMemberId(),
 				review.getRating(),
-				review.getContent(),
+				review.getSummary(),
 				review.getCreatedAt()
 		);
 	}

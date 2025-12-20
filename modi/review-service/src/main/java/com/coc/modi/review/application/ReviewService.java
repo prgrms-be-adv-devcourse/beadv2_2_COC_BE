@@ -25,32 +25,36 @@ public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
+	private final ReviewSummaryService reviewSummaryService;
 
 	
 	// 판매자 리뷰 생성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
-		
+
+		String summary = reviewSummaryService.summarize(command.content());
+
 		Review review = Review.create(
 				command.rentalItemid(),
 				command.sellerId(),
 				command.memberId(),
 				command.rating(),
-				command.content()
+				command.content(),
+				summary
 		);
 
 		Review saved = reviewRepository.save(review);
 
-		notificationEventPublisher.publish(
-				NotificationEvent.of(
-						saved.getSellerId(),
-						"REVIEW_CREATED",
-						"새 리뷰가 등록 되었습니다!",
-						"상품에 새로운 리뷰가 등록되었습니다.",
-						"REVIEW",
-						String.valueOf(saved.getId())
-				)
-		);
+		// notificationEventPublisher.publish(
+		// 		NotificationEvent.of(
+		// 				saved.getSellerId(),
+		// 				"REVIEW_CREATED",
+		// 				"새 리뷰가 등록 되었습니다!",
+		// 				"상품에 새로운 리뷰가 등록되었습니다.",
+		// 				"REVIEW",
+		// 				String.valueOf(saved.getId())
+		// 		)
+		// );
 		
 		return ReviewResponse.from(saved);
 	}
@@ -64,7 +68,8 @@ public class ReviewService {
 
 		validateOwnership(review, command.memberId());
 
-		review.update(command.rating(), command.content());
+		String summary = command.content() != null ? reviewSummaryService.summarize(command.content()) : null;
+		review.update(command.rating(), command.content(), summary);
 		
 		return ReviewResponse.from(review);
 	}
