@@ -5,6 +5,10 @@ on:
     branches:
       - dev-cicd
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: hyeonguk2
