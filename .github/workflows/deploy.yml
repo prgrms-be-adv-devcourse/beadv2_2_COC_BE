@@ -45,7 +45,7 @@ jobs:
           services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "modi-config" "modi-gateway" "modi-discovery")
 
           for service in "${services[@]}"; do
-            IMAGE_NAME=$REGISTRY/$IMAGE_OWNER/$service:dev
+            IMAGE_NAME=$REGISTRY/$IMAGE_OWNER/$service:dev-cicd
             echo "Building $IMAGE_NAME ..."
             docker build -t $IMAGE_NAME ./modi/$service
             docker push $IMAGE_NAME
