@@ -16,7 +16,7 @@ services:
       retries: 5
 
   modi-discovery:
-    image: ghcr.io/hyeonguk2/modi-discovery:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/modi-discovery:dev-cicd
     container_name: modi-discovery
     ports:
       - "8761:8761"
@@ -30,7 +30,7 @@ services:
       retries: 5
 
   modi-config:
-    image: ghcr.io/hyeonguk2/modi-config:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/modi-config:dev-cicd
     container_name: modi-config
     depends_on:
       modi-discovery:
@@ -49,7 +49,7 @@ services:
       retries: 5
 
   modi-gateway:
-    image: ghcr.io/hyeonguk2/modi-gateway:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/modi-gateway:dev-cicd
     container_name: modi-gateway
     depends_on:
       modi-config:
@@ -109,7 +109,7 @@ services:
       - "2181"
 
   account-service:
-    image: ghcr.io/hyeonguk2/account-service:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/account-service:dev-cicd
     container_name: account-service
     depends_on:
       postgres:
@@ -125,7 +125,7 @@ services:
       - msa-net
 
   product-service:
-    image: ghcr.io/hyeonguk2/product-service:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/product-service:dev-cicd
     container_name: product-service
     depends_on:
       postgres:
@@ -141,7 +141,7 @@ services:
       - msa-net
 
   rental-service:
-    image: ghcr.io/hyeonguk2/rental-service:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/rental-service:dev-cicd
     container_name: rental-service
     depends_on:
       postgres:
@@ -157,7 +157,7 @@ services:
       - msa-net
 
   seller-service:
-    image: ghcr.io/hyeonguk2/seller-service:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/seller-service:dev-cicd
     container_name: seller-service
     depends_on:
       postgres:
@@ -173,7 +173,7 @@ services:
       - msa-net
 
   member-service:
-    image: ghcr.io/hyeonguk2/member-service:dev-cicd
+    image: ${REGISTRY}/${IMAGE_OWNER}/member-service:dev-cicd
     container_name: member-service
     depends_on:
       postgres:
@@ -189,7 +189,7 @@ services:
       - msa-net
 
 #  review-service:
-#    image: ghcr.io/hyeonguk2/review-service:dev-cicd
+#    image: ${REGISTRY}/${IMAGE_OWNER}/review-service:dev-cicd
 #    container_name: review-service
 #    depends_on:
 #      postgres:
@@ -205,7 +205,7 @@ services:
 #      - msa-net
 #
 #  notification-service:
-#    image: ghcr.io/hyeonguk2/notification-service:dev-cicd
+#    image: ${REGISTRY}/${IMAGE_OWNER}/notification-service:dev-cicd
 #    container_name: notification-service
 #    depends_on:
 #      postgres:
