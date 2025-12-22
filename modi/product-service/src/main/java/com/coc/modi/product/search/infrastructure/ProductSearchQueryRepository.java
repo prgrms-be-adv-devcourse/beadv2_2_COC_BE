@@ -2,7 +2,6 @@ package com.coc.modi.product.search.infrastructure;
 
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.domain.ProductCategory;
-import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.search.domain.ProductDocument;
 import com.coc.modi.product.search.domain.ProductSortType;
 
@@ -51,7 +50,7 @@ public class ProductSearchQueryRepository {
 					// 카테고리 필터
 					if (cond.category() != null) {
 						ProductCategory category = cond.category();
-						b.filter(f -> f.term(t -> t.field("category").value(category.name())));
+						b.filter(f -> f.term(t -> t.field("category.keyword").value(category.name())));
 					}
 					
 					// 가격 범위 필터

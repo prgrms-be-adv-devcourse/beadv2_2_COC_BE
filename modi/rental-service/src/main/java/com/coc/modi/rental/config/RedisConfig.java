@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.coc.modi.rental.cart.domain.Cart;
@@ -31,10 +32,13 @@ public class RedisConfig {
 
         RedisTemplate<String, Cart> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-
+        
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
-
+		
+		Jackson2JsonRedisSerializer<Cart> jsonSerializer = new Jackson2JsonRedisSerializer<>(Cart.class);
+		
+		// 경고가 떠도 실행은 됨(지금 목표면 OK)
+		jsonSerializer.setObjectMapper(redisObjectMapper);
         template.setKeySerializer(stringSerializer);
         template.setHashKeySerializer(stringSerializer);
         template.setValueSerializer(jsonSerializer);

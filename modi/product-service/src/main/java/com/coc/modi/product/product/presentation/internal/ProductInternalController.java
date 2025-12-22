@@ -2,9 +2,12 @@ package com.coc.modi.product.product.presentation.internal;
 
 import com.coc.modi.product.product.application.ProductService;
 import com.coc.modi.product.product.application.dto.ProductBulkResponse;
+import com.coc.modi.product.product.application.dto.ProductInternalSellerResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,5 +26,11 @@ public class ProductInternalController {
 	public List<ProductBulkResponse> getProductsBulk(@RequestBody List<Long> productIds) {
 		
 		return productService.getProductsByIds(productIds);
+	}
+	
+	@GetMapping("/{productId}")
+	public ProductInternalSellerResponse getProductsById(@PathVariable("productId") Long productId) {
+		
+		return productService.getProductById(productId);
 	}
 }

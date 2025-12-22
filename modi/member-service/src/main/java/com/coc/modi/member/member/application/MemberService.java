@@ -24,6 +24,7 @@ import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +46,7 @@ public class MemberService {
 	private final AccountClientAdapter accountClientAdapter;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationService emailVerificationService;
+	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
@@ -211,7 +213,7 @@ public class MemberService {
 	}
 	
 	@Transactional
-	public void updateRole(Long memberId) {
+	public String updateRoleToSeller(Long memberId) {
 		
 		Member member = getMemberOrThrow(memberId);
 		
@@ -219,5 +221,9 @@ public class MemberService {
 			
 			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
 		}
+		
+		member.updateRole(MemberRole.SELLER);
+		
+		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
 	}
 }

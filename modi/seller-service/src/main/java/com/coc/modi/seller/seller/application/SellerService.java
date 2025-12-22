@@ -38,7 +38,7 @@ public class SellerService {
     }
 
     @Transactional
-    public SellerDetailResponse registerSeller(SellerCreateCommand command) {
+    public String registerSeller(SellerCreateCommand command) {
 		
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new SellerDuplicateException("이미 등록된 판매자입니다. memberId=" + command.memberId());
@@ -51,9 +51,9 @@ public class SellerService {
                 command.storePhone()
         );
 
-        Seller saved = sellerRepository.save(seller);
+        sellerRepository.save(seller);
 		
-		memberClientAdapter.changeMemberRole(seller.getMemberId());
+		    memberClientAdapter.changeMemberRole(seller.getMemberId());
 		
         return SellerDetailResponse.from(saved);
     }
