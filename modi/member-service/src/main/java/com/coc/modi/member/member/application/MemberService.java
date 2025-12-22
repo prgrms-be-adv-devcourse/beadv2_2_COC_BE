@@ -19,17 +19,19 @@ import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
+import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
+import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
-import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
-import com.coc.modi.member.security.JwtTokenProvider;
+import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
 
-import feign.FeignException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -41,7 +43,7 @@ public class MemberService {
 	
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final AccountFeignClient accountFeignClient;
+	private final AccountClientAdapter accountClientAdapter;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationService emailVerificationService;
 	private final JwtTokenProvider jwtTokenProvider;
@@ -77,8 +79,8 @@ public class MemberService {
 		// 회원 지갑 생성 요청
 		try {
 			
-			accountFeignClient.createWallet(saved.getId());
-		} catch (FeignException ex) {
+			accountClientAdapter.createWallet(saved.getId());
+		} catch (Exception ex) {
 			
 			log.error("Failed to create wallet for memberId={}", saved.getId(), ex);
 			
@@ -152,6 +154,27 @@ public class MemberService {
 	public void deleteMember(Long memberId) {
 		
 		Member member = getMemberOrThrow(memberId);
+		
+		MemberWalletResponse wallet;
+		
+		try {
+			
+			// 지갑에 잔액 남아있는지 내부API 확인
+			wallet = accountFeignClient.getWalletBalance(memberId);
+		} catch (FeignException ex) {
+			
+			log.error("Failed to fetch wallet balance for memberId={}", memberId, ex);
+			
+			throw new WalletBalanceCheckFailedException();
+		}
+		
+		// 지갑에 잔액 남아있으면 예외처리
+		if (wallet != null && wallet.balance() != null && wallet.balance().compareTo(BigDecimal.ZERO) > 0) {
+			
+			log.error("Wallet balance is not null. memberId={}, wallet={}", memberId, wallet);
+			
+			throw new WalletBalanceRemainingException();
+		}
 		
 		member.withdraw();
 	}

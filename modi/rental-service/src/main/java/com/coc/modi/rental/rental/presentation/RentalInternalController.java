@@ -39,5 +39,4 @@ public class RentalInternalController {
 		
 		return queryService.getUnavailableProducts(unavailableProductsRequest);
 	}
-	
 }
