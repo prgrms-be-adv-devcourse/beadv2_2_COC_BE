@@ -1,0 +1,27 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: modi-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - msa-net  #EC2 인스턴스용
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: modi-grafana
+    ports:
+      - "3001:3000"   # 로컬 3000이 이미 프론트로 쓰일 수 있어서 3001 추천
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

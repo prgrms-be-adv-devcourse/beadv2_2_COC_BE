@@ -6,6 +6,7 @@ import com.coc.modi.product.product.application.ProductService;
 import com.coc.modi.product.product.application.ProductStatusService;
 import com.coc.modi.product.product.application.dto.ProductCreateCommand;
 import com.coc.modi.product.product.application.dto.ProductDetailResponse;
+import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
@@ -16,8 +17,11 @@ import com.coc.modi.product.search.domain.ProductSortType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -41,11 +45,24 @@ public class ProductController {
 		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType)));
 	}
 	
+	// 판매자 상품 목록 조회
+	@GetMapping("/seller")
+	public ResponseEntity<ApiResponse<Page<ProductListResponse>>> getSellerProducts(@AuthenticationPrincipal CustomMember member,
+																					@PageableDefault(
+																						size = 20,
+																						sort = "createdAt",
+																						direction = Sort.Direction.DESC
+																				) Pageable pageable) {
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.memberId(), pageable)));
+	}
+	
 	// 상품 상세 조회
 	@GetMapping("/{productId}")
-	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@PathVariable("productId") Long productId) {
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
+																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(productId)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
 	}
 	
 	// 상품 등록
@@ -53,7 +70,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody ProductCreateRequest request) {
 		
-		ProductCreateCommand command = ProductCreateCommand.toCommand(member.getMemberId(), request);
+		ProductCreateCommand command = ProductCreateCommand.toCommand(member.memberId(), request);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(productService.createProduct(command)));
 	}
@@ -64,7 +81,7 @@ public class ProductController {
 																			@PathVariable("productId") Long productId,
 																			@Valid @RequestBody ProductUpdateRequest request) {
 		
-		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.getMemberId(), productId, request);
+		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.memberId(), productId, request);
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
 	}
@@ -74,7 +91,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> activeProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.activeProduct(member.getMemberId(), productId);
+		productStatusService.activeProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -84,7 +101,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> disableProduct(@AuthenticationPrincipal CustomMember member,
 														    @PathVariable("productId") Long productId) {
 		
-		productStatusService.disableProduct(member.getMemberId(), productId);
+		productStatusService.disableProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -94,7 +111,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> deleteProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.deleteProduct(member.getMemberId(), productId);
+		productStatusService.deleteProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

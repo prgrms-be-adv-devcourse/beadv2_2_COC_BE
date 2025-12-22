@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: account-service
+  config:
+    import: configserver:http://localhost:8888
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}

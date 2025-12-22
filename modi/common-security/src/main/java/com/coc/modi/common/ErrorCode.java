@@ -32,12 +32,14 @@ public enum ErrorCode {
 	
 	MEMBER_WITHDRAWN(HttpStatus.BAD_REQUEST, "MEMBER-WITHDRAWN", "탈퇴한 회원입니다."),
 	MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-404", "회원 정보를 찾을 수 없습니다."),
+	MEMER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "MEMBER-403", "사용 불가능한 회원입니다."),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-EMAIL-409", "이미 사용 중인 이메일입니다."),
 	PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-PASSWORD-400", "비밀번호가 일치하지 않습니다."),
 	NAME_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-NAME-400", "이름이 일치하지 않습니다."),
 	EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER-EMAIL-400", "이메일이 일치하지 않습니다."),
 	ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-ADDRESS-404", "주소 정보를 찾을 수 없습니다."),
 	AUTH_CODE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-AUTH-400", "이메일 인증 코드가 유효하지 않습니다."),
+	MEMBER_ROLE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-ROLE-400", "요청한 역할 상태가 일치하지 않습니다."),
 	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
 	ACCOUNT_BALENCE_REMAIN(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-REMAIN-400", "지갑에 잔액이 남아있습니다."),

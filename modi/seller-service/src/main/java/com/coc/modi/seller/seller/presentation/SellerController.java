@@ -3,7 +3,7 @@ package com.coc.modi.seller.seller.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerIdResponse;
 import com.coc.modi.seller.seller.presentation.dto.SellerCreateRequest;
@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +30,7 @@ public class SellerController {
 																	  @AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.getMemberId()));
+		SellerDetailResponse seller = sellerService.registerSeller(request.toCommand(member.memberId()));
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -40,7 +39,7 @@ public class SellerController {
 	public ResponseEntity<ApiResponse<SellerDetailResponse>> getMySeller(@AuthenticationPrincipal CustomMember member) {
 		
 		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.getMemberId());
+		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
@@ -55,7 +54,7 @@ public class SellerController {
 																				@RequestParam(value = "size", required = false) Integer size) {
 		
 		
-		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.getMemberId(), productId, status, startDate, endDate, page, size);
+		List<SellerRentalResponse> rentals = sellerService.getMyRentals(member.memberId(), productId, status, startDate, endDate, page, size);
 		
 		return ResponseEntity.ok(ApiResponse.ok(rentals));
 	}
@@ -65,7 +64,7 @@ public class SellerController {
 																	  @Valid @RequestBody SellerUpdateRequest request) {
 		
 		
-		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.getMemberId(), request.toCommand());
+		SellerDetailResponse seller = sellerService.updateSellerByMemberId(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}

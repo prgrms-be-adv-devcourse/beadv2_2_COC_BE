@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -29,7 +30,8 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 	private static final List<RentalItemStatus> UNAVAILABLE_STATUSES = List.of(
 			RentalItemStatus.REQUESTED,
 			RentalItemStatus.ACCEPTED,
-			RentalItemStatus.RENTING
+			RentalItemStatus.RENTING,
+			RentalItemStatus.PAID
 	);
 	
 	@Override
@@ -199,4 +201,26 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 		
 		return exists != null;
 	}
+	
+	@Override
+	public List<RentalItem> findUnavailableRentalItems(Long productId, LocalDate startDate, LocalDate endDate) {
+		
+		if (productId == null || startDate == null || endDate == null) {
+			
+			return Collections.emptyList();
+		}
+		
+		QRentalItem rentalItem = QRentalItem.rentalItem;
+		
+		return queryFactory
+				.selectFrom(rentalItem)
+				.where(
+						rentalItem.productId.eq(productId),
+						rentalItem.status.in(UNAVAILABLE_STATUSES),
+						rentalItem.startDate.loe(endDate),
+						rentalItem.endDate.goe(startDate)
+				)
+				.fetch();
+	}
+	
 }
