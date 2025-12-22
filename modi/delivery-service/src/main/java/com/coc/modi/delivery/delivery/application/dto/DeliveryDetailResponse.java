@@ -6,7 +6,7 @@ import com.coc.modi.delivery.delivery.domain.DeliveryStatus;
 import java.time.LocalDateTime;
 
 public record DeliveryDetailResponse(
-		Long id,
+		Long deliveryId,
 		Long rentalItemId,
 		String carrierCode,
 		String trackingNumber,

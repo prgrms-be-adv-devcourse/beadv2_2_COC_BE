@@ -10,6 +10,10 @@ public class DeliveryStatusMapper {
 	
 	public DeliveryStatus map(TrackingResult result) {
 		
+		if (result == null) {
+			return DeliveryStatus.REGISTERED;
+		}
+		
 		if (result.delivered()) {
 			return DeliveryStatus.DELIVERED;
 		}
