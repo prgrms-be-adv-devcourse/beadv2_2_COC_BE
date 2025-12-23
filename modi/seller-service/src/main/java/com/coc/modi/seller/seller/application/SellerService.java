@@ -3,7 +3,7 @@ package com.coc.modi.seller.seller.application;
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.exception.SellerDuplicateException;
 import com.coc.modi.seller.exception.SellerNotFoundException;
-import com.coc.modi.seller.infrastructure.client.member.MemberClientAdapter;
+import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
