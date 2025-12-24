@@ -1,4 +1,4 @@
-package com.coc.modi.seller.infrastructure.client.member;
+package com.coc.modi.seller.seller.infrastructure.client.member;
 
 import org.springframework.stereotype.Component;
 
