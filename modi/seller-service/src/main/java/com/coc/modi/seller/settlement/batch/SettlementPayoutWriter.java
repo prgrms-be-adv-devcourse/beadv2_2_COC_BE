@@ -1,5 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
+import com.coc.modi.seller.exception.SettlementPayoutNotReadyException;
+
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
@@ -12,6 +14,6 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 			return;
 		}
 		
-		throw new UnsupportedOperationException("Settlement payout integration is not wired yet.");
+		throw new SettlementPayoutNotReadyException("정산 지급 연동이 아직 준비되지 않았습니다.");
 	}
 }
