@@ -8,11 +8,34 @@ if not os.path.exists(env_path):
 k8s_yaml(kustomize('k8s/overlays/kind'))
 
 # 2) 로컬 도커 이미지 빌드(각 서비스별)
+shared_paths = [
+  'build.gradle',
+  'settings.gradle',
+  'gradle',
+  'gradlew',
+  'gradle.properties',
+  'common',
+  'common-security',
+  'common-notification',
+  'common-openapi',
+  'common-kafka',
+]
+
+ignore_paths = [
+  '**/build/**',
+  '**/.gradle/**',
+]
+
+def only_paths(service_dir):
+  return shared_paths + [service_dir]
+
 docker_build(
   'modi/modi-discovery:local',
   context='.',
   dockerfile='modi-discovery/Dockerfile',
   build_args={'MODULE': 'modi-discovery'},
+  only=only_paths('modi-discovery'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -20,6 +43,8 @@ docker_build(
   context='.',
   dockerfile='modi-config/Dockerfile',
   build_args={'MODULE': 'modi-config'},
+  only=only_paths('modi-config'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -27,6 +52,8 @@ docker_build(
   context='.',
   dockerfile='modi-gateway/Dockerfile',
   build_args={'MODULE': 'modi-gateway'},
+  only=only_paths('modi-gateway'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -34,6 +61,8 @@ docker_build(
   context='.',
   dockerfile='account-service/Dockerfile',
   build_args={'MODULE': 'account-service'},
+  only=only_paths('account-service'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -41,6 +70,8 @@ docker_build(
   context='.',
   dockerfile='product-service/Dockerfile',
   build_args={'MODULE': 'product-service'},
+  only=only_paths('product-service'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -48,6 +79,8 @@ docker_build(
   context='.',
   dockerfile='rental-service/Dockerfile',
   build_args={'MODULE': 'rental-service'},
+  only=only_paths('rental-service'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -55,6 +88,8 @@ docker_build(
   context='.',
   dockerfile='seller-service/Dockerfile',
   build_args={'MODULE': 'seller-service'},
+  only=only_paths('seller-service'),
+  ignore=ignore_paths,
 )
 
 docker_build(
@@ -62,6 +97,8 @@ docker_build(
   context='.',
   dockerfile='member-service/Dockerfile',
   build_args={'MODULE': 'member-service'},
+  only=only_paths('member-service'),
+  ignore=ignore_paths,
 )
 
 # 3) k8s 리소스(이름은 매니페스트 metadata.name와 맞춰야 함)
@@ -74,7 +111,7 @@ only_services = cfg.get('services', [])
 def auto_init_for(name):
   return (not only_services) or (name in only_services)
 
-k8s_resource('pgvector', auto_init=auto_init_for('pgvector'))
+k8s_resource('pgvector', auto_init=auto_init_for('pgvector'), port_forwards=5432)
 k8s_resource('redis', auto_init=auto_init_for('redis'))
 k8s_resource('elasticsearch', auto_init=auto_init_for('elasticsearch'))
 

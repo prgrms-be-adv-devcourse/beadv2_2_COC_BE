@@ -4,6 +4,7 @@ import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.EmailVerificationService;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
+import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -41,12 +42,15 @@ public class MemberService {
 	private final PasswordEncoder passwordEncoder;
 	private final AccountClientAdapter accountClientAdapter;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final EmailVerificationService emailVerificationService;
 	
 	// 회원가입
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
+		validateVerificationToken(command.email(), command.verificationToken());
+
 		// 중복 이메일인지 확인
 		if (memberRepository.existsByEmail(command.email())) {
 			
@@ -81,6 +85,8 @@ public class MemberService {
 			
 			throw new WalletCreationFailedException();
 		}
+
+		emailVerificationTokenStore.deleteToken(command.verificationToken());
 		
 		return MemberSignupResponse.from(saved);
 	}
@@ -184,6 +190,26 @@ public class MemberService {
 		}
 		
 		emailVerificationCodeStore.deleteCode(email);
+	}
+
+	private void validateVerificationToken(String email, String verificationToken) {
+
+		if (verificationToken == null || verificationToken.isBlank()) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 필요합니다.");
+		}
+
+		String storedEmail = emailVerificationTokenStore.getEmail(verificationToken);
+
+		if (storedEmail == null) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 만료되었거나 유효하지 않습니다.");
+		}
+
+		if (!storedEmail.equals(email)) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 이메일과 일치하지 않습니다.");
+		}
 	}
 	
 	@Transactional
