@@ -5,6 +5,9 @@ import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInf
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
 import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.domain.SellerSettlement;
+import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
+import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
 
 import feign.FeignException;
 import feign.RetryableException;
@@ -74,6 +77,21 @@ public class SettlementBatchJobConfig {
 				.listener(stepListener)
 				.build();
 	}
+
+	@Bean
+	public Step settlementPayoutStep(JobRepository jobRepository,
+									 PlatformTransactionManager transactionManager,
+									 SettlementPayoutItemReader settlementPayoutItemReader,
+									 SettlementPayoutProcessor settlementPayoutProcessor,
+									 SettlementPayoutWriter settlementPayoutWriter) {
+
+		return new StepBuilder("settlementPayoutStep", jobRepository)
+				.<SellerSettlement, SettlementPayoutItem>chunk(chunkSize, transactionManager)
+				.reader(settlementPayoutItemReader)
+				.processor(settlementPayoutProcessor)
+				.writer(settlementPayoutWriter)
+				.build();
+	}
 	
 	@Bean
 	@StepScope
@@ -113,6 +131,28 @@ public class SettlementBatchJobConfig {
 	) {
 		
 		return new SettlementAggregationWriter(settlementAggregationService, batchId);
+	}
+
+	@Bean
+	@StepScope
+	public SettlementPayoutItemReader settlementPayoutItemReader(
+			SellerSettlementJpaRepository settlementRepository,
+			@Value("#{jobParameters['batchId']}") Long batchId
+	) {
+
+		return new SettlementPayoutItemReader(settlementRepository, batchId, SellerSettlementStatus.READY);
+	}
+
+	@Bean
+	public SettlementPayoutProcessor settlementPayoutProcessor() {
+
+		return new SettlementPayoutProcessor(sellerRepository);
+	}
+
+	@Bean
+	public SettlementPayoutWriter settlementPayoutWriter() {
+
+		return new SettlementPayoutWriter();
 	}
 	
 	@Bean
