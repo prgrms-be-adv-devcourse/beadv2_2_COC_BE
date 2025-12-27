@@ -8,7 +8,7 @@ services:
       - "9090:9090"
     restart: unless-stopped
     networks:
-      - msa-net  #EC2 인스턴스용
+      - msa-net
 
   grafana:
     image: grafana/grafana:11.2.0

@@ -4,6 +4,7 @@ public record CreateMemberCommand(
 		String email,
 		String password,
 		String name,
-		String phone
+		String phone,
+		String verificationToken
 ) {
 }
