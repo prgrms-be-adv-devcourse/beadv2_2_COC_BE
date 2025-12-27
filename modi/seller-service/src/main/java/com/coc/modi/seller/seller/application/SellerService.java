@@ -3,7 +3,7 @@ package com.coc.modi.seller.seller.application;
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.exception.SellerDuplicateException;
 import com.coc.modi.seller.exception.SellerNotFoundException;
-import com.coc.modi.seller.infrastructure.client.member.MemberClientAdapter;
+import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
@@ -38,7 +38,7 @@ public class SellerService {
     }
 
     @Transactional
-    public String registerSeller(SellerCreateCommand command) {
+    public SellerDetailResponse registerSeller(SellerCreateCommand command) {
 		
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new SellerDuplicateException("이미 등록된 판매자입니다. memberId=" + command.memberId());
@@ -51,7 +51,7 @@ public class SellerService {
                 command.storePhone()
         );
 
-        sellerRepository.save(seller);
+        Seller saved = sellerRepository.save(seller);
 		
 		    memberClientAdapter.changeMemberRole(seller.getMemberId());
 		
