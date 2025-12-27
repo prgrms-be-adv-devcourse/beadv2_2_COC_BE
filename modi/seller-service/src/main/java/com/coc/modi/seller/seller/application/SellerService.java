@@ -53,7 +53,7 @@ public class SellerService {
 
         sellerRepository.save(seller);
 		
-		memberClientAdapter.changeMemberRole(seller.getMemberId());
+		    memberClientAdapter.changeMemberRole(seller.getMemberId());
 		
         return SellerDetailResponse.from(saved);
     }

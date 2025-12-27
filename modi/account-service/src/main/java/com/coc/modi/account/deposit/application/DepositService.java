@@ -3,6 +3,7 @@ package com.coc.modi.account.deposit.application;
 import com.coc.modi.account.deposit.application.dto.DepositApprovalCommand;
 import com.coc.modi.account.deposit.application.dto.DepositCancelCommand;
 import com.coc.modi.account.deposit.application.dto.DepositCommand;
+import com.coc.modi.account.deposit.application.dto.DepositFailCommand;
 import com.coc.modi.account.deposit.application.dto.DepositResponse;
 import com.coc.modi.account.deposit.domain.PgDeposit;
 import com.coc.modi.account.deposit.domain.PgDepositRepository;
@@ -112,7 +113,7 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit.getId(), deposit.getAmount());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -173,11 +174,24 @@ public class DepositService {
         walletCommandService.createTransactionAndUpdateBalance(
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
-                        deposit.getId(),
-                        cancelAmount
+                        deposit,
+                        cancelAmount,
+						deposit.getPaymentKey()
                 )
         );
 
         return DepositResponse.from(deposit);
     }
+	
+	// 결제 실패
+	@Transactional
+	public DepositResponse failDeposit(DepositFailCommand command) {
+		
+		PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
+				.orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+		
+		deposit.fail(command.failureMessage());
+		
+		return DepositResponse.from(deposit);
+	}
 }

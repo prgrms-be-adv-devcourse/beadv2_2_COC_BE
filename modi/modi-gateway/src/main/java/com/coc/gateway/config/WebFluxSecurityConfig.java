@@ -94,7 +94,8 @@ public class WebFluxSecurityConfig {
 								"/v3/api-docs/**",
 								"/*/v3/api-docs/**",
 								"/member-service/api/auth/**",
-								"/member-service/api/members/signup"
+								"/member-service/api/members/signup",
+								"/favicon.ico"
 						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()
 						.pathMatchers(HttpMethod.POST, "/seller-service/api/sellers").hasRole("MEMBER")

@@ -33,7 +33,7 @@
         try {
             const token = asBearer(localStorage.getItem('accessToken'));
 
-            const response = await fetch('/api/deposits/pg/approve', {
+            const response = await fetch('/account-service/api/deposits/pg/approve', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
