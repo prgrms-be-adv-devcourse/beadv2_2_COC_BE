@@ -24,9 +24,10 @@ import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
 import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
 import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
+import com.coc.modi.member.member.infrastructure.client.dto.MemberWalletResponse;
 import com.coc.modi.member.security.JwtTokenProvider;
 
-
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -167,7 +168,7 @@ public class MemberService {
 		try {
 			
 			// 지갑에 잔액 남아있는지 내부API 확인
-			wallet = accountFeignClient.getWalletBalance(memberId);
+			wallet = accountClientAdapter.getWalletBalance(memberId);
 		} catch (FeignException ex) {
 			
 			log.error("Failed to fetch wallet balance for memberId={}", memberId, ex);

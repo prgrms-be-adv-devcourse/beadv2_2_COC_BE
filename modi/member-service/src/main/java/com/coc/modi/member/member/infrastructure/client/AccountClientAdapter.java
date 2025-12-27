@@ -3,6 +3,7 @@ package com.coc.modi.member.member.infrastructure.client;
 import org.springframework.stereotype.Component;
 
 import com.coc.modi.member.member.exception.WalletCreationFailedException;
+import com.coc.modi.member.member.infrastructure.client.dto.MemberWalletResponse;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -27,5 +28,12 @@ public class AccountClientAdapter {
 		
 		log.warn("지갑 생성 요청 실패 memberId={}", memberId, throwable);
 		throw new WalletCreationFailedException();
+	}
+	
+	@Retry(name = "walletGetBalanceRetry")
+	@CircuitBreaker(name = "walletGetBalanceCircuitBreaker", fallbackMethod = "fallbackGetBalance")
+	public MemberWalletResponse getWalletBalance(Long memberId) {
+		
+		return accountFeignClient.getWalletBalance(memberId);
 	}
 }
