@@ -44,6 +44,7 @@ public class MemberService {
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final EmailVerificationService emailVerificationService;
+	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
@@ -213,7 +214,7 @@ public class MemberService {
 	}
 	
 	@Transactional
-	public void updateRole(Long memberId) {
+	public String updateRoleToSeller(Long memberId) {
 		
 		Member member = getMemberOrThrow(memberId);
 		
@@ -221,5 +222,9 @@ public class MemberService {
 			
 			throw new MemberException(ErrorCode.MEMBER_ROLE_INVALID);
 		}
+		
+		member.updateRole(MemberRole.SELLER);
+		
+		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
 	}
 }
