@@ -107,7 +107,8 @@ configure([
         project(':seller-service'),
         project(':member-service'),
         project(':review-service'),
-        project(':notification-service')
+        project(':notification-service'),
+        project(':delivery-service')
 ]) {
     dependencies {
 
