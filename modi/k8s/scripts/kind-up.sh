@@ -6,6 +6,7 @@ CLUSTER_NAME="${CLUSTER_NAME:-modi}"
 NAMESPACE="modi"
 OVERLAY_DIR="${ROOT_DIR}/k8s/overlays/kind"
 ENV_FILE="${OVERLAY_DIR}/.env"
+KIND_CONFIG="${KIND_CONFIG:-${ROOT_DIR}/k8s/scripts/kind-config.yaml}"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -28,7 +29,9 @@ if [ ! -f "${ENV_FILE}" ]; then
 fi
 
 if ! kind get clusters | grep -qx "${CLUSTER_NAME}"; then
-  kind create cluster --name "${CLUSTER_NAME}"
+  kind create cluster --name "${CLUSTER_NAME}" --config "${KIND_CONFIG}"
+else
+  echo "kind cluster '${CLUSTER_NAME}' already exists. Port mappings won't change unless you delete and recreate it." >&2
 fi
 
 kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null

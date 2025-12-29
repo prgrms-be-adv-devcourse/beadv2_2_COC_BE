@@ -1,5 +1,11 @@
 # Tiltfile
 
+# 0) 공통 설정
+config.define_string('k8s_context')
+config.define_string_list('services')
+cfg = config.parse()
+k8s_context(cfg.get('k8s_context', 'kind-modi'))
+
 # 1) k8s yaml 로드 (kustomize overlay 사용)
 env_path = 'k8s/overlays/kind/.env'
 if not os.path.exists(env_path):
@@ -104,8 +110,6 @@ docker_build(
 # 3) k8s 리소스(이름은 매니페스트 metadata.name와 맞춰야 함)
 # 특정 리소스만 띄우고 싶으면:
 # tilt up -- --services=modi-config,modi-gateway
-config.define_string_list('services')
-cfg = config.parse()
 only_services = cfg.get('services', [])
 
 def auto_init_for(name):
