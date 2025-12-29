@@ -42,6 +42,8 @@ spec:
               value: "true"
             - name: SERVER_PORT
               value: "8081"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
           envFrom:
             - secretRef:
                 name: modi-env

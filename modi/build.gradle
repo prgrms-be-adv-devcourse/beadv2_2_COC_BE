@@ -80,10 +80,11 @@ project(':common-security') {
 
 
 project(':common-kafka') {
+    apply plugin: 'java-library'
 
     dependencies {
 
-        implementation 'org.springframework.kafka:spring-kafka'
+        api 'org.springframework.kafka:spring-kafka'
         implementation 'com.fasterxml.jackson.core:jackson-databind'
         implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

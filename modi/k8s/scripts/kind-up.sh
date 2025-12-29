@@ -64,7 +64,27 @@ IMAGES=(
   modi/member-service:local
 )
 
-for img in "${IMAGES[@]}"; do
+LOAD_EXTERNAL_IMAGES="${LOAD_EXTERNAL_IMAGES:-false}"
+if [ "${LOAD_EXTERNAL_IMAGES}" = "true" ]; then
+  EXTERNAL_IMAGES=(
+    apache/kafka:3.8.1
+    redis:7
+    docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    pgvector/pgvector:pg18
+  )
+
+  for img in "${EXTERNAL_IMAGES[@]}"; do
+    if ! docker image inspect "${img}" >/dev/null 2>&1; then
+      docker pull "${img}"
+    fi
+  done
+
+  ALL_IMAGES=("${IMAGES[@]}" "${EXTERNAL_IMAGES[@]}")
+else
+  ALL_IMAGES=("${IMAGES[@]}")
+fi
+
+for img in "${ALL_IMAGES[@]}"; do
   kind load docker-image "${img}" --name "${CLUSTER_NAME}"
 done
 
@@ -94,6 +114,7 @@ DEPLOYMENTS=(
 )
 STATEFULSETS=(
   statefulset/pgvector
+  statefulset/kafka
   statefulset/redis
   statefulset/elasticsearch
 )
