@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: modi-discovery
+  labels:
+    app: modi-discovery
+spec:
+  ports:
+    - name: http
+      port: 8761
+      targetPort: 8761
+  selector:
+    app: modi-discovery
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modi-discovery
+  labels:
+    app: modi-discovery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modi-discovery
+  template:
+    metadata:
+      labels:
+        app: modi-discovery
+    spec:
+      containers:
+        - name: modi-discovery
+          image: modi/modi-discovery:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8761
+          readinessProbe:
+            tcpSocket:
+              port: 8761
+            initialDelaySeconds: 10
+            periodSeconds: 10
