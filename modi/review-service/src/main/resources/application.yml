@@ -17,7 +17,7 @@ eureka:
 
 openai:
   api-key: #추가해야됨
-  model: chatgpt-5-nano
+  model: gpt-4.1-mini
   summary:
     max-length: 200
 
