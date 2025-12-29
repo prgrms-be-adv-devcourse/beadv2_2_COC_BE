@@ -39,12 +39,14 @@ public class ProductController {
 	// 상품 목록 조회
 	@GetMapping
 	public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
+			@AuthenticationPrincipal CustomMember member,
 			@ModelAttribute ProductSearchCondition condition,
 			@RequestParam(name = "cursor", required = false) String cursor,
 			@RequestParam(name = "size", defaultValue = "20") int size,
 			@RequestParam(name = "sortType", defaultValue = "LATEST") ProductSortType sortType) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType)));
+		Long memberId = member != null ? member.memberId() : null;
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType, memberId)));
 	}
 	
 	// 판매자 상품 목록 조회
