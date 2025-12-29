@@ -9,7 +9,7 @@ public interface ReviewRepository {
 
 	Review save(Review review);
 
-	Optional<Review> findByIdAndStatus(Long reviewId, ReviewStatus status);
+	Optional<Review> findByReviewIdAndStatus(Long reviewId, ReviewStatus status);
 
 	Page<Review> findBySellerIdAndStatus(Long sellerId, ReviewStatus status, Pageable pageable);
 

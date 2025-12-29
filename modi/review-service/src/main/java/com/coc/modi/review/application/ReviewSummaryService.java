@@ -15,11 +15,13 @@ public class ReviewSummaryService {
 	private final OpenAiProperties properties;
 
 	public ReviewSummaryService(OpenAiClient openAiClient, OpenAiProperties properties) {
+
 		this.openAiClient = openAiClient;
 		this.properties = properties;
 	}
 
 	public String summarize(String content) {
+
 		if (content == null || content.isBlank()) {
 			return null;
 		}
@@ -33,28 +35,38 @@ public class ReviewSummaryService {
 			if (summary == null || summary.isBlank()) {
 				return fallback(content);
 			}
+
 			return normalize(summary);
+
 		} catch (Exception ex) {
+
 			log.warn("Failed to summarize review content with OpenAI", ex);
+
 			return fallback(content);
 		}
 	}
 
 	private String normalize(String summary) {
+
 		String trimmed = summary.replace("\n", " ").trim();
 		int maxLength = properties.getSummary().getMaxLength();
 		if (trimmed.length() <= maxLength) {
+
 			return trimmed;
 		}
+
 		return trimmed.substring(0, maxLength).trim();
 	}
 
 	private String fallback(String content) {
+
 		String trimmed = content.replace("\n", " ").trim();
 		int maxLength = properties.getSummary().getMaxLength();
 		if (trimmed.length() <= maxLength) {
+
 			return trimmed;
 		}
+
 		return trimmed.substring(0, maxLength).trim();
 	}
 }

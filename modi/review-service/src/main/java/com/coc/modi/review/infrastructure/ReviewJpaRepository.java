@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface ReviewJpaRepository extends JpaRepository<Review, Long> {
 
-	Optional<Review> findByIdAndStatus(Long reviewId, ReviewStatus status);
+	Optional<Review> findByReviewIdAndStatus(Long reviewId, ReviewStatus status);
 
 	Page<Review> findBySellerIdAndStatus(Long sellerId, ReviewStatus status, Pageable pageable);
 

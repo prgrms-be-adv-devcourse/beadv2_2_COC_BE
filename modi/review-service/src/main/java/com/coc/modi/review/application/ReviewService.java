@@ -7,10 +7,9 @@ import com.coc.modi.review.application.dto.UpdateReviewCommand;
 import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
 import com.coc.modi.review.domain.ReviewStatus;
-import com.coc.modi.review.event.NotificationEventPublisher;
+//import com.coc.modi.review.event.NotificationEventPublisher;
 import com.coc.modi.review.exception.ReviewAccessDeniedException;
 import com.coc.modi.review.exception.ReviewNotFoundException;
-import com.coc.modi.kafka.event.NotificationEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +23,7 @@ import java.util.List;
 public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
-	private final NotificationEventPublisher notificationEventPublisher;
+//	private final NotificationEventPublisher notificationEventPublisher;
 	private final ReviewSummaryService reviewSummaryService;
 
 	
@@ -63,7 +62,7 @@ public class ReviewService {
 	@Transactional
 	public ReviewResponse updateReview(UpdateReviewCommand command) {
 		
-		Review review = reviewRepository.findByIdAndStatus(command.reviewId(), ReviewStatus.ACTIVE)
+		Review review = reviewRepository.findByReviewIdAndStatus(command.reviewId(), ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(command.reviewId()));
 
 		validateOwnership(review, command.memberId());
@@ -78,7 +77,7 @@ public class ReviewService {
 	@Transactional
 	public void deleteReview(Long reviewId, Long memberId) {
 		
-		Review review = reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
+		Review review = reviewRepository.findByReviewIdAndStatus(reviewId, ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
 		validateOwnership(review, memberId);
@@ -90,7 +89,7 @@ public class ReviewService {
 	@Transactional(readOnly = true)
 	public ReviewResponse getReview(Long reviewId) {
 		
-		return reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
+		return reviewRepository.findByReviewIdAndStatus(reviewId, ReviewStatus.ACTIVE)
 				.map(ReviewResponse::from)
 				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
 	}

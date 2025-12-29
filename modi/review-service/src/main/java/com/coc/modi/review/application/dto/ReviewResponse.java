@@ -5,7 +5,8 @@ import com.coc.modi.review.domain.Review;
 import java.time.LocalDateTime;
 
 public record ReviewResponse(
-		Long id,
+
+		Long reviewId,
 		Long rentalItemId,
 		Long sellerId,
 		Long memberId,
@@ -18,7 +19,8 @@ public record ReviewResponse(
 	public static ReviewResponse from(Review review) {
 		
 		return new ReviewResponse(
-				review.getId(),
+
+				review.getReviewId(),
 				review.getRentalItemId(),
 				review.getSellerId(),
 				review.getMemberId(),

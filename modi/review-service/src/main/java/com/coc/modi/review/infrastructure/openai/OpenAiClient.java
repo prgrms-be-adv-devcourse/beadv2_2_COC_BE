@@ -15,22 +15,24 @@ public class OpenAiClient {
 	private final OpenAiProperties properties;
 
 	public OpenAiClient(RestTemplate restTemplate, OpenAiProperties properties) {
+
 		this.restTemplate = restTemplate;
 		this.properties = properties;
 	}
 
 	public String summarize(String content) {
+
 		OpenAiChatRequest request = new OpenAiChatRequest(
 				properties.getModel(),
 				List.of(
 						new OpenAiChatRequest.Message(
 								"system",
-								"Summarize the review in 1-2 sentences. Keep it concise and neutral."
+								"Summarize the review in 1-2 sentences from the reviewer's perspective. Use first-person voice. Keep it concise and neutral."
 						),
 						new OpenAiChatRequest.Message("user", content)
 				),
 				0.2,
-				120
+				100
 		);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -46,11 +48,13 @@ public class OpenAiClient {
 		);
 
 		if (response == null || response.choices() == null || response.choices().isEmpty()) {
+
 			return null;
 		}
 
 		OpenAiChatResponse.Choice choice = response.choices().get(0);
 		if (choice == null || choice.message() == null) {
+
 			return null;
 		}
 

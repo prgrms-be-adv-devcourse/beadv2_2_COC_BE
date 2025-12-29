@@ -1,52 +1,25 @@
 package com.coc.modi.review.infrastructure.openai;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+@Getter
 @ConfigurationProperties(prefix = "openai")
 public class OpenAiProperties {
 
-	private String apiKey;
-	private String baseUrl = "https://api.openai.com/v1";
-	private String model = "chatgpt-5-nano";
+	@Setter
+    private String apiKey;
+	@Setter
+    private String baseUrl = "https://api.openai.com/v1";
+	@Setter
+    private String model = "gpt-4.1-mini";
 	private final Summary summary = new Summary();
 
-	public String getApiKey() {
-		return apiKey;
-	}
+    @Setter
+    @Getter
+    public static class Summary {
 
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
-
-	public String getBaseUrl() {
-		return baseUrl;
-	}
-
-	public void setBaseUrl(String baseUrl) {
-		this.baseUrl = baseUrl;
-	}
-
-	public String getModel() {
-		return model;
-	}
- 
-	public void setModel(String model) {
-		this.model = model;
-	}
-
-	public Summary getSummary() {
-		return summary;
-	}
-
-	public static class Summary {
 		private int maxLength = 200;
-
-		public int getMaxLength() {
-			return maxLength;
-		}
-
-		public void setMaxLength(int maxLength) {
-			this.maxLength = maxLength;
-		}
-	}
+    }
 }

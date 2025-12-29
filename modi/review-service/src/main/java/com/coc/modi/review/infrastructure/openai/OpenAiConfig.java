@@ -1,11 +1,10 @@
 package com.coc.modi.review.infrastructure.openai;
 
-import java.time.Duration;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -14,9 +13,15 @@ public class OpenAiConfig {
 
 	@Bean
 	public RestTemplate openAiRestTemplate(RestTemplateBuilder builder) {
+
+		HttpComponentsClientHttpRequestFactory factory =
+				new HttpComponentsClientHttpRequestFactory();
+
+		factory.setConnectTimeout(5_000);  // ms
+		factory.setReadTimeout(10_000);    // ms
+
 		return builder
-				.setConnectTimeout(Duration.ofSeconds(5))
-				.setReadTimeout(Duration.ofSeconds(10))
+				.requestFactory(() -> factory)
 				.build();
 	}
 }

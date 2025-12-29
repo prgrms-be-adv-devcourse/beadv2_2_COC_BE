@@ -24,9 +24,9 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	}
 
 	@Override
-	public Optional<Review> findByIdAndStatus(Long reviewId, ReviewStatus status) {
+	public Optional<Review> findByReviewIdAndStatus(Long reviewId, ReviewStatus status) {
 		
-		return reviewJpaRepository.findByIdAndStatus(reviewId, status);
+		return reviewJpaRepository.findByReviewIdAndStatus(reviewId, status);
 	}
 
 	@Override
