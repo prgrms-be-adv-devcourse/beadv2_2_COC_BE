@@ -32,7 +32,7 @@ public class SettlementPayoutTestConfig {
 
     @Bean
     @Primary
-    public RecordingSettlementPayoutWriter settlementPayoutWriter() {
+    public RecordingSettlementPayoutWriter testSettlementPayoutWriter() {
 
         return new RecordingSettlementPayoutWriter();
     }
