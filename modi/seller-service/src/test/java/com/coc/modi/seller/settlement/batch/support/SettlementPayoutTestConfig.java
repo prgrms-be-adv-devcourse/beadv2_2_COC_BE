@@ -2,6 +2,8 @@ package com.coc.modi.seller.settlement.batch.support;
 
 import com.coc.modi.seller.settlement.batch.SettlementPayoutItem;
 import com.coc.modi.seller.settlement.batch.SettlementPayoutWriter;
+import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
+import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -37,9 +39,10 @@ public class SettlementPayoutTestConfig {
 
     @Bean
     @Primary
-    public RecordingSettlementPayoutWriter testSettlementPayoutWriter() {
+    public RecordingSettlementPayoutWriter testSettlementPayoutWriter(WalletClientAdapter walletClientAdapter,
+                                                                      SellerSettlementJpaRepository settlementRepository) {
 
-        return new RecordingSettlementPayoutWriter();
+        return new RecordingSettlementPayoutWriter(walletClientAdapter, settlementRepository);
     }
 
     @Bean
@@ -98,6 +101,12 @@ public class SettlementPayoutTestConfig {
         public List<Long> zeroAmountSettlementIds() {
 
             return List.copyOf(zeroAmountSettlementIds);
+        }
+
+        public RecordingSettlementPayoutWriter(WalletClientAdapter walletClientAdapter,
+                                               SellerSettlementJpaRepository settlementRepository) {
+
+            super(walletClientAdapter, settlementRepository);
         }
 
         @Override

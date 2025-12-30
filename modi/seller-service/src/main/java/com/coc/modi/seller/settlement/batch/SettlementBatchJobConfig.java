@@ -8,6 +8,7 @@ import com.coc.modi.seller.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
+import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
 
 import feign.FeignException;
 import feign.RetryableException;
@@ -150,9 +151,10 @@ public class SettlementBatchJobConfig {
 	}
 
 	@Bean
-	public SettlementPayoutWriter settlementPayoutWriter() {
+	public SettlementPayoutWriter settlementPayoutWriter(WalletClientAdapter walletClientAdapter,
+														 SellerSettlementJpaRepository settlementRepository) {
 
-		return new SettlementPayoutWriter();
+		return new SettlementPayoutWriter(walletClientAdapter, settlementRepository);
 	}
 	
 	@Bean
