@@ -30,13 +30,14 @@ public class ProductViewStatsService {
 		List<Object[]> rows = productViewDailyRepository.findPopularProducts(startDate, endDate, limit);
 		List<PopularProductResponse> results = new ArrayList<>(rows.size());
 		for (Object[] row : rows) {
-			if (row == null || row.length < 2) {
+			if (row == null || row.length < 3) {
 				continue;
 			}
 			Long productId = row[0] == null ? null : ((Number) row[0]).longValue();
-			Long count = row[1] == null ? 0L : ((Number) row[1]).longValue();
+			String productName = row[1] == null ? null : row[1].toString();
+			Long count = row[2] == null ? 0L : ((Number) row[2]).longValue();
 			if (productId != null) {
-				results.add(new PopularProductResponse(productId, count));
+				results.add(new PopularProductResponse(productId, productName, count));
 			}
 		}
 		return results;

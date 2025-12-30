@@ -21,11 +21,12 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 	void increment(@Param("viewDate") LocalDate viewDate, @Param("productId") Long productId);
 
 	@Query(value = """
-			select pvd.product_id, sum(pvd.view_count) as view_count
+			select pvd.product_id, p.name, sum(pvd.view_count) as view_count
 			from public.product_view_daily pvd
+			join public.product p on p.id = pvd.product_id
 			where (:startDate is null or pvd.view_date >= :startDate)
 			  and (:endDate is null or pvd.view_date <= :endDate)
-			group by pvd.product_id
+			group by pvd.product_id, p.name
 			order by view_count desc, pvd.product_id
 			limit :limit
 			""", nativeQuery = true)
