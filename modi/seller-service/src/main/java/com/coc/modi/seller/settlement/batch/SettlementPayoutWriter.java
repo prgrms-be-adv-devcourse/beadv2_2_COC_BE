@@ -44,6 +44,7 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 
 			BigDecimal amount = item.amount();
 			if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+				log.info("Skip payout with non-positive amount. settlementId={}, amount={}", item.settlementId(), amount);
 				markAsPaid(settlement);
 				continue;
 			}
