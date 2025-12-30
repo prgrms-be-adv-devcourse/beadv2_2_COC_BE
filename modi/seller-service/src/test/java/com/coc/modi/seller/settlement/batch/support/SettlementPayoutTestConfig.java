@@ -11,12 +11,17 @@ import org.springframework.batch.item.Chunk;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.sql.DataSource;
 
 @TestConfiguration
 public class SettlementPayoutTestConfig {
@@ -35,6 +40,18 @@ public class SettlementPayoutTestConfig {
     public RecordingSettlementPayoutWriter testSettlementPayoutWriter() {
 
         return new RecordingSettlementPayoutWriter();
+    }
+
+    @Bean
+    public DataSourceInitializer batchSchemaInitializer(DataSource dataSource) {
+
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        populator.addScript(new ClassPathResource("org/springframework/batch/core/schema-h2.sql"));
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(populator);
+        return initializer;
     }
 
     public static class RecordingSettlementPayoutWriter extends SettlementPayoutWriter {
