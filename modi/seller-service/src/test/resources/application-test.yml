@@ -33,6 +33,8 @@ member-service:
   url: http://localhost
 product-service:
   url: http://localhost
+account-service:
+  url: http://localhost
 
 app:
   gateway-prefix: test
