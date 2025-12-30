@@ -32,7 +32,11 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBatchTest
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+                "spring.config.name=application-test"
+        }
+)
 @ActiveProfiles("test")
 @Import(SettlementPayoutTestConfig.class)
 class SettlementPayoutStepTest {
