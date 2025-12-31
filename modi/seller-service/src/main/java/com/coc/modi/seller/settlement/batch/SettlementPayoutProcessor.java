@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.exception.SellerNotFoundException;
+import com.coc.modi.seller.seller.exception.SellerNotFoundException;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;

@@ -1,4 +1,4 @@
-package com.coc.modi.seller.exception;
+package com.coc.modi.seller.settlement.exception;
 
 import com.coc.modi.common.ErrorCode;
 

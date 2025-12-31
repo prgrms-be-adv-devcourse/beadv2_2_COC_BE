@@ -7,9 +7,10 @@ import com.coc.modi.seller.chat.domain.ChatParticipantRepository;
 import com.coc.modi.seller.chat.domain.ChatParticipantRole;
 import com.coc.modi.seller.chat.domain.ChatRoom;
 import com.coc.modi.seller.chat.domain.ChatRoomRepository;
-import com.coc.modi.seller.exception.ChatAccessDeniedException;
-import com.coc.modi.seller.exception.ChatRoomNotFoundException;
-import com.coc.modi.seller.exception.SellerNotFoundException;
+import com.coc.modi.seller.chat.exception.ChatAccessDeniedException;
+import com.coc.modi.seller.chat.exception.ChatInputInvalidException;
+import com.coc.modi.seller.chat.exception.ChatRoomNotFoundException;
+import com.coc.modi.seller.seller.exception.SellerNotFoundException;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 
@@ -32,7 +33,7 @@ public class ChatRoomService {
     @Transactional
 	public ChatRoomResponse createRoom(ChatRoomCreateCommand command) {
         if (command == null || command.requesterMemberId() == null || command.requesterRole() == null) {
-            throw new IllegalArgumentException("요청자 정보가 필요합니다.");
+            throw new ChatInputInvalidException("요청자 정보가 필요합니다.");
         }
 
 		ChatRoomParticipants participants = resolveParticipants(command);
@@ -52,7 +53,7 @@ public class ChatRoomService {
 
     public ChatRoomResponse getRoom(Long roomId, Long requesterMemberId) {
         if (roomId == null || requesterMemberId == null) {
-            throw new IllegalArgumentException("roomId와 memberId는 필수입니다.");
+            throw new ChatInputInvalidException("roomId와 memberId는 필수입니다.");
         }
 
         ChatRoom room = chatRoomRepository.findById(roomId)
@@ -70,7 +71,7 @@ public class ChatRoomService {
 
 		if ("SELLER".equals(role)) {
 			if (command.memberId() == null) {
-				throw new IllegalArgumentException("판매자 요청에는 memberId가 필요합니다.");
+				throw new ChatInputInvalidException("판매자 요청에는 memberId가 필요합니다.");
 			}
 			Seller seller = findSellerByMemberId(requesterMemberId);
 			validateDistinctParticipants(seller.getMemberId(), command.memberId());
@@ -80,7 +81,7 @@ public class ChatRoomService {
 
 		if ("MEMBER".equals(role)) {
 			if (command.sellerId() == null) {
-				throw new IllegalArgumentException("회원 요청에는 sellerId가 필요합니다.");
+				throw new ChatInputInvalidException("회원 요청에는 sellerId가 필요합니다.");
 			}
 			Seller seller = sellerRepository.findById(command.sellerId())
 					.orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + command.sellerId()));
@@ -89,7 +90,7 @@ public class ChatRoomService {
 			return new ChatRoomParticipants(seller, requesterMemberId);
 		}
 
-        throw new IllegalArgumentException("지원하지 않는 역할입니다. role=" + command.requesterRole());
+        throw new ChatInputInvalidException("지원하지 않는 역할입니다. role=" + command.requesterRole());
     }
 
 	private Seller findSellerByMemberId(Long memberId) {
@@ -100,7 +101,7 @@ public class ChatRoomService {
 
     private void validateDistinctParticipants(Long sellerOwnerId, Long memberId) {
         if (sellerOwnerId.equals(memberId)) {
-            throw new IllegalArgumentException("판매자와 회원이 동일할 수 없습니다.");
+            throw new ChatInputInvalidException("판매자와 회원이 동일할 수 없습니다.");
         }
     }
 
