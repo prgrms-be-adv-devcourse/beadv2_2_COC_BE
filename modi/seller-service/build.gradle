@@ -4,4 +4,7 @@ dependencies {
 
     // 배치 처리
     implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // WebSocket/STOMP
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
