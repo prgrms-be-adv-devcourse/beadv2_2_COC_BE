@@ -12,4 +12,6 @@ public interface ChatMessageJpaRepository extends JpaRepository<ChatMessage, Lon
 	List<ChatMessage> findByRoomIdOrderByIdDesc(Long roomId, Pageable pageable);
 
 	List<ChatMessage> findByRoomIdAndIdLessThanOrderByIdDesc(Long roomId, Long cursorId, Pageable pageable);
+
+	java.util.Optional<ChatMessage> findFirstByRoomIdOrderByIdDesc(Long roomId);
 }

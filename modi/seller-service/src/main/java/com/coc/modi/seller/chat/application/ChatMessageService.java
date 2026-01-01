@@ -5,6 +5,7 @@ import com.coc.modi.seller.chat.application.dto.ChatMessageSendCommand;
 import com.coc.modi.seller.chat.application.dto.ChatMessageSliceResponse;
 import com.coc.modi.seller.chat.domain.ChatMessage;
 import com.coc.modi.seller.chat.domain.ChatMessageRepository;
+import com.coc.modi.seller.chat.domain.ChatParticipant;
 import com.coc.modi.seller.chat.domain.ChatParticipantRepository;
 import com.coc.modi.seller.chat.domain.ChatParticipantRole;
 import com.coc.modi.seller.chat.domain.ChatRoom;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -70,7 +73,7 @@ public class ChatMessageService {
 		ChatRoom room = chatRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ChatRoomNotFoundException("채팅방을 찾을 수 없습니다. roomId=" + roomId));
 
-		chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), requesterId)
+		ChatParticipant participant = chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), requesterId)
 				.orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다. roomId=" + room.getId()));
 
 		List<ChatMessage> messages = chatMessageRepository.findMessages(roomId, cursorId, pageSize + 1);
@@ -88,7 +91,28 @@ public class ChatMessageService {
 				.map(ChatMessageResponse::from)
 				.toList();
 
+		markParticipantReadIfNeeded(participant, messages);
+
 		return new ChatMessageSliceResponse(responses, nextCursorId, hasNext);
+	}
+
+	private void markParticipantReadIfNeeded(ChatParticipant participant, List<ChatMessage> messages) {
+		if (participant == null) {
+			return;
+		}
+		Long latestMessageId = null;
+		if (!messages.isEmpty()) {
+			latestMessageId = messages.get(messages.size() - 1).getId();
+		} else {
+			Optional<ChatMessage> latestMessage = chatMessageRepository.findLatestMessage(participant.getRoom().getId());
+			if (latestMessage.isPresent()) {
+				latestMessageId = latestMessage.get().getId();
+			}
+		}
+
+		if (latestMessageId != null) {
+			participant.markRead(latestMessageId, LocalDateTime.now());
+		}
 	}
 
 	private ChatParticipantRole resolveRole(String role) {

@@ -67,4 +67,14 @@ public class ChatParticipant extends BaseEntity {
 		this.lastReadMessageId = lastReadMessageId;
 		this.lastReadAt = lastReadAt;
 	}
+
+	public void markRead(Long messageId, LocalDateTime readAt) {
+		if (messageId == null) {
+			return;
+		}
+		if (this.lastReadMessageId == null || messageId > this.lastReadMessageId) {
+			this.lastReadMessageId = messageId;
+			this.lastReadAt = readAt;
+		}
+	}
 }

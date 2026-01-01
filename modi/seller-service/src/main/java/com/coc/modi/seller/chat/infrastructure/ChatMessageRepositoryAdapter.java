@@ -30,4 +30,9 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
 		}
 		return chatMessageJpaRepository.findByRoomIdAndIdLessThanOrderByIdDesc(roomId, cursorId, pageable);
 	}
+
+	@Override
+	public java.util.Optional<ChatMessage> findLatestMessage(Long roomId) {
+		return chatMessageJpaRepository.findFirstByRoomIdOrderByIdDesc(roomId);
+	}
 }
