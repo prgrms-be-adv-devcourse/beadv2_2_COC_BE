@@ -8,8 +8,6 @@ import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.chat.application.ChatMessageService;
 import com.coc.modi.seller.chat.domain.ChatParticipantRepository;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.security.core.Authentication;
@@ -21,7 +19,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
 	private static final Pattern ROOM_TOPIC_PATTERN = Pattern.compile("^/topic/chat/rooms/(\\d+)$");
@@ -29,6 +26,14 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 	private final ChatParticipantRepository chatParticipantRepository;
 	private final ChatMessageService chatMessageService;
 	private final ChatSubscriptionTracker chatSubscriptionTracker;
+
+	public WebSocketAuthChannelInterceptor(ChatParticipantRepository chatParticipantRepository,
+										   ChatMessageService chatMessageService,
+										   ChatSubscriptionTracker chatSubscriptionTracker) {
+		this.chatParticipantRepository = chatParticipantRepository;
+		this.chatMessageService = chatMessageService;
+		this.chatSubscriptionTracker = chatSubscriptionTracker;
+	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -91,9 +96,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 				&& authentication.getPrincipal() instanceof CustomMember member) {
 			return member;
 		}
-		if (principal instanceof CustomMember member) {
-			return member;
-		}
+
 		return null;
 	}
 }
