@@ -2,6 +2,7 @@ package com.coc.modi.seller.chat.application;
 
 import com.coc.modi.seller.chat.application.dto.ChatMessageResponse;
 import com.coc.modi.seller.chat.application.dto.ChatMessageSendCommand;
+import com.coc.modi.seller.chat.application.dto.ChatMessageSliceResponse;
 import com.coc.modi.seller.chat.domain.ChatMessage;
 import com.coc.modi.seller.chat.domain.ChatMessageRepository;
 import com.coc.modi.seller.chat.domain.ChatParticipantRepository;
@@ -16,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +56,39 @@ public class ChatMessageService {
 
 		ChatMessage saved = chatMessageRepository.save(message);
 		return ChatMessageResponse.from(saved);
+	}
+
+	public ChatMessageSliceResponse getMessages(Long roomId, Long requesterId, Long cursorId, Integer size) {
+		if (roomId == null || requesterId == null) {
+			throw new ChatInputInvalidException("roomId와 memberId는 필수입니다.");
+		}
+		int pageSize = size == null ? 20 : size;
+		if (pageSize < 1 || pageSize > 100) {
+			throw new ChatInputInvalidException("size는 1~100 사이여야 합니다.");
+		}
+
+		ChatRoom room = chatRoomRepository.findById(roomId)
+				.orElseThrow(() -> new ChatRoomNotFoundException("채팅방을 찾을 수 없습니다. roomId=" + roomId));
+
+		chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), requesterId)
+				.orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다. roomId=" + room.getId()));
+
+		List<ChatMessage> messages = chatMessageRepository.findMessages(roomId, cursorId, pageSize + 1);
+		boolean hasNext = messages.size() > pageSize;
+		if (hasNext) {
+			messages = messages.subList(0, pageSize);
+		}
+
+		Long nextCursorId = hasNext && !messages.isEmpty()
+				? messages.get(messages.size() - 1).getId()
+				: null;
+
+		Collections.reverse(messages);
+		List<ChatMessageResponse> responses = messages.stream()
+				.map(ChatMessageResponse::from)
+				.toList();
+
+		return new ChatMessageSliceResponse(responses, nextCursorId, hasNext);
 	}
 
 	private ChatParticipantRole resolveRole(String role) {

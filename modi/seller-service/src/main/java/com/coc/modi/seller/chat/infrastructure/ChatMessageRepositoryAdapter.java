@@ -5,7 +5,10 @@ import com.coc.modi.seller.chat.domain.ChatMessageRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,4 +21,13 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
 
 		return chatMessageJpaRepository.save(message);
     }
+
+	@Override
+	public List<ChatMessage> findMessages(Long roomId, Long cursorId, int size) {
+		PageRequest pageable = PageRequest.of(0, size);
+		if (cursorId == null) {
+			return chatMessageJpaRepository.findByRoomIdOrderByIdDesc(roomId, pageable);
+		}
+		return chatMessageJpaRepository.findByRoomIdAndIdLessThanOrderByIdDesc(roomId, cursorId, pageable);
+	}
 }
