@@ -3,6 +3,7 @@ package com.coc.modi.seller.chat.presentation;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.chat.application.ChatMessageService;
 import com.coc.modi.seller.chat.application.dto.ChatMessageResponse;
+import com.coc.modi.seller.chat.config.ChatSubscriptionTracker;
 import com.coc.modi.seller.chat.presentation.dto.ChatMessageSendRequest;
 import com.coc.modi.seller.chat.exception.ChatAccessDeniedException;
 
@@ -22,6 +23,7 @@ public class ChatMessageController {
 
 	private final ChatMessageService chatMessageService;
 	private final SimpMessagingTemplate messagingTemplate;
+	private final ChatSubscriptionTracker chatSubscriptionTracker;
 
 	@MessageMapping("/chat/rooms/{roomId}/send")
 	public void sendMessage(@DestinationVariable Long roomId,
@@ -30,6 +32,8 @@ public class ChatMessageController {
 		CustomMember sender = resolveSender(principal);
 		ChatMessageResponse response = chatMessageService.sendMessage(request.toCommand(roomId, sender));
 		messagingTemplate.convertAndSend("/topic/chat/rooms/" + roomId, response);
+		chatMessageService.markReadForMembers(roomId, chatSubscriptionTracker.getActiveMembers(roomId),
+				response.messageId());
 	}
 
 	private CustomMember resolveSender(Principal principal) {

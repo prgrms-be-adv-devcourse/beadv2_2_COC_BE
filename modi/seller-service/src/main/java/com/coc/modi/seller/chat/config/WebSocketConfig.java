@@ -1,6 +1,5 @@
 package com.coc.modi.seller.chat.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -10,16 +9,14 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@lombok.RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-	@Bean
-	public WebSocketAuthChannelInterceptor webSocketAuthChannelInterceptor() {
-		return new WebSocketAuthChannelInterceptor();
-	}
+	private final WebSocketAuthChannelInterceptor webSocketAuthChannelInterceptor;
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.interceptors(webSocketAuthChannelInterceptor());
+		registration.interceptors(webSocketAuthChannelInterceptor);
 	}
 
 	@Override

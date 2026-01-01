@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
@@ -59,6 +60,35 @@ public class ChatMessageService {
 
 		ChatMessage saved = chatMessageRepository.save(message);
 		return ChatMessageResponse.from(saved);
+	}
+
+	@Transactional
+	public void markReadForMembers(Long roomId, Collection<Long> memberIds, Long messageId) {
+		if (roomId == null || messageId == null || memberIds == null || memberIds.isEmpty()) {
+			return;
+		}
+		LocalDateTime readAt = LocalDateTime.now();
+		for (Long memberId : memberIds) {
+			if (memberId == null) {
+				continue;
+			}
+			chatParticipantRepository.findByRoomIdAndMemberId(roomId, memberId)
+					.ifPresent(participant -> participant.markRead(messageId, readAt));
+		}
+	}
+
+	@Transactional
+	public void markReadToLatest(Long roomId, Long memberId) {
+		if (roomId == null || memberId == null) {
+			return;
+		}
+		ChatParticipant participant = chatParticipantRepository.findByRoomIdAndMemberId(roomId, memberId)
+				.orElse(null);
+		if (participant == null) {
+			return;
+		}
+		Optional<ChatMessage> latestMessage = chatMessageRepository.findLatestMessage(roomId);
+		latestMessage.ifPresent(message -> participant.markRead(message.getId(), LocalDateTime.now()));
 	}
 
 	public ChatMessageSliceResponse getMessages(Long roomId, Long requesterId, Long cursorId, Integer size) {
