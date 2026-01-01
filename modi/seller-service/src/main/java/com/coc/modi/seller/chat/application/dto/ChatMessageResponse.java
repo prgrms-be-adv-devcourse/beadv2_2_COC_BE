@@ -4,6 +4,7 @@ import com.coc.modi.seller.chat.domain.ChatMessage;
 import com.coc.modi.seller.chat.domain.ChatParticipantRole;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ChatMessageResponse(
 		Long messageId,
@@ -23,5 +24,22 @@ public record ChatMessageResponse(
 				message.getContent(),
 				message.getSentAt()
 		);
+	}
+
+	public static ChatMessageResponse fromEvent(ChatMessageEvent event) {
+		return new ChatMessageResponse(
+				event.messageId(),
+				event.roomId(),
+				event.senderId(),
+				event.senderRole(),
+				event.content(),
+				event.sentAt()
+		);
+	}
+
+	public static List<ChatMessageResponse> fromEvents(List<ChatMessageEvent> events) {
+		return events.stream()
+				.map(ChatMessageResponse::fromEvent)
+				.toList();
 	}
 }

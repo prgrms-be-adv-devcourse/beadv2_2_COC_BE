@@ -1,5 +1,6 @@
 package com.coc.modi.seller.chat.application;
 
+import com.coc.modi.seller.chat.application.dto.ChatMessageEvent;
 import com.coc.modi.seller.chat.application.dto.ChatMessageResponse;
 import com.coc.modi.seller.chat.application.dto.ChatMessageSendCommand;
 import com.coc.modi.seller.chat.application.dto.ChatMessageSliceResponse;
@@ -13,6 +14,7 @@ import com.coc.modi.seller.chat.domain.ChatRoomRepository;
 import com.coc.modi.seller.chat.exception.ChatInputInvalidException;
 import com.coc.modi.seller.chat.exception.ChatRoomNotFoundException;
 import com.coc.modi.seller.chat.exception.ChatAccessDeniedException;
+import com.coc.modi.seller.chat.infrastructure.ChatMessagePublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,7 @@ public class ChatMessageService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatMessageRepository chatMessageRepository;
 	private final ChatParticipantRepository chatParticipantRepository;
+	private final ChatMessagePublisher chatMessagePublisher;
 
 	@Transactional
 	public ChatMessageResponse sendMessage(ChatMessageSendCommand command) {
@@ -59,6 +62,7 @@ public class ChatMessageService {
 				.build();
 
 		ChatMessage saved = chatMessageRepository.save(message);
+		chatMessagePublisher.publish(ChatMessageEvent.from(saved));
 		return ChatMessageResponse.from(saved);
 	}
 
