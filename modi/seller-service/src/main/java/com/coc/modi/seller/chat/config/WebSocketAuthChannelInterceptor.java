@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.chat.application.ChatMessageService;
 import com.coc.modi.seller.chat.domain.ChatParticipantRepository;
+import com.coc.modi.seller.chat.exception.ChatAccessDeniedException;
 
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -15,7 +16,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,7 +45,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 		if (StompCommand.CONNECT.equals(accessor.getCommand())) {
 			CustomMember member = resolveMember(accessor.getUser());
 			if (member == null) {
-				throw new AccessDeniedException("Missing websocket principal");
+				throw new ChatAccessDeniedException("웹소켓 인증 정보가 없습니다.");
 			}
 			chatSubscriptionTracker.registerSession(accessor.getSessionId(), member.memberId());
 			return message;
@@ -58,10 +58,10 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 			}
 			CustomMember member = resolveMember(accessor.getUser());
 			if (member == null) {
-				throw new AccessDeniedException("Missing websocket principal");
+				throw new ChatAccessDeniedException("웹소켓 인증 정보가 없습니다.");
 			}
 			chatParticipantRepository.findByRoomIdAndMemberId(roomId, member.memberId())
-					.orElseThrow(() -> new AccessDeniedException("Not a chat participant"));
+					.orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다."));
 			chatSubscriptionTracker.registerSubscription(accessor.getSessionId(), accessor.getSubscriptionId(), roomId,
 					member.memberId());
 			chatMessageService.markReadToLatest(roomId, member.memberId());
