@@ -35,6 +35,11 @@ spec:
           ports:
             - name: http
               containerPort: 8761
+          startupProbe:
+            tcpSocket:
+              port: 8761
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8761

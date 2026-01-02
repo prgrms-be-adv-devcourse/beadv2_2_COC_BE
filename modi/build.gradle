@@ -70,6 +70,7 @@ project(':common-security') {
 
     dependencies {
 
+        compileOnly 'io.github.openfeign:feign-core'
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'io.jsonwebtoken:jjwt-api:0.11.5'

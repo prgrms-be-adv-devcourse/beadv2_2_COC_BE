@@ -21,6 +21,7 @@ spring:
           spring.mail.password: ${EMAIL_PASSWORD}
           spring.data.redis.host: ${REDIS_HOST}
           spring.data.redis.port: ${REDIS_PORT}
+          internal.api.token: ${INTERNAL_API_TOKEN:}
           mail.from-address: ${EMAIL_ADDRESS}
           product-service.url: ${PRODUCT_SERVICE_URL}
           account-service.url: ${ACCOUNT_SERVICE_URL}

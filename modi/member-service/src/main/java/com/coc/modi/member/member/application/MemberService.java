@@ -23,7 +23,7 @@ import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
 import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
-import com.coc.modi.member.member.event.MemberCreatedEventPublisher;
+import com.coc.modi.member.outbox.MemberOutboxService;
 import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
 import com.coc.modi.member.member.infrastructure.client.dto.MemberWalletResponse;
 import com.coc.modi.member.security.JwtTokenProvider;
@@ -51,7 +51,7 @@ public class MemberService {
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final EmailVerificationService emailVerificationService;
-	private final MemberCreatedEventPublisher memberCreatedEventPublisher;
+	private final MemberOutboxService memberOutboxService;
 	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
@@ -84,7 +84,7 @@ public class MemberService {
 		
 		Member saved = memberRepository.save(member);
 		
-		memberCreatedEventPublisher.publish(
+		memberOutboxService.enqueueMemberCreated(
 				MemberCreatedEvent.of(saved.getId(), saved.getEmail())
 		);
 

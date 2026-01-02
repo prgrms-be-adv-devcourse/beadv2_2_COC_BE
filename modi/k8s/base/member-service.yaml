@@ -47,6 +47,11 @@ spec:
           envFrom:
             - secretRef:
                 name: modi-env
+          startupProbe:
+            tcpSocket:
+              port: 8085
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8085
