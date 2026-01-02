@@ -10,6 +10,7 @@ import com.coc.modi.seller.chat.domain.ChatRoomRepository;
 import com.coc.modi.seller.chat.exception.ChatAccessDeniedException;
 import com.coc.modi.seller.chat.exception.ChatInputInvalidException;
 import com.coc.modi.seller.chat.exception.ChatRoomNotFoundException;
+import com.coc.modi.seller.chat.exception.ChatRoomStateConflictException;
 import com.coc.modi.seller.seller.exception.SellerNotFoundException;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
@@ -135,9 +136,9 @@ public class ChatRoomService {
             }
         }
 
-		if (sellerAccountId == null || memberId == null) {
-			throw new IllegalStateException("채팅방 참가자 정보가 올바르지 않습니다. roomId=" + room.getId());
-		}
+			if (sellerAccountId == null || memberId == null) {
+				throw new ChatRoomStateConflictException("채팅방 참가자 정보가 올바르지 않습니다. roomId=" + room.getId());
+			}
 
 		Seller seller = findSellerByMemberId(sellerAccountId);
 
