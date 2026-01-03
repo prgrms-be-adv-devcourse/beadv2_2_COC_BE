@@ -5,7 +5,7 @@ import com.coc.modi.rental.cart.application.dto.CartResponse;
 import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
-import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
+import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class CartQueryService {
 
     private final CartRepository cartRepository;
-    private final ProductFeignClient productFeignClient;
+    private final ProductClientAdapter productClientAdapter;
 
     @Transactional(readOnly = true)
     public CartResponse getCart(Long memberId) {
@@ -38,7 +38,7 @@ public class CartQueryService {
                 .distinct()
                 .toList();
 
-        List<ProductResponseDto> products = productFeignClient.getProducts(productIds);
+        List<ProductResponseDto> products = productClientAdapter.getProducts(productIds);
 
         Map<Long, ProductResponseDto> productMap = products.stream()
                 .collect(Collectors.toMap(ProductResponseDto::productId, dto -> dto));

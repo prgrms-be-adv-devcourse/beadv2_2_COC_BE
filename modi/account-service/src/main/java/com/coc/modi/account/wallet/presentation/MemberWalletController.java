@@ -8,7 +8,6 @@ import com.coc.modi.common.auth.CustomMember;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +26,7 @@ public class MemberWalletController {
     @GetMapping("/balance")
     public ResponseEntity<ApiResponse<MemberWalletResponse>> getMemberWalletBalance(@AuthenticationPrincipal CustomMember member) {
 
-        MemberWalletResponse response = memberWalletService.getMemberWalletBalance(member.getMemberId());
+        MemberWalletResponse response = memberWalletService.getMemberWalletBalance(member.memberId());
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -36,7 +35,7 @@ public class MemberWalletController {
     @GetMapping("/transactions")
     public ResponseEntity<ApiResponse<List<WalletTransactionResponse>>> getWalletTransactions(@AuthenticationPrincipal CustomMember member) {
 
-        List<WalletTransactionResponse> transactions = memberWalletService.getWalletTransactions(member.getMemberId());
+        List<WalletTransactionResponse> transactions = memberWalletService.getWalletTransactions(member.memberId());
 
         return ResponseEntity.ok(ApiResponse.ok(transactions));
     }

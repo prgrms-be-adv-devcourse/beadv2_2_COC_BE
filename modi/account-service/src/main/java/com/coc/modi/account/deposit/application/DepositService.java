@@ -3,9 +3,11 @@ package com.coc.modi.account.deposit.application;
 import com.coc.modi.account.deposit.application.dto.DepositApprovalCommand;
 import com.coc.modi.account.deposit.application.dto.DepositCancelCommand;
 import com.coc.modi.account.deposit.application.dto.DepositCommand;
+import com.coc.modi.account.deposit.application.dto.DepositFailCommand;
 import com.coc.modi.account.deposit.application.dto.DepositResponse;
 import com.coc.modi.account.deposit.domain.PgDeposit;
 import com.coc.modi.account.deposit.domain.PgDepositRepository;
+import com.coc.modi.account.deposit.domain.PgDepositStatus;
 import com.coc.modi.account.deposit.infrastructure.client.TossPaymentsClient;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprovalResponse;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelResponse;
@@ -55,8 +57,31 @@ public class DepositService {
     public DepositResponse approveDeposit(DepositApprovalCommand command) {
 
         // 1. orderId로 충전 요청 조회
-        PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
+        PgDeposit deposit = pgDepositRepository.findByPgTidForUpdate(command.orderId())
                 .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+
+        if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
+
+            BigDecimal requestedAmount = deposit.getAmount();
+            BigDecimal approvedAmount = command.amount();
+
+            if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
+
+                throw new AccountException(ErrorCode.CONFLICT, "이미 승인된 결제 금액과 일치하지 않습니다.");
+            }
+
+            if (deposit.getPaymentKey() != null && !deposit.getPaymentKey().equals(command.paymentKey())) {
+
+                throw new AccountException(ErrorCode.CONFLICT, "이미 승인된 결제와 paymentKey가 일치하지 않습니다.");
+            }
+
+            return DepositResponse.from(deposit);
+        }
+
+        if (deposit.getStatus() != PgDepositStatus.REQUESTED) {
+
+            throw new AccountException(ErrorCode.CONFLICT, "승인할 수 없는 상태입니다. : " + deposit.getStatus());
+        }
 
         // 2. 금액 검증
         BigDecimal requestedAmount = deposit.getAmount();
@@ -88,7 +113,7 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit.getId(), deposit.getAmount());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -149,11 +174,24 @@ public class DepositService {
         walletCommandService.createTransactionAndUpdateBalance(
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
-                        deposit.getId(),
-                        cancelAmount
+                        deposit,
+                        cancelAmount,
+						deposit.getPaymentKey()
                 )
         );
 
         return DepositResponse.from(deposit);
     }
+	
+	// 결제 실패
+	@Transactional
+	public DepositResponse failDeposit(DepositFailCommand command) {
+		
+		PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
+				.orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+		
+		deposit.fail(command.failureMessage());
+		
+		return DepositResponse.from(deposit);
+	}
 }

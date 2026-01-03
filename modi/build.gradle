@@ -77,18 +77,7 @@ project(':common-security') {
         implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     }
 }
-project(':common-openapi') {
 
-    dependencies {
-
-        implementation 'org.springframework.boot:spring-boot-autoconfigure'
-//        implementation 'io.swagger.core.v3:swagger-models:2.2.22'
-        implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.33'
-        implementation 'io.swagger.core.v3:swagger-models:2.2.33'
-
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    }
-}
 
 project(':common-kafka') {
 
@@ -102,6 +91,14 @@ project(':common-kafka') {
     }
 }
 
+project(':common-openapi') {
+
+    dependencies {
+
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+    }
+}
+
 
 configure([
         project(':account-service'),
@@ -110,7 +107,8 @@ configure([
         project(':seller-service'),
         project(':member-service'),
         project(':review-service'),
-        project(':notification-service')
+        project(':notification-service'),
+        project(':delivery-service')
 ]) {
     dependencies {
 
@@ -127,6 +125,8 @@ configure([
 
         implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+        implementation 'io.github.openfeign:feign-httpclient'
+
         // 타입 안전한 JPA 쿼리를 위한 Querydsl.
         implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
         annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
@@ -142,6 +142,10 @@ configure([
         implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
         implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+        implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
+        implementation "io.github.resilience4j:resilience4j-micrometer"
     }
 }

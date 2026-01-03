@@ -39,12 +39,14 @@ public class ProductController {
 	// 상품 목록 조회
 	@GetMapping
 	public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
+			@AuthenticationPrincipal CustomMember member,
 			@ModelAttribute ProductSearchCondition condition,
 			@RequestParam(name = "cursor", required = false) String cursor,
 			@RequestParam(name = "size", defaultValue = "20") int size,
 			@RequestParam(name = "sortType", defaultValue = "LATEST") ProductSortType sortType) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType)));
+		Long memberId = member != null ? member.memberId() : null;
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType, memberId)));
 	}
 	
 	// 판매자 상품 목록 조회
@@ -56,7 +58,7 @@ public class ProductController {
 																						direction = Sort.Direction.DESC
 																				) Pageable pageable) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.getMemberId(), pageable)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.memberId(), pageable)));
 	}
 	
 	// 상품 상세 조회
@@ -64,7 +66,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
 																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.getMemberId(), productId)));
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
 	}
 	
 	// 상품 등록
@@ -72,7 +74,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody ProductCreateRequest request) {
 		
-		ProductCreateCommand command = ProductCreateCommand.toCommand(member.getMemberId(), request);
+		ProductCreateCommand command = ProductCreateCommand.toCommand(member.memberId(), request);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(productService.createProduct(command)));
 	}
@@ -83,7 +85,7 @@ public class ProductController {
 																			@PathVariable("productId") Long productId,
 																			@Valid @RequestBody ProductUpdateRequest request) {
 		
-		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.getMemberId(), productId, request);
+		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.memberId(), productId, request);
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
 	}
@@ -93,7 +95,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> activeProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.activeProduct(member.getMemberId(), productId);
+		productStatusService.activeProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -103,7 +105,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> disableProduct(@AuthenticationPrincipal CustomMember member,
 														    @PathVariable("productId") Long productId) {
 		
-		productStatusService.disableProduct(member.getMemberId(), productId);
+		productStatusService.disableProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
@@ -113,7 +115,7 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> deleteProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
 		
-		productStatusService.deleteProduct(member.getMemberId(), productId);
+		productStatusService.deleteProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
 	}

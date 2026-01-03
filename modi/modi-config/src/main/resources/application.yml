@@ -38,6 +38,8 @@ spring:
           uri: ${GIT_URI}
           username: ${GIT_USER}
           password: ${GIT_PAT}
+          refresh-rate: 0 # every request checks for updates
+          force-pull: true # discard local changes and pull from remote when refreshing
         default-label: main
 
 
@@ -45,3 +47,12 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URI}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always

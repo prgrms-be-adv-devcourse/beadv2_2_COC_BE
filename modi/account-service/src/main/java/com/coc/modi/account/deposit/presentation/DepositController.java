@@ -5,6 +5,7 @@ import com.coc.modi.account.deposit.application.dto.DepositResponse;
 import com.coc.modi.account.deposit.infrastructure.config.TossPaymentsConfig;
 import com.coc.modi.account.deposit.presentation.dto.DepositApprovalRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositCancelRequest;
+import com.coc.modi.account.deposit.presentation.dto.DepositFailRequest;
 import com.coc.modi.account.deposit.presentation.dto.DepositRequest;
 import com.coc.modi.account.deposit.application.dto.TossConfigResponse;
 import com.coc.modi.common.ApiResponse;
@@ -29,7 +30,7 @@ public class DepositController {
     public ResponseEntity<ApiResponse<DepositResponse>> requestDeposit(@Valid @RequestBody DepositRequest request,
 																	   @AuthenticationPrincipal CustomMember member) {
 
-        DepositResponse response = depositService.requestDeposit(request.toCommand(member.getMemberId()));
+        DepositResponse response = depositService.requestDeposit(request.toCommand(member.memberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -61,9 +62,18 @@ public class DepositController {
     public ResponseEntity<ApiResponse<DepositResponse>> cancelDeposit(@Valid @RequestBody DepositCancelRequest request,
 																	  @AuthenticationPrincipal CustomMember member) {
 
-        DepositResponse response = depositService.cancelDeposit(request.toCommand(member.getMemberId()));
+        DepositResponse response = depositService.cancelDeposit(request.toCommand(member.memberId()));
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+	
+	// 예치금 충전 실패
+	@PostMapping("/payments/fail")
+	public ResponseEntity<ApiResponse<DepositResponse>> failDeposit(@Valid @RequestBody DepositFailRequest request) {
+		
+		DepositResponse response = depositService.failDeposit(request.toCommand());
+		
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
 
 }

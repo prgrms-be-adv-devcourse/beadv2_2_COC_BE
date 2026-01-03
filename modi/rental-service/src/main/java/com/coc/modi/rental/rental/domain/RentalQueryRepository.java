@@ -25,4 +25,7 @@ public interface RentalQueryRepository {
 	List<Long> findUnavailableProductIds(LocalDate startDate, LocalDate endDate, List<Long> productIds);
 	
 	boolean existsOverlappingRentalItem(Long productId, LocalDate startDate, LocalDate endDate, Long excludeRentalItemId);
+	
+	List<RentalItem> findUnavailableRentalItems(Long productId, LocalDate startDate, LocalDate endDate);
+	
 }

@@ -10,11 +10,11 @@ import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
 import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
-import com.coc.modi.rental.rental.infrastructure.client.AccountFeignClient;
+import com.coc.modi.rental.rental.infrastructure.client.AccountClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
+import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.WalletInfoResponse;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -29,8 +29,9 @@ import java.util.Map;
 public class RentalPaymentService {
 	
 	private final RentalRepository rentalRepository;
-	private final AccountFeignClient accountFeignClient;
+	private final AccountClientAdapter accountClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
+	private final RentalAppSupport rentalAppSupport;
 	
 	@Transactional
 	public PayRentalResponse completePayment(Long rentalId, Long memberId) {
@@ -62,12 +63,8 @@ public class RentalPaymentService {
 		
 		BigDecimal totalAmount = rental.getTotalAmount();
 		
-		WalletInfoResponse walletInfoResponse;
-		try {
-			walletInfoResponse = accountFeignClient.charge(new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
-		} catch (FeignException ex) {
-			throw new RentalStatusInvalidException("결제 처리 중 지갑 서비스 호출에 실패했습니다.");
-		}
+		WalletInfoResponse walletInfoResponse =
+				accountClientAdapter.charge(new ChargeWalletCommand(memberId, rental.getId(), totalAmount));
 		
 		LocalDateTime paidAt = LocalDateTime.now();
 		
@@ -84,5 +81,27 @@ public class RentalPaymentService {
 						"rentalStatus", rental.getStatus().name()));
 		
 		return PayRentalResponse.create(rental, totalAmount, walletInfoResponse.balance(), paidAt);
+	}
+	
+	
+	@Transactional
+	public void refundRentalItem(Long rentalItemId, Long memberId) {
+		RentalItem rentalItem = rentalAppSupport.loadRentalItem(rentalItemId);
+		Rental rental = rentalAppSupport.requireRental(rentalItem);
+		
+		rentalAppSupport.requireMember(rental, memberId);
+		
+		BigDecimal refundAmount = rentalItem.processRefund();
+		
+		accountClientAdapter.refund(new RefundWalletCommand(memberId, rental.getId(), rentalItem.getId(), refundAmount));
+		
+		rental.recalculateAmountsAndStatus();
+		
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_REFUNDED,
+				Map.of("rentalId", rental.getId(),
+						"rentalItemId", rentalItem.getId(),
+						"rentalStatus", rental.getStatus().name(),
+						"itemStatus", rentalItem.getStatus().name(),
+						"refundAmount", refundAmount));
 	}
 }

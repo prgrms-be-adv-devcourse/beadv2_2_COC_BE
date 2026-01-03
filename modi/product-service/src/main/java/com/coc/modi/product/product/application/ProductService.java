@@ -21,8 +21,11 @@ import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.search.application.ProductIndexService;
 import com.coc.modi.product.search.application.ProductSearchPort;
 import com.coc.modi.product.search.domain.ProductSortType;
+import com.coc.modi.product.searchlog.application.ProductSearchLogService;
+import com.coc.modi.product.viewlog.application.ProductViewService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +39,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -45,15 +49,24 @@ public class ProductService {
 	private final SellerIdResolver sellerIdResolver;
 	private final ProductIndexService productIndexService;
 	private final ProductImageRepository productImageRepository;
+	private final ProductSearchLogService productSearchLogService;
+	private final ProductViewService productViewService;
 	
 	// 3-1. 상품 목록 조회 검색 기능
 	@Transactional(readOnly = true)
 	public ProductScrollResponse searchProducts(ProductSearchCondition condition,
 												String cursor,
 												int size,
-												ProductSortType sortType) {
+												ProductSortType sortType,
+												Long memberId) {
 		
-		return productSearchPort.searchProducts(condition, cursor, size, sortType);
+		ProductScrollResponse response = productSearchPort.searchProducts(condition, cursor, size, sortType);
+		try {
+			productSearchLogService.recordSearchLog(condition, sortType, cursor, size, memberId);
+		} catch (Exception e) {
+			log.warn("Product search log save failed. keyword={}", condition.keyword(), e);
+		}
+		return response;
 	}
 	
 	// 사용자의 판매 리스트 조회
@@ -88,6 +101,12 @@ public class ProductService {
 			}
 		}
 		
+		try {
+			productViewService.recordView(productId, memberId);
+		} catch (Exception e) {
+			log.warn("Product view log save failed. productId={}", productId, e);
+		}
+
 		return ProductDetailResponse.from(product);
 	}
 	
@@ -145,7 +164,7 @@ public class ProductService {
 		product.refreshThumbnailImage();
 		
 		productIndexService.index(product);
-		
+	
 		return ProductDetailResponse.from(product);
 	}
 	

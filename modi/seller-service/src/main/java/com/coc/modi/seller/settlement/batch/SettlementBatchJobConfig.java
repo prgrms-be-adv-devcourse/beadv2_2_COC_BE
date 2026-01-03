@@ -1,10 +1,13 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.application.port.RentalPort;
-import com.coc.modi.seller.infrastructure.client.rental.dto.RentalItemInfo;
+import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient;
+import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
 import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.domain.SellerSettlement;
+import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
+import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
 
 import feign.FeignException;
 import feign.RetryableException;
@@ -32,7 +35,7 @@ public class SettlementBatchJobConfig {
 	private final SettlementBatchJobListener jobListener;
 	private final SettlementBatchStepListener stepListener;
 	private final SettlementAggregationService settlementAggregationService;
-	private final RentalPort rentalPort;
+	private final RentalFeignClient rentalFeignClient;
 	private final SellerRepository sellerRepository;
 	
 	@Value("${settlement.batch.chunk-size:50}")
@@ -74,6 +77,21 @@ public class SettlementBatchJobConfig {
 				.listener(stepListener)
 				.build();
 	}
+
+	@Bean
+	public Step settlementPayoutStep(JobRepository jobRepository,
+									 PlatformTransactionManager transactionManager,
+									 SettlementPayoutItemReader settlementPayoutItemReader,
+									 SettlementPayoutProcessor settlementPayoutProcessor,
+									 SettlementPayoutWriter settlementPayoutWriter) {
+
+		return new StepBuilder("settlementPayoutStep", jobRepository)
+				.<SellerSettlement, SettlementPayoutItem>chunk(chunkSize, transactionManager)
+				.reader(settlementPayoutItemReader)
+				.processor(settlementPayoutProcessor)
+				.writer(settlementPayoutWriter)
+				.build();
+	}
 	
 	@Bean
 	@StepScope
@@ -88,7 +106,7 @@ public class SettlementBatchJobConfig {
 			throw new SettlementInputInvalidException("startDate and endDate are required");
 		}
 		return new SettlementRentalItemReader(
-				rentalPort,
+				rentalFeignClient,
 				sellerRepository,
 				startDate,
 				endDate,
@@ -113,6 +131,28 @@ public class SettlementBatchJobConfig {
 	) {
 		
 		return new SettlementAggregationWriter(settlementAggregationService, batchId);
+	}
+
+	@Bean
+	@StepScope
+	public SettlementPayoutItemReader settlementPayoutItemReader(
+			SellerSettlementJpaRepository settlementRepository,
+			@Value("#{jobParameters['batchId']}") Long batchId
+	) {
+
+		return new SettlementPayoutItemReader(settlementRepository, batchId, SellerSettlementStatus.READY);
+	}
+
+	@Bean
+	public SettlementPayoutProcessor settlementPayoutProcessor() {
+
+		return new SettlementPayoutProcessor(sellerRepository);
+	}
+
+	@Bean
+	public SettlementPayoutWriter settlementPayoutWriter() {
+
+		return new SettlementPayoutWriter();
 	}
 	
 	@Bean

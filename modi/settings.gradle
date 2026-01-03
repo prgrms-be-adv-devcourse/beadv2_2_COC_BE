@@ -4,8 +4,8 @@ include(
         'common',
         'common-security',
         'common-notification',
-        'common-openapi',
         'common-kafka',
+        'common-openapi',
         'account-service',
         'product-service',
         'rental-service',
@@ -13,6 +13,7 @@ include(
         'member-service',
         'review-service',
         'notification-service',
+        'delivery-service',
         'modi-gateway',
         'modi-discovery',
         'modi-config'
