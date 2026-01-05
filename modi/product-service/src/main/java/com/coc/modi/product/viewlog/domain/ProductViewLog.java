@@ -15,7 +15,7 @@ import java.time.LocalDate;
 
 @Getter
 @Entity
-@Table(name = "product_view_log", schema = "public")
+@Table(name = "product_view_log")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ProductViewLog extends BaseEntity {
 

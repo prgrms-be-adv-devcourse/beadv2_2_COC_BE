@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @Getter
 @Entity
-@Table(name = "product_view_daily", schema = "public")
+@Table(name = "product_view_daily")
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ProductViewDaily extends BaseEntity {
 
