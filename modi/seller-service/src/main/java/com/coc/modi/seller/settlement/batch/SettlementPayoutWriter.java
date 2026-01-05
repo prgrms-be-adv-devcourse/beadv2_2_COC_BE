@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
 
-import com.coc.modi.seller.exception.SellerSettlementNotFoundException;
+import com.coc.modi.seller.settlement.exception.SellerSettlementNotFoundException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
