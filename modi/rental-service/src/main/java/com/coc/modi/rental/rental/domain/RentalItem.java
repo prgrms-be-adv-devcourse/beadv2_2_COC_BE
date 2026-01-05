@@ -21,7 +21,7 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "rental_item", schema = "public")
+@Table(name = "rental_item", schema = "rental")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RentalItem extends BaseEntity {
 	

@@ -31,7 +31,7 @@ import static java.math.BigDecimal.ZERO;
 
 @Getter
 @Entity
-@Table(name = "seller_settlement")
+@Table(name = "seller_settlement", schema = "seller")
 @ToString(of = {"id", "sellerId", "periodYm", "settlementAmount", "status"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SellerSettlement extends BaseEntity {

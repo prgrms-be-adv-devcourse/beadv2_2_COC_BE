@@ -42,6 +42,11 @@ spec:
               value: "true"
             - name: SERVER_PORT
               value: "8083"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: RENTAL_DB_URL
           envFrom:
             - secretRef:
                 name: modi-env
