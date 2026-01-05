@@ -43,6 +43,18 @@ spring:
           resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.wait-duration-in-open-state: 10s
           resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.permitted-number-of-calls-in-half-open-state: 3
           resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.automatic-transition-from-open-to-half-open-enabled: true
+          openai.api-key: ${OPENAI_API_KEY}
+          openai.base-url: https://api.openai.com/
+          openai.chat.options.model: gpt-5-nano
+          openai.chat.options.temperature: 1.0
+          openai.chat.max-tokens: 256
+          openai.chat.template.system: |
+            너는 전자기기 렌탈 서비스의 상담 도우미야.
+            전문용어는 쉬운 표현으로 설명하고, 핵심 정보만 간결하게 답변해.
+            답변은 2문장 이내로, 핵심만 요약해. 불필요한 서론/부연 설명은 생략해.
+            확실하지 않은 정보는 추측하지 말고, 필요한 경우에만 아주 짧게 세부사항을 질문해.
+          openai.embeddings.model: text-embedding-3-small
+          openai.embeddings.dimensions: 1536
         git:
           uri: ${GIT_URI}
           username: ${GIT_USER}
