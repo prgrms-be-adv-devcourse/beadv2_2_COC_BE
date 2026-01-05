@@ -27,6 +27,16 @@ public enum ErrorCode {
 	PRODUCT_INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT-500", "상품 처리 중 오류가 발생했습니다."),
 	PRODUCT_SEARCH_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PRODUCT-503", "상품 검색 기능을 이용할 수 없습니다."),
 
+	DELIVERY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "DELIVERY-400", "잘못된 배송 요청입니다."),
+	DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "DELIVERY-404", "배송 정보를 찾을 수 없습니다."),
+	DELIVERY_CONFLICT(HttpStatus.CONFLICT, "DELIVERY-409", "배송 요청이 현재 상태와 충돌합니다."),
+	DELIVERY_TRACKING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "DELIVERY-500", "배송 추적 처리 중 오류가 발생했습니다."),
+
+	CHAT_INVALID_INPUT(HttpStatus.BAD_REQUEST, "CHAT-400", "잘못된 채팅 요청입니다."),
+	CHAT_FORBIDDEN(HttpStatus.FORBIDDEN, "CHAT-403", "채팅 접근 권한이 없습니다."),
+	CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT-404", "채팅 정보를 찾을 수 없습니다."),
+	CHAT_CONFLICT(HttpStatus.CONFLICT, "CHAT-409", "채팅 상태가 요청과 충돌합니다."),
+
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
 	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다."),
 	

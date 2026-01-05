@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
@@ -37,7 +37,7 @@ public class SettlementPayoutItemReader implements ItemStreamReader<SellerSettle
 		if (batchId == null) {
 			throw new SettlementInputInvalidException("batchId is required for payout step");
 		}
-		this.items = settlementRepository.findByBatchIdAndStatusOrderByIdAsc(batchId, status);
+		this.items = settlementRepository.findByBatch_IdAndStatusOrderByIdAsc(batchId, status);
 		if (executionContext.containsKey(INDEX_KEY)) {
 			this.index = executionContext.getInt(INDEX_KEY);
 		}

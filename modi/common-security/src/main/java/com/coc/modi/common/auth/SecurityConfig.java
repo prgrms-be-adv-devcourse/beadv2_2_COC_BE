@@ -54,6 +54,7 @@ public class SecurityConfig {
 							.requestMatchers("/payments/**").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/internal/**").permitAll()
 							.requestMatchers("/actuator/**").permitAll()
 							.requestMatchers("/api/**").authenticated()

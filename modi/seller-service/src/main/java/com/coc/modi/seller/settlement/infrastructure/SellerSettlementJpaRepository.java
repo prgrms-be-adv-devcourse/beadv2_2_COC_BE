@@ -17,5 +17,5 @@ public interface SellerSettlementJpaRepository extends JpaRepository<SellerSettl
 
     Optional<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm);
 
-    List<SellerSettlement> findByBatchIdAndStatusOrderByIdAsc(Long batchId, SellerSettlementStatus status);
+    List<SellerSettlement> findByBatch_IdAndStatusOrderByIdAsc(Long batchId, SellerSettlementStatus status);
 }

@@ -34,6 +34,12 @@ public class PgDepositRepositoryAdapter implements PgDepositRepository {
     }
 
     @Override
+    public Optional<PgDeposit> findByPgTidForUpdate(String pgTid) {
+
+        return pgDepositJpaRepository.findByPgTidForUpdate(pgTid);
+    }
+
+    @Override
     public List<PgDeposit> findByMemberId(Long memberId) {
 
         return pgDepositJpaRepository.findByMemberId(memberId);

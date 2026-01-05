@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.exception.SettlementPayoutNotReadyException;
+import com.coc.modi.seller.settlement.exception.SettlementPayoutNotReadyException;
 
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;

@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: modi-config
+  labels:
+    app: modi-config
+spec:
+  ports:
+    - name: http
+      port: 8888
+      targetPort: 8888
+  selector:
+    app: modi-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modi-config
+  labels:
+    app: modi-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modi-config
+  template:
+    metadata:
+      labels:
+        app: modi-config
+    spec:
+      containers:
+        - name: modi-config
+          image: modi/modi-config:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8888
+          envFrom:
+            - secretRef:
+                name: modi-env
+          env:
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+          readinessProbe:
+            tcpSocket:
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 10
