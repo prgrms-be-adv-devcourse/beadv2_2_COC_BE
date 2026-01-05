@@ -1,13 +1,13 @@
 package com.coc.modi.product.product.presentation;
 
 import com.coc.modi.common.ApiResponse;
+import com.coc.modi.product.product.infrastructure.batch.ProductReindexJobParameters;
 import com.coc.modi.product.product.exception.ProductInternalException;
 import com.coc.modi.product.product.presentation.dto.ProductReindexResponse;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,9 +33,7 @@ public class ProductReindexController {
 	public ApiResponse<ProductReindexResponse> reindex() {
 		
 		try {
-			JobParameters params = new JobParametersBuilder()
-					.addLong("time", System.currentTimeMillis())
-					.toJobParameters();
+			JobParameters params = ProductReindexJobParameters.newParameters();
 			JobExecution execution = jobLauncher.run(productReindexJob, params);
 			return ApiResponse.ok(new ProductReindexResponse(execution.getId(), execution.getStatus().toString()));
 		} catch (Exception e) {

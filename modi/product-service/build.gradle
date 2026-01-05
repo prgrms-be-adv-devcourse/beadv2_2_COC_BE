@@ -1,4 +1,8 @@
 dependencies {
+    implementation project(':common-ai')
+    implementation project(':common-kafka')
+    implementation 'org.springframework.kafka:spring-kafka'
+
     implementation 'co.elastic.clients:elasticsearch-java:8.18.0'
     implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.18.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
@@ -10,7 +14,7 @@ dependencies {
     // AWS SDK BOM 및 S3 연동
     implementation platform("software.amazon.awssdk:bom:2.28.0")
     implementation "software.amazon.awssdk:s3"
-    implementation 'org.apache.tika:tika-core:2.9.4'
+    implementation 'org.apache.tika:tika-core:3.2.2'
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 

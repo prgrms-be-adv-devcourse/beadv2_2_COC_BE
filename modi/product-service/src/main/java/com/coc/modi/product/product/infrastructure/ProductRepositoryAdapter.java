@@ -54,4 +54,10 @@ public class ProductRepositoryAdapter implements ProductRepository {
 		
 		return productJpaRepository.findByIdIn(productIds);
 	}
+
+	@Override
+	public List<Product> findByStatusNot(ProductStatus status) {
+		
+		return productJpaRepository.findByStatusNot(status);
+	}
 }

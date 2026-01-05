@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -48,6 +51,10 @@ public class Product extends BaseEntity {
 	
 	@Column(name = "thumbnail_image_id")
 	private Long thumbnailImageId;
+
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "specs", columnDefinition = "jsonb")
+	private Map<String, String> specs;
 	
 	@OrderBy("ordering ASC")
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,7 +69,8 @@ public class Product extends BaseEntity {
 					String description,
 					BigDecimal pricePerDay,
 					ProductStatus status,
-					ProductCategory category) {
+					ProductCategory category,
+					Map<String, String> specs) {
 		
 		this.sellerId = sellerId;
 		this.name = name;
@@ -70,6 +78,7 @@ public class Product extends BaseEntity {
 		this.pricePerDay = pricePerDay;
 		this.status = status;
 		this.category = category;
+		this.specs = specs;
 	}
 	
 	public static Product create(Long sellerId,
@@ -77,25 +86,31 @@ public class Product extends BaseEntity {
 								 String description,
 								 BigDecimal pricePerDay,
 								 ProductCategory category,
+								 Map<String, String> specs,
 								 List<String> urls) {
 		
 		if (sellerId == null) {
 			throw new ProductInvalidInputException("판매자 ID는 필수입니다.");
 		}
 		
-		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category);
+		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category, specs);
 		
 		product.addImages(urls);
 		
 		return product;
 	}
 	
-	public void update(String name, String description, BigDecimal pricePerDay, ProductCategory category) {
+	public void update(String name,
+					   String description,
+					   BigDecimal pricePerDay,
+					   ProductCategory category,
+					   Map<String, String> specs) {
 		
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
 		this.category = category;
+		this.specs = specs;
 	}
 	
 	public void updateStatus(ProductStatus status) {
