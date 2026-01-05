@@ -21,7 +21,9 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 	void increment(@Param("viewDate") LocalDate viewDate, @Param("productId") Long productId);
 
 	@Query(value = """
-			select pvd.product_id, p.name, sum(pvd.view_count) as view_count
+			select pvd.product_id as productId,
+			       p.name as productName,
+			       sum(pvd.view_count) as viewCount
 			from public.product_view_daily pvd
 			join public.product p on p.id = pvd.product_id
 			where (:startDate is null or pvd.view_date >= :startDate)
@@ -30,7 +32,7 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 			order by view_count desc, pvd.product_id
 			limit :limit
 			""", nativeQuery = true)
-	List<Object[]> findPopularProducts(@Param("startDate") LocalDate startDate,
+	List<PopularProductRow> findPopularProducts(@Param("startDate") LocalDate startDate,
 			@Param("endDate") LocalDate endDate,
 			@Param("limit") int limit);
 }

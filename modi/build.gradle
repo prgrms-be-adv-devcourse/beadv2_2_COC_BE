@@ -99,6 +99,19 @@ project(':common-openapi') {
     }
 }
 
+project(':common-ai') {
+
+    dependencies {
+
+        implementation 'org.springframework:spring-web'
+        implementation 'io.projectreactor:reactor-core'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'org.slf4j:slf4j-api'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    }
+}
+
 
 configure([
         project(':account-service'),

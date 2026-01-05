@@ -18,7 +18,7 @@ import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.search.application.ProductIndexService;
+import com.coc.modi.product.event.ProductIndexingEventPublisher;
 import com.coc.modi.product.search.application.ProductSearchPort;
 import com.coc.modi.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
@@ -47,7 +47,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final ProductIndexService productIndexService;
+	private final ProductIndexingEventPublisher productIndexingEventPublisher;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -64,7 +64,7 @@ public class ProductService {
 		try {
 			productSearchLogService.recordSearchLog(condition, sortType, cursor, size, memberId);
 		} catch (Exception e) {
-			log.warn("Product search log save failed. keyword={}", condition.keyword(), e);
+			log.warn("상품 검색 로그 저장 실패. keyword={}", condition.keyword(), e);
 		}
 		return response;
 	}
@@ -104,7 +104,7 @@ public class ProductService {
 		try {
 			productViewService.recordView(productId, memberId);
 		} catch (Exception e) {
-			log.warn("Product view log save failed. productId={}", productId, e);
+			log.warn("상품 조회 로그 저장 실패. productId={}", productId, e);
 		}
 
 		return ProductDetailResponse.from(product);
@@ -122,13 +122,14 @@ public class ProductService {
 				command.description(),
 				command.pricePerDay(),
 				command.category(),
+				command.specs(),
 				command.imageUrls());
 		
 		Product saved = productRepository.saveAndFlush(product);
 		saved.refreshThumbnailImage();
 		
-		// ES 인덱싱
-		productIndexService.index(saved);
+		// ES 인덱싱/임베딩 이벤트 발행
+		productIndexingEventPublisher.publishIndexAndEmbedding(saved.getId());
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -149,7 +150,8 @@ public class ProductService {
 		product.update(command.name(),
 				command.description(),
 				command.pricePerDay(),
-				command.category());
+				command.category(),
+				command.specs());
 		
 		//이미지 변경 사항 반영 (null값인 경우 이미지 변동사항 없음)
 		if (command.images() != null) {
@@ -163,7 +165,7 @@ public class ProductService {
 		
 		product.refreshThumbnailImage();
 		
-		productIndexService.index(product);
+		productIndexingEventPublisher.publishIndexAndEmbedding(product.getId());
 	
 		return ProductDetailResponse.from(product);
 	}

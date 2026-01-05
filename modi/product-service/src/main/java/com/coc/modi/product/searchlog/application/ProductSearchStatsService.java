@@ -3,6 +3,7 @@ package com.coc.modi.product.searchlog.application;
 import com.coc.modi.product.searchlog.domain.ProductSearchLog;
 import com.coc.modi.product.searchlog.domain.ProductSearchLogRepository;
 import com.coc.modi.product.searchlog.presentation.dto.PopularKeywordResponse;
+import com.coc.modi.product.support.StatsSizeNormalizer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,9 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProductSearchStatsService {
 
-	private static final int DEFAULT_SIZE = 10;
-	private static final int MAX_SIZE = 100;
-
 	private final ProductSearchLogRepository productSearchLogRepository;
 
 	@Transactional(readOnly = true)
@@ -31,7 +29,7 @@ public class ProductSearchStatsService {
 										   LocalDate startDate,
 										   LocalDate endDate) {
 
-		int limit = normalizeSize(size);
+		int limit = StatsSizeNormalizer.normalize(size);
 		List<ProductSearchLog> logs = loadLogs(startDate, endDate);
 
 		Map<String, Long> counts = new HashMap<>();
@@ -49,13 +47,6 @@ public class ProductSearchStatsService {
 				.limit(limit)
 				.map(entry -> new PopularKeywordResponse(entry.getKey(), entry.getValue()))
 				.toList();
-	}
-
-	private int normalizeSize(Integer size) {
-		if (size == null || size <= 0) {
-			return DEFAULT_SIZE;
-		}
-		return Math.min(size, MAX_SIZE);
 	}
 
 	private List<ProductSearchLog> loadLogs(LocalDate startDate, LocalDate endDate) {

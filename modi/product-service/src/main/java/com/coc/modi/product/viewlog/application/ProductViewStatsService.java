@@ -1,7 +1,9 @@
 package com.coc.modi.product.viewlog.application;
 
 import com.coc.modi.product.searchlog.presentation.dto.PopularProductResponse;
+import com.coc.modi.product.support.StatsSizeNormalizer;
 import com.coc.modi.product.viewlog.domain.ProductViewDailyRepository;
+import com.coc.modi.product.viewlog.domain.PopularProductRow;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,9 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductViewStatsService {
 
-	private static final int DEFAULT_SIZE = 10;
-	private static final int MAX_SIZE = 100;
-
 	private final ProductViewDailyRepository productViewDailyRepository;
 
 	@Transactional(readOnly = true)
@@ -26,16 +25,16 @@ public class ProductViewStatsService {
 			LocalDate startDate,
 			LocalDate endDate) {
 
-		int limit = normalizeSize(size);
-		List<Object[]> rows = productViewDailyRepository.findPopularProducts(startDate, endDate, limit);
+		int limit = StatsSizeNormalizer.normalize(size);
+		List<PopularProductRow> rows = productViewDailyRepository.findPopularProducts(startDate, endDate, limit);
 		List<PopularProductResponse> results = new ArrayList<>(rows.size());
-		for (Object[] row : rows) {
-			if (row == null || row.length < 3) {
+		for (PopularProductRow row : rows) {
+			if (row == null) {
 				continue;
 			}
-			Long productId = row[0] == null ? null : ((Number) row[0]).longValue();
-			String productName = row[1] == null ? null : row[1].toString();
-			Long count = row[2] == null ? 0L : ((Number) row[2]).longValue();
+			Long productId = row.getProductId();
+			String productName = row.getProductName();
+			Long count = row.getViewCount() == null ? 0L : row.getViewCount();
 			if (productId != null) {
 				results.add(new PopularProductResponse(productId, productName, count));
 			}
@@ -43,10 +42,4 @@ public class ProductViewStatsService {
 		return results;
 	}
 
-	private int normalizeSize(Integer size) {
-		if (size == null || size <= 0) {
-			return DEFAULT_SIZE;
-		}
-		return Math.min(size, MAX_SIZE);
-	}
 }
