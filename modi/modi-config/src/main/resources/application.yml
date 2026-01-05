@@ -34,6 +34,15 @@ spring:
           cloud.aws.region.static: ${S3_REGION}
           cloud.aws.credentials.accessKey: ${S3_ACCESS_KEY}
           cloud.aws.credentials.secretKey: ${S3_SECRET_KEY}
+          resilience4j.retry.instances.settlementPayoutRetry.max-attempts: 3
+          resilience4j.retry.instances.settlementPayoutRetry.wait-duration: 500ms
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.sliding-window-type: COUNT_BASED
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.sliding-window-size: 10
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.minimum-number-of-calls: 5
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.failure-rate-threshold: 50
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.wait-duration-in-open-state: 10s
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.permitted-number-of-calls-in-half-open-state: 3
+          resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.automatic-transition-from-open-to-half-open-enabled: true
         git:
           uri: ${GIT_URI}
           username: ${GIT_USER}
