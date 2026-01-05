@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.batch;
 
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;

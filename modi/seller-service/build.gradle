@@ -5,6 +5,14 @@ dependencies {
     // 배치 처리
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
+    // TEST
     testImplementation 'org.springframework.batch:spring-batch-test'
     testRuntimeOnly 'com.h2database:h2'
+
+    // WebSocket/STOMP
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 }
