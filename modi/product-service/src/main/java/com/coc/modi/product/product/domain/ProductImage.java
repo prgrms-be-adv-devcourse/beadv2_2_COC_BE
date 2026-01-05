@@ -9,7 +9,7 @@ import com.coc.modi.common.BaseEntity;
 
 @Getter
 @Entity
-@Table(name = "product_image", schema = "public")
+@Table(name = "product_image", schema = "product")
 public class ProductImage extends BaseEntity {
 	
 	@Id

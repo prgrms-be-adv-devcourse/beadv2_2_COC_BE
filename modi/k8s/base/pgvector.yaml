@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgvector-initdb
+data:
+  01-init-schemas.sql: |
+    CREATE SCHEMA IF NOT EXISTS account;
+    CREATE SCHEMA IF NOT EXISTS product;
+    CREATE SCHEMA IF NOT EXISTS rental;
+    CREATE SCHEMA IF NOT EXISTS seller;
+    CREATE SCHEMA IF NOT EXISTS member;
+    CREATE SCHEMA IF NOT EXISTS review;
+    CREATE SCHEMA IF NOT EXISTS notification;
+    CREATE SCHEMA IF NOT EXISTS delivery;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgvector
+  labels:
+    app: pgvector
+spec:
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: pgvector
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pgvector
+  labels:
+    app: pgvector
+spec:
+  serviceName: pgvector
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgvector
+  template:
+    metadata:
+      labels:
+        app: pgvector
+    spec:
+      containers:
+        - name: pgvector
+          image: pgvector/pgvector:pg18
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              value: modi
+          volumeMounts:
+            - name: pgvector-data
+              mountPath: /var/lib/postgresql
+            - name: pgvector-initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: pgvector-initdb
+          configMap:
+            name: pgvector-initdb
+  volumeClaimTemplates:
+    - metadata:
+        name: pgvector-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
