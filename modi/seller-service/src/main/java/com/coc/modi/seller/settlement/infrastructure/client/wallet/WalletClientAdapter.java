@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.infrastructure.client.wallet;
 
 import com.coc.modi.common.ErrorCode;
-import com.coc.modi.seller.exception.SellerException;
+import com.coc.modi.seller.seller.exception.SellerException;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutRequest;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutResponse;
 
