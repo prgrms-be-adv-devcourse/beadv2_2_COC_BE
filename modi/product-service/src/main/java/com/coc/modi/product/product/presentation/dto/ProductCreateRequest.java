@@ -2,6 +2,7 @@ package com.coc.modi.product.product.presentation.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import com.coc.modi.product.product.domain.ProductCategory;
 
@@ -23,6 +24,8 @@ public record ProductCreateRequest(
 		
 		@NotNull(message = "카테고리는 필수입니다.")
 		ProductCategory category,
+
+		Map<String, String> specs,
 		
         List<String> images
 ) {

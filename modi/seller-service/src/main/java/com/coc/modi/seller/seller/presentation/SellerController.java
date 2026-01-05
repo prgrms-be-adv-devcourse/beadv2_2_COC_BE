@@ -34,7 +34,7 @@ public class SellerController {
 	private final SellerService sellerService;
 	private final SellerProductService sellerProductService;
 	
-	@PostMapping("/api/sellers")
+	@PostMapping
 	public ResponseEntity<ApiResponse<?>> registerSeller(@Valid @RequestBody SellerCreateRequest request,
 																	  @AuthenticationPrincipal CustomMember member) {
   
