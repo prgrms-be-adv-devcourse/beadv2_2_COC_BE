@@ -1,6 +1,6 @@
 package com.coc.modi.seller.settlement.infrastructure.client.wallet;
 
-import com.coc.modi.seller.config.FeignConfig;
+import com.coc.modi.seller.seller.infrastructure.client.member.MemberFeignClientConfig;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutRequest;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutResponse;
 
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(
         name = "account-service",
         url = "${account-service.url}",
-        configuration = FeignConfig.class,
+        configuration = MemberFeignClientConfig.class,
         path = "/internal/wallets"
 )
 public interface WalletFeignClient {
