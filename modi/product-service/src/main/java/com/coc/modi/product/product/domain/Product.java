@@ -90,7 +90,7 @@ public class Product extends BaseEntity {
 								 List<String> urls) {
 		
 		if (sellerId == null) {
-			throw new ProductInvalidInputException("판매자 ID는 필수입니다.");
+			throw new ProductInvalidInputException("Seller ID is required.");
 		}
 		
 		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category, specs);
