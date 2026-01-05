@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.exception.SettlementBatchExecutionNotFoundException;
-import com.coc.modi.seller.exception.SettlementBatchNotFoundException;
+import com.coc.modi.seller.settlement.exception.SettlementBatchExecutionNotFoundException;
+import com.coc.modi.seller.settlement.exception.SettlementBatchNotFoundException;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecution;
 import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionRepository;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
