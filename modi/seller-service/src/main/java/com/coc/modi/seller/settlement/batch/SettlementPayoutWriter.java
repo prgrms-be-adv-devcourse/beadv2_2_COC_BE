@@ -4,6 +4,7 @@ package com.coc.modi.seller.settlement.batch;
 import com.coc.modi.seller.settlement.exception.SellerSettlementNotFoundException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
+import com.coc.modi.seller.settlement.application.SettlementNotificationService;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
 import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutRequest;
@@ -23,6 +24,7 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 
 	private final WalletClientAdapter walletClientAdapter;
 	private final SellerSettlementJpaRepository settlementRepository;
+	private final SettlementNotificationService settlementNotificationService;
 
 	@Override
 	public void write(Chunk<? extends SettlementPayoutItem> chunk) {
@@ -71,5 +73,6 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 		}
 		settlement.pay(LocalDateTime.now());
 		settlementRepository.save(settlement);
+		settlementNotificationService.notifySettlementPaid(settlement);
 	}
 }

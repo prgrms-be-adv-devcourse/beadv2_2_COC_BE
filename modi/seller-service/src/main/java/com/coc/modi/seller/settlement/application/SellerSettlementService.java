@@ -23,6 +23,7 @@ import java.util.List;
 public class SellerSettlementService {
 	
 	private final SellerSettlementRepository sellerSettlementRepository;
+	private final SettlementNotificationService settlementNotificationService;
 	
 	public Page<SellerSettlementResponse> getSellerSettlements(Long sellerId, String periodYm, Pageable pageable) {
 		
@@ -56,6 +57,7 @@ public class SellerSettlementService {
 		
 		SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
 		settlement.pay(paidAt);
+		settlementNotificationService.notifySettlementPaid(settlement);
 		return SellerSettlementResponse.from(settlement);
 	}
 	
