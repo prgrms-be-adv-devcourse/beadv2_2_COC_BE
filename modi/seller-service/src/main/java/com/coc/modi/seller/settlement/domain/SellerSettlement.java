@@ -112,7 +112,21 @@ public class SellerSettlement extends BaseEntity {
                 .build();
     }
 
-    // 정산 완료 처리
+    // 정산 지급 요청/완료 처리
+
+    public void requestPayout() {
+
+        if (this.status == SellerSettlementStatus.PENDING) {
+            throw new SellerSettlementStatusConflictException("settlement payout is already requested");
+        }
+        if (this.status == SellerSettlementStatus.PAID) {
+            throw new SellerSettlementStatusConflictException("paid settlement cannot be requested");
+        }
+        if (this.status == SellerSettlementStatus.CANCELED) {
+            throw new SellerSettlementStatusConflictException("canceled settlement cannot be requested");
+        }
+        this.status = SellerSettlementStatus.PENDING;
+    }
 
     public void pay(LocalDateTime paidAt) {
 
