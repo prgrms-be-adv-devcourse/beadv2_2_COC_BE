@@ -4,6 +4,8 @@ import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.infrastructure.SellerJpaRepository;
 import com.coc.modi.seller.settlement.batch.support.SettlementPayoutFixture;
 import com.coc.modi.seller.settlement.batch.support.SettlementPayoutTestConfig;
+import com.coc.modi.seller.settlement.application.SettlementNotificationService;
+import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublisher;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
@@ -22,14 +24,24 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @SpringBatchTest
 @SpringBootTest(
@@ -57,14 +69,29 @@ class SettlementPayoutStepTest {
     @Autowired
     private SellerSettlementJpaRepository sellerSettlementJpaRepository;
 
-    @Autowired
-    private SettlementPayoutTestConfig.RecordingSettlementPayoutWriter writer;
+    @MockBean
+    private SettlementPayoutRequestPublisher settlementPayoutRequestPublisher;
+
+    @MockBean
+    private SettlementNotificationService settlementNotificationService;
+
+    @MockBean
+    private RedisMessageListenerContainer redisMessageListenerContainer;
+
+    @MockBean
+    private RedisConnectionFactory redisConnectionFactory;
+
+    @MockBean
+    private StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
 
     @BeforeEach
     void setUp() {
 
         jobLauncherTestUtils.setJob(settlementPayoutTestJob);
-        writer.reset();
+        reset(settlementPayoutRequestPublisher, settlementNotificationService);
         sellerSettlementJpaRepository.deleteAll();
         settlementBatchJpaRepository.deleteAll();
         sellerJpaRepository.deleteAll();
@@ -105,16 +132,24 @@ class SettlementPayoutStepTest {
         JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters(batch.getId()));
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-        List<SettlementPayoutItem> processed = writer.processedItems();
-        assertThat(processed).hasSize(2);
-        assertThat(processed)
-                .extracting(SettlementPayoutItem::settlementId)
-                .containsExactlyInAnyOrder(readyOne.getId(), readyTwo.getId());
-        assertThat(processed.get(0).memberId()).isEqualTo(seller.getMemberId());
+
+        SellerSettlement updatedReadyOne = sellerSettlementJpaRepository.findById(readyOne.getId()).orElseThrow();
+        SellerSettlement updatedReadyTwo = sellerSettlementJpaRepository.findById(readyTwo.getId()).orElseThrow();
+        SellerSettlement updatedPaid = sellerSettlementJpaRepository.findById(paid.getId()).orElseThrow();
+
+        assertThat(updatedReadyOne.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+        assertThat(updatedReadyTwo.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+        assertThat(updatedPaid.getStatus()).isEqualTo(SellerSettlementStatus.PAID);
+
+        verify(settlementPayoutRequestPublisher, times(2))
+                .publish(anyLong(), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementPayoutRequestPublisher).publish(eq(readyOne.getId()), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementPayoutRequestPublisher).publish(eq(readyTwo.getId()), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementNotificationService, times(0)).notifySettlementPaid(any());
     }
 
     @Test
-    void payoutStep_skipsDuplicatesAndZeroAmounts() throws Exception {
+    void payoutStep_marksZeroAmountAsPaid() throws Exception {
 
         Seller seller = sellerJpaRepository.save(SettlementPayoutFixture.newSeller(11L));
         SettlementBatch batch = settlementBatchJpaRepository.save(SettlementPayoutFixture.newBatch("2025-02"));
@@ -145,27 +180,32 @@ class SettlementPayoutStepTest {
         );
         sellerSettlementJpaRepository.saveAll(List.of(valid, zeroAmount, duplicate));
 
-        writer.markDuplicate(duplicate.getId());
-
         JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters(batch.getId()));
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-        assertThat(writer.processedItems())
-                .extracting(SettlementPayoutItem::settlementId)
-                .containsExactly(valid.getId());
-        assertThat(writer.duplicateSettlementIds())
-                .containsExactly(duplicate.getId());
-        assertThat(writer.zeroAmountSettlementIds())
-                .containsExactly(zeroAmount.getId());
+
+        SellerSettlement updatedValid = sellerSettlementJpaRepository.findById(valid.getId()).orElseThrow();
+        SellerSettlement updatedZero = sellerSettlementJpaRepository.findById(zeroAmount.getId()).orElseThrow();
+        SellerSettlement updatedDuplicate = sellerSettlementJpaRepository.findById(duplicate.getId()).orElseThrow();
+
+        assertThat(updatedValid.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+        assertThat(updatedZero.getStatus()).isEqualTo(SellerSettlementStatus.PAID);
+        assertThat(updatedDuplicate.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+
+        verify(settlementPayoutRequestPublisher, times(2))
+                .publish(anyLong(), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementPayoutRequestPublisher).publish(eq(valid.getId()), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementPayoutRequestPublisher).publish(eq(duplicate.getId()), anyLong(), anyLong(), any(BigDecimal.class));
+        verify(settlementNotificationService, times(1)).notifySettlementPaid(any());
     }
 
     @Test
-    void payoutStep_failsOnWriterError() throws Exception {
+    void payoutStep_skipsNonReadySettlements() throws Exception {
 
         Seller seller = sellerJpaRepository.save(SettlementPayoutFixture.newSeller(12L));
         SettlementBatch batch = settlementBatchJpaRepository.save(SettlementPayoutFixture.newBatch("2025-03"));
 
-        SellerSettlement first = SettlementPayoutFixture.newSettlement(
+        SellerSettlement ready = SettlementPayoutFixture.newSettlement(
                 batch,
                 seller.getId(),
                 "2025-03",
@@ -173,24 +213,39 @@ class SettlementPayoutStepTest {
                 new BigDecimal("1100"),
                 SellerSettlementStatus.READY
         );
-        SellerSettlement failing = SettlementPayoutFixture.newSettlement(
+        SellerSettlement paid = SettlementPayoutFixture.newSettlement(
                 batch,
                 seller.getId(),
                 "2025-03",
                 new BigDecimal("22000"),
                 new BigDecimal("2200"),
+                SellerSettlementStatus.PAID
+        );
+        SellerSettlement pending = SettlementPayoutFixture.newSettlement(
+                batch,
+                seller.getId(),
+                "2025-03",
+                new BigDecimal("33000"),
+                new BigDecimal("3300"),
                 SellerSettlementStatus.READY
         );
-        sellerSettlementJpaRepository.saveAll(List.of(first, failing));
-
-        writer.failOn(failing.getId());
+        pending.requestPayout();
+        sellerSettlementJpaRepository.saveAll(List.of(ready, paid, pending));
 
         JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters(batch.getId()));
 
-        assertThat(execution.getStatus()).isEqualTo(BatchStatus.FAILED);
-        assertThat(writer.processedItems())
-                .extracting(SettlementPayoutItem::settlementId)
-                .isSubsetOf(Set.of(first.getId(), failing.getId()));
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        SellerSettlement updatedReady = sellerSettlementJpaRepository.findById(ready.getId()).orElseThrow();
+        SellerSettlement updatedPaid = sellerSettlementJpaRepository.findById(paid.getId()).orElseThrow();
+        SellerSettlement updatedPending = sellerSettlementJpaRepository.findById(pending.getId()).orElseThrow();
+
+        assertThat(updatedReady.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+        assertThat(updatedPaid.getStatus()).isEqualTo(SellerSettlementStatus.PAID);
+        assertThat(updatedPending.getStatus()).isEqualTo(SellerSettlementStatus.PENDING);
+
+        verify(settlementPayoutRequestPublisher, times(1))
+                .publish(eq(ready.getId()), anyLong(), anyLong(), any(BigDecimal.class));
     }
 
     private JobParameters jobParameters(Long batchId) {
