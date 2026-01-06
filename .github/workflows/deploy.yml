@@ -85,17 +85,4 @@ jobs:
             kubectl rollout restart deploy modi-gateway
             kubectl rollout restart deploy modi-discovery
 
-#            kubectl rollout restart deploy account-service
-#            kubectl rollout restart deploy product-service
-#            kubectl rollout restart deploy rental-service
-#            kubectl rollout restart deploy seller-service
-#            kubectl rollout restart deploy member-service
-#            kubectl rollout restart deploy review-service
-#            kubectl rollout restart deploy notification-service
-#            kubectl rollout restart deploy delivery-service
-#            kubectl rollout restart deploy modi-config
-#            kubectl rollout restart deploy modi-gateway
-#            kubectl rollout restart deploy modi-discovery
-
-
             echo "▶ Deploy finished"
