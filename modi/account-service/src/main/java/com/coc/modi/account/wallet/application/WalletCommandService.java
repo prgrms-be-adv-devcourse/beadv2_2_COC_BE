@@ -55,7 +55,7 @@ public class WalletCommandService {
         // 2. txType에 따라 예치금 입금, 차감 결정
         BigDecimal signedAmount = switch (command.txType()) {
 
-            case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST -> command.amount();
+            case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST, SETTLEMENT_PAYOUT -> command.amount();
             case DEPOSIT_CANCEL, RENTAL_PAYMENT -> command.amount().negate();
         };
 
