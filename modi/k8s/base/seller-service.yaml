@@ -42,9 +42,19 @@ spec:
               value: "true"
             - name: SERVER_PORT
               value: "8084"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: SELLER_DB_URL
           envFrom:
             - secretRef:
                 name: modi-env
+          startupProbe:
+            tcpSocket:
+              port: 8084
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8084

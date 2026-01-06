@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @ToString(of = {"id", "batchType", "status", "startedAt", "endedAt", "totalCount", "successCount", "failCount"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "settlement_batch_execution")
+@Table(name = "settlement_batch_execution", schema = "seller")
 public class SettlementBatchExecution extends BaseEntity {
 	
 	@Id

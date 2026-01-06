@@ -42,6 +42,7 @@ public class ReviewService {
 		Review saved = reviewRepository.save(review);
 
 		notificationEventPublisher.publish(
+				saved.getId(),
 				NotificationEvent.of(
 						saved.getSellerId(),
 						"REVIEW_CREATED",

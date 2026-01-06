@@ -41,6 +41,11 @@ spec:
           env:
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
               value: "true"
+          startupProbe:
+            tcpSocket:
+              port: 8888
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8888
