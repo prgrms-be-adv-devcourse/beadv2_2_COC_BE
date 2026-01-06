@@ -58,6 +58,7 @@ public class SecurityConfig {
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 							.requestMatchers("/internal/**").hasRole("INTERNAL")
+							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/actuator/**").permitAll()
 							.requestMatchers("/api/**").authenticated()
 							.anyRequest().denyAll()

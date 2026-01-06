@@ -5,6 +5,7 @@ include(
         'common-security',
         'common-notification',
         'common-kafka',
+        'common-ai',
         'common-openapi',
         'account-service',
         'product-service',

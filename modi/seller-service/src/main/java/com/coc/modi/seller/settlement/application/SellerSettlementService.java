@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.exception.SellerSettlementForbiddenException;
-import com.coc.modi.seller.exception.SellerSettlementNotFoundException;
+import com.coc.modi.seller.settlement.exception.SellerSettlementForbiddenException;
+import com.coc.modi.seller.settlement.exception.SellerSettlementNotFoundException;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;

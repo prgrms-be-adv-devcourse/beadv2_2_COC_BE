@@ -5,6 +5,7 @@ import com.coc.modi.product.product.domain.ProductCategory;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,8 @@ public record ProductUpdateRequest(
 		
 		@NotNull(message = "카테고리는 필수입니다.")
         ProductCategory category,
+
+		Map<String, String> specs,
 		
         List<ProductDetailResponse.ImageInfo> images) {
 }

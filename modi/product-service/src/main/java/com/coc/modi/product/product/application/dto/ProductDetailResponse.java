@@ -8,6 +8,8 @@ import com.coc.modi.product.product.domain.ProductStatus;
 import java.math.BigDecimal;
 import java.util.List;
 
+import java.util.Map;
+
 public record ProductDetailResponse(
 		Long productId,
 		Long sellerId,
@@ -17,6 +19,7 @@ public record ProductDetailResponse(
 		ProductStatus status,
 		ProductCategory category,
 		Long thumbnailImageId,
+		Map<String, String> specs,
 		List<ImageInfo> images
 ) {
 	public static ProductDetailResponse from(Product product) {
@@ -34,6 +37,7 @@ public record ProductDetailResponse(
 				product.getStatus(),
 				product.getCategory(),
 				product.getThumbnailImageId(),
+				product.getSpecs(),
 				images
 		);
 	}

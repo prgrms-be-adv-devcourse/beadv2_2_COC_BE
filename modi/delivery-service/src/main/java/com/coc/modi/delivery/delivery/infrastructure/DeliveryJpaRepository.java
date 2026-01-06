@@ -25,8 +25,8 @@ public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
 			LIMIT :limit
 			""", nativeQuery = true)
 	List<Delivery> findTargetsForTrackingWithSkipLocked(
-			@Param("limit") int limit,
-			@Param("intervalMinutes") int intervalMinutes
+			@Param("intervalMinutes") int intervalMinutes,
+			@Param("limit") int limit
 	);
 }
 
