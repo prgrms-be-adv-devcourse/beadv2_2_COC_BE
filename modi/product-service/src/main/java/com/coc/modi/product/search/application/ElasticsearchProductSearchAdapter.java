@@ -17,7 +17,7 @@ import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.RentalResponse;
-import com.coc.modi.product.product.infrastructure.client.RentalFeignClient;
+import com.coc.modi.product.product.infrastructure.client.RentalAvailabilityClient;
 import com.coc.modi.product.product.presentation.dto.RentalRequest;
 import com.coc.modi.product.product.exception.ProductSearchUnavailableException;
 import com.coc.modi.product.search.infrastructure.ElasticsearchClientManager;
@@ -46,7 +46,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 	
 	private final ProductSearchQueryRepository searchQueryRepository;
 	private final ElasticsearchClientManager clientManager;
-	private final RentalFeignClient rentalFeignClient;
+	private final RentalAvailabilityClient rentalAvailabilityClient;
 	private final ElasticsearchStatus status;
 	
 	@Override
@@ -91,7 +91,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 						
 						RentalRequest request = new RentalRequest(condition.startDate(), condition.endDate(), productIds);
 						
-						RentalResponse rentalResponse = rentalFeignClient.unavailableProducts(request);
+						RentalResponse rentalResponse = rentalAvailabilityClient.unavailableProducts(request);
 						
 						Set<Long> unavailableIds = new HashSet<>(
 								Optional.ofNullable(rentalResponse)
@@ -201,7 +201,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 					yield null;
 				}
 				
-				String rawCursor = target.getCreatedAt().toString();
+				String rawCursor = target.getCreatedAt().toString() + "|" + target.getId();
 				
 				yield Base64.getUrlEncoder()
 						.encodeToString(rawCursor.getBytes(StandardCharsets.UTF_8));

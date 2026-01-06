@@ -2,7 +2,7 @@ package com.coc.modi.product.product.infrastructure.batch;
 
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductStatus;
-import com.coc.modi.product.search.application.ProductIndexService;
+import com.coc.modi.product.event.KafkaProductIndexEventPublisher;
 
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class ProductReindexJobConfig {
 	
 	private final EntityManagerFactory entityManagerFactory;
-	private final ProductIndexService productIndexService;
+	private final KafkaProductIndexEventPublisher productIndexEventPublisher;
 	
 	private static final int CHUNK_SIZE = 500;
 	
@@ -55,7 +55,7 @@ public class ProductReindexJobConfig {
 		
 		return item -> {
 			for (Product product : item) {
-				productIndexService.index(product);
+				productIndexEventPublisher.publishIndex(product.getId());
 			}
 		};
 	}

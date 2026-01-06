@@ -9,6 +9,8 @@ import com.coc.modi.member.auth.application.dto.MemberLoginResponse;
 import com.coc.modi.member.auth.application.dto.TokenReissueResponse;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.domain.MemberStatus;
+import com.coc.modi.member.member.exception.MemberAccessDeniedException;
 import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.MemberPasswordMismatchException;
@@ -41,6 +43,16 @@ public class MemberAuthService {
 			throw new MemberPasswordMismatchException("비밀번호가 일치하지 않습니다.");
 		}
 		
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			
+			throw new MemberAccessDeniedException("탈퇴한 회원입니다.");
+		}
+		
+		if (member.getStatus() == MemberStatus.INACTIVE) {
+			
+			throw new MemberAccessDeniedException("정지된 회원입니다.");
+		}
+		
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
 		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
 		
@@ -70,6 +82,12 @@ public class MemberAuthService {
 		}
 		
 		Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+		
+		if (!refreshTokenService.matches(memberId, refreshToken)) {
+			
+			throw new MemberException(ErrorCode.UNAUTHORIZED);
+		}
+		
 		String role = jwtTokenProvider.getRole(refreshToken);
 		String name = jwtTokenProvider.getName(refreshToken);
 		String email = jwtTokenProvider.getEmail(refreshToken);
@@ -94,7 +112,11 @@ public class MemberAuthService {
 		if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
 			
 			Long memberId = jwtTokenProvider.getMemberId(refreshToken);
-			refreshTokenService.delete(memberId);
+			
+			if (refreshTokenService.matches(memberId, refreshToken)) {
+				
+				refreshTokenService.delete(memberId);
+			}
 		}
 		
 		return new LogoutResponse(refreshCookieManager.clear(secureCookie));

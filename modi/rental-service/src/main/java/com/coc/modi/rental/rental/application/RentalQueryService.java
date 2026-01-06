@@ -25,7 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -162,5 +165,40 @@ public class RentalQueryService {
 		);
 		
 		return new UnavailableProductsResponse(unavailableProductIds);
+	}
+	
+	public List<LocalDate> findUnavailableDates(Long productId, YearMonth ym) {
+
+		if (productId == null) {
+			
+			throw new RentalException(ErrorCode.INVALID_INPUT, "productId는 필수입니다.");
+		}
+		
+		if (ym == null) {
+			
+			throw new RentalException(ErrorCode.INVALID_INPUT, "ym은 필수입니다.");
+		}
+		
+		LocalDate startDate = ym.atDay(1);
+		LocalDate endDate = ym.atEndOfMonth();
+		
+		List<RentalItem> rentalItems = rentalQueryRepository.findUnavailableRentalItems(productId, startDate, endDate);
+		
+		if (rentalItems.isEmpty()) {
+			
+			return List.of();
+		}
+		
+		return rentalItems.stream()
+				.flatMap(item -> {
+					
+					LocalDate from = item.getStartDate().isBefore(startDate) ? startDate : item.getStartDate();
+					LocalDate to = item.getEndDate().isAfter(endDate) ? endDate : item.getEndDate();
+					
+					return from.datesUntil(to.plusDays(1));
+				})
+				.collect(Collectors.toCollection(TreeSet::new))
+				.stream()
+				.toList();
 	}
 }

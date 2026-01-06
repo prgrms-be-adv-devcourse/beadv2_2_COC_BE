@@ -4,6 +4,7 @@ package com.coc.modi.common.auth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -30,7 +31,9 @@ public class SecurityConfig {
 	}
 	
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http,
+												   InternalApiAuthenticationFilter internalApiAuthenticationFilter,
+												   HeaderAuthenticationFilter headerAuthenticationFilter) throws Exception {
 		
 		http.httpBasic(AbstractHttpConfigurer::disable)
 				// .cors(configurer -> {
@@ -50,18 +53,40 @@ public class SecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(auth ->
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
+							.requestMatchers("/toss-payment.html").permitAll()
+							.requestMatchers("/payments/**").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-							.requestMatchers("/internal/**").permitAll()
+							.requestMatchers("/internal/**").hasRole("INTERNAL")
+							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/actuator/**").permitAll()
 							.requestMatchers("/api/**").authenticated()
 							.anyRequest().denyAll()
 				)
 				.addFilterBefore(
-						new HeaderAuthenticationFilter(),
+						internalApiAuthenticationFilter,
+						UsernamePasswordAuthenticationFilter.class
+				)
+				.addFilterBefore(
+						headerAuthenticationFilter,
 						UsernamePasswordAuthenticationFilter.class
 				);
 		
 		return http.build();
+	}
+	
+	@Bean
+	public HeaderAuthenticationFilter headerAuthenticationFilter() {
+		
+		return new HeaderAuthenticationFilter();
+	}
+	
+	@Bean
+	public InternalApiAuthenticationFilter internalApiAuthenticationFilter(
+			@Value("${internal.api.token:}") String token,
+			@Value("${internal.api.header:X-Internal-Token}") String headerName
+	) {
+		
+		return new InternalApiAuthenticationFilter(token, headerName);
 	}
 }

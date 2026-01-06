@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "seller_settlement_line")
+@Table(name = "seller_settlement_line", schema = "seller")
 public class SellerSettlementLine extends BaseEntity {
 	
 	@Id

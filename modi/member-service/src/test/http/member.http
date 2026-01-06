@@ -10,7 +10,8 @@ Content-Type: application/json
   "email": "bbb@gmail.com",
   "password": "!@#asdf1122",
   "name": "김이김",
-  "phone": "010-3232-3234"
+  "phone": "010-3232-3234",
+  "verificationToken": "EMAIL_VERIFY_TOKEN"
 }
 
 ### 내 정보 조회

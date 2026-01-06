@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 @Getter
 @Entity
-@Table(name = "rental_extend", schema = "public")
+@Table(name = "rental_extend", schema = "rental")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RentalExtend extends BaseEntity {
 	

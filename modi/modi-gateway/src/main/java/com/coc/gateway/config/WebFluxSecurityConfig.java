@@ -26,6 +26,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import com.coc.gateway.security.GlobalAuthHeaderFilter;
 import com.coc.gateway.security.JwtTokenProvider;
+import com.coc.gateway.security.permission.EndpointPermissionAuthorizationManager;
 
 import lombok.Setter;
 import reactor.core.publisher.Mono;
@@ -80,7 +81,8 @@ public class WebFluxSecurityConfig {
 			
 			ServerHttpSecurity http,
 			AuthenticationWebFilter jwtAuthWebFilter,
-			GlobalAuthHeaderFilter globalAuthHeaderFilter) {
+			GlobalAuthHeaderFilter globalAuthHeaderFilter,
+			EndpointPermissionAuthorizationManager endpointPermissionAuthorizationManager) {
 		
 		return http
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -94,14 +96,12 @@ public class WebFluxSecurityConfig {
 								"/v3/api-docs/**",
 								"/*/v3/api-docs/**",
 								"/member-service/api/auth/**",
-								"/member-service/api/members/signup"
+								"/member-service/api/members/signup",
+								"/favicon.ico"
 						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()
-						.pathMatchers(HttpMethod.POST, "/seller-service/api/sellers").hasRole("MEMBER")
-						.pathMatchers("/seller-service/api/sellers/**").hasRole("SELLER")
-						.pathMatchers("/*/api/**").hasRole("MEMBER")
 						.pathMatchers("/*/actuator/**").permitAll()
-						.anyExchange().denyAll()
+						.anyExchange().access(endpointPermissionAuthorizationManager)
 				)
 				.addFilterAt(jwtAuthWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.addFilterAfter(globalAuthHeaderFilter, SecurityWebFiltersOrder.AUTHENTICATION)

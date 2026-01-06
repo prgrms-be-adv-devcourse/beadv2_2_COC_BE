@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,15 +21,13 @@ public class ProductReindexScheduler {
 	public void reindex() {
 		
 		try {
-			JobParameters params = new JobParametersBuilder()
-					.addLong("time", System.currentTimeMillis())
-					.toJobParameters();
+			JobParameters params = ProductReindexJobParameters.newParameters();
 			
-			log.info("[Batch] productReindexJob start");
+			log.info("[Batch] productReindexJob 시작");
 			jobLauncher.run(reindexJob, params);
-			log.info("[Batch] productReindexJob end");
+			log.info("[Batch] productReindexJob 종료");
 		} catch (Exception e) {
-			log.error("[Batch] productReindexJob error", e);
+			log.error("[Batch] productReindexJob 오류", e);
 		}
 	}
 }
