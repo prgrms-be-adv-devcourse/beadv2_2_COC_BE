@@ -24,6 +24,7 @@ public class SellerSettlementService {
 	
 	private final SellerSettlementRepository sellerSettlementRepository;
 	private final SettlementNotificationService settlementNotificationService;
+	private final SettlementPayoutRequestPublisher settlementPayoutRequestPublisher;
 	
 	public Page<SellerSettlementResponse> getSellerSettlements(Long sellerId, String periodYm, Pageable pageable) {
 		
@@ -53,11 +54,19 @@ public class SellerSettlementService {
 	}
 	
 	@Transactional
-	public SellerSettlementResponse markAsPaid(Long sellerId, Long sellerSettlementId, LocalDateTime paidAt) {
+	public SellerSettlementResponse requestPayout(Long sellerId, Long sellerSettlementId, LocalDateTime requestedAt) {
 		
 		SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
-		settlement.pay(paidAt);
-		settlementNotificationService.notifySettlementPaid(settlement);
+		if (settlement.getSettlementAmount() == null || settlement.getSettlementAmount().signum() <= 0) {
+			LocalDateTime paidAt = requestedAt != null ? requestedAt : LocalDateTime.now();
+			settlement.pay(paidAt);
+			settlementNotificationService.notifySettlementPaid(settlement);
+			return SellerSettlementResponse.from(settlement);
+		}
+
+		settlement.requestPayout();
+		sellerSettlementRepository.save(settlement);
+		settlementPayoutRequestPublisher.publish(settlement);
 		return SellerSettlementResponse.from(settlement);
 	}
 	

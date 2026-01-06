@@ -74,7 +74,7 @@ public class SellerSettlementController {
 		
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
 		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
-		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.sellerId(), sellerSettlementId, paidAtValue);
+		SellerSettlementResponse settlement = sellerSettlementService.requestPayout(seller.sellerId(), sellerSettlementId, paidAtValue);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	

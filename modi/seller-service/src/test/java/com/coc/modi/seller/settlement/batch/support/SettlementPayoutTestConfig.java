@@ -2,8 +2,9 @@ package com.coc.modi.seller.settlement.batch.support;
 
 import com.coc.modi.seller.settlement.batch.SettlementPayoutItem;
 import com.coc.modi.seller.settlement.batch.SettlementPayoutWriter;
+import com.coc.modi.seller.settlement.application.SettlementNotificationService;
+import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublisher;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
-import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -39,10 +40,11 @@ public class SettlementPayoutTestConfig {
 
     @Bean
     @Primary
-    public RecordingSettlementPayoutWriter testSettlementPayoutWriter(WalletClientAdapter walletClientAdapter,
-                                                                      SellerSettlementJpaRepository settlementRepository) {
+    public RecordingSettlementPayoutWriter testSettlementPayoutWriter(SellerSettlementJpaRepository settlementRepository,
+                                                                      SettlementPayoutRequestPublisher settlementPayoutRequestPublisher,
+                                                                      SettlementNotificationService settlementNotificationService) {
 
-        return new RecordingSettlementPayoutWriter(walletClientAdapter, settlementRepository);
+        return new RecordingSettlementPayoutWriter(settlementRepository, settlementPayoutRequestPublisher, settlementNotificationService);
     }
 
     @Bean
@@ -103,10 +105,11 @@ public class SettlementPayoutTestConfig {
             return List.copyOf(zeroAmountSettlementIds);
         }
 
-        public RecordingSettlementPayoutWriter(WalletClientAdapter walletClientAdapter,
-                                               SellerSettlementJpaRepository settlementRepository) {
+        public RecordingSettlementPayoutWriter(SellerSettlementJpaRepository settlementRepository,
+                                               SettlementPayoutRequestPublisher settlementPayoutRequestPublisher,
+                                               SettlementNotificationService settlementNotificationService) {
 
-            super(walletClientAdapter, settlementRepository);
+            super(settlementRepository, settlementPayoutRequestPublisher, settlementNotificationService);
         }
 
         @Override

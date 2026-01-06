@@ -5,11 +5,11 @@ import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInf
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
 import com.coc.modi.seller.settlement.application.SettlementNotificationService;
+import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublisher;
 import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
-import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
 
 import feign.FeignException;
 import feign.RetryableException;
@@ -152,11 +152,11 @@ public class SettlementBatchJobConfig {
 	}
 
 	@Bean
-	public SettlementPayoutWriter settlementPayoutWriter(WalletClientAdapter walletClientAdapter,
-														 SellerSettlementJpaRepository settlementRepository,
+	public SettlementPayoutWriter settlementPayoutWriter(SellerSettlementJpaRepository settlementRepository,
+														 SettlementPayoutRequestPublisher settlementPayoutRequestPublisher,
 														 SettlementNotificationService settlementNotificationService) {
 
-		return new SettlementPayoutWriter(walletClientAdapter, settlementRepository, settlementNotificationService);
+		return new SettlementPayoutWriter(settlementRepository, settlementPayoutRequestPublisher, settlementNotificationService);
 	}
 	
 	@Bean
