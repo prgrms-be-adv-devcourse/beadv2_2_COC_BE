@@ -1,4 +1,4 @@
-name: Deploy dev
+name: Build, Push & Deploy (dev)
 
 on:
   push:
@@ -11,10 +11,11 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
+  IMAGE_OWNER: prgrms-be-adv-devcourse
+  TAG: dev-cicd
 
 jobs:
-  deploy:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,41 +28,74 @@ jobs:
           distribution: corretto
           java-version: 17
 
-      # 3. build services jar
+      # 3. Build all services JAR
       - name: Build all services JAR
         working-directory: modi
         run: |
           chmod +x gradlew
-          ./gradlew build -x test
+          ./gradlew clean build -x test
 
-      # GHCR login
+      # 4. Login to GHCR
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-#          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "review-service" "notification-service" "modi-config" "modi-gateway" "modi-discovery")
-      # 3. Docker build & save (서비스별)
-      - name: Build & save docker images
+      # 5. Build & Push Docker Images
+      - name: Build & Push Docker Images
         run: |
-          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "modi-config" "modi-gateway" "modi-discovery")
+          services=(
+            "account-service"
+            "product-service"
+            "rental-service"
+            "seller-service"
+            "member-service"
+            "review-service"
+            "notification-service"
+            "delivery-service"
+            "modi-config"
+            "modi-gateway"
+            "modi-discovery"
+          )
 
           for service in "${services[@]}"; do
-            IMAGE_NAME=$REGISTRY/$IMAGE_OWNER/$service:dev-cicd
-            echo "Building $IMAGE_NAME ..."
+            IMAGE_NAME=$REGISTRY/$IMAGE_OWNER/$service:$TAG
+            echo "▶ Building $IMAGE_NAME"
             docker build -t $IMAGE_NAME ./modi/$service
             docker push $IMAGE_NAME
           done
 
-      #5. deploy on EC2
-      - name: deploy on EC2
+      # 6. Deploy to EC2 (k3s)
+      - name: Deploy to EC2 (k3s)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ec2-user/app/modi
-            
-            docker compose down
-            docker compose pull
-            docker compose up -d
-            docker system prune -f
+            echo "▶ Restarting deployments on k3s"
+
+            kubectl rollout restart deploy account-service
+            kubectl rollout restart deploy product-service
+            kubectl rollout restart deploy rental-service
+            kubectl rollout restart deploy seller-service
+            kubectl rollout restart deploy member-service
+            kubectl rollout restart deploy review-service
+            kubectl rollout restart deploy notification-service
+            kubectl rollout restart deploy delivery-service
+            kubectl rollout restart deploy modi-config
+            kubectl rollout restart deploy modi-gateway
+            kubectl rollout restart deploy modi-discovery
+
+#            kubectl rollout restart deploy account-service
+#            kubectl rollout restart deploy product-service
+#            kubectl rollout restart deploy rental-service
+#            kubectl rollout restart deploy seller-service
+#            kubectl rollout restart deploy member-service
+#            kubectl rollout restart deploy review-service
+#            kubectl rollout restart deploy notification-service
+#            kubectl rollout restart deploy delivery-service
+#            kubectl rollout restart deploy modi-config
+#            kubectl rollout restart deploy modi-gateway
+#            kubectl rollout restart deploy modi-discovery
+
+
+            echo "▶ Deploy finished"
