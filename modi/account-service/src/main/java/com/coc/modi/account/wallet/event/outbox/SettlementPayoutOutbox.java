@@ -30,49 +30,49 @@ import lombok.NoArgsConstructor;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SettlementPayoutOutbox extends BaseEntity {
-
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
+	
 	@Column(name = "event_id", nullable = false, length = 36)
 	private String eventId;
-
+	
 	@Column(name = "occurred_at", nullable = false)
 	private Instant occurredAt;
-
+	
 	@Column(name = "settlement_id", nullable = false)
 	private Long settlementId;
-
+	
 	@Column(name = "seller_id", nullable = false)
 	private Long sellerId;
-
+	
 	@Column(name = "member_id", nullable = false)
 	private Long memberId;
-
+	
 	@Column(name = "amount", nullable = false, precision = 18, scale = 2)
 	private BigDecimal amount;
-
+	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "event_type", nullable = false, length = 20)
 	private SettlementPayoutOutboxType eventType;
-
+	
 	@Column(name = "failure_reason", length = 255)
 	private String failureReason;
-
+	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
 	private SettlementPayoutOutboxStatus status;
-
+	
 	@Column(name = "retry_count", nullable = false)
 	private int retryCount;
-
+	
 	@Column(name = "next_attempt_at")
 	private Instant nextAttemptAt;
-
+	
 	@Column(name = "last_error", length = 1000)
 	private String lastError;
-
+	
 	@Builder
 	private SettlementPayoutOutbox(
 			String eventId,
@@ -88,7 +88,7 @@ public class SettlementPayoutOutbox extends BaseEntity {
 			Instant nextAttemptAt,
 			String lastError
 	) {
-
+		
 		this.eventId = eventId;
 		this.occurredAt = occurredAt;
 		this.settlementId = settlementId;
@@ -102,34 +102,34 @@ public class SettlementPayoutOutbox extends BaseEntity {
 		this.nextAttemptAt = nextAttemptAt;
 		this.lastError = lastError;
 	}
-
+	
 	public static SettlementPayoutOutbox completed(Long settlementId,
 												   Long sellerId,
 												   Long memberId,
 												   BigDecimal amount) {
-
+		
 		return baseBuilder(settlementId, sellerId, memberId, amount)
 				.eventType(SettlementPayoutOutboxType.COMPLETED)
 				.build();
 	}
-
+	
 	public static SettlementPayoutOutbox failed(Long settlementId,
 												Long sellerId,
 												Long memberId,
 												BigDecimal amount,
 												String failureReason) {
-
+		
 		return baseBuilder(settlementId, sellerId, memberId, amount)
 				.eventType(SettlementPayoutOutboxType.FAILED)
 				.failureReason(failureReason)
 				.build();
 	}
-
+	
 	private static SettlementPayoutOutboxBuilder baseBuilder(Long settlementId,
 															 Long sellerId,
 															 Long memberId,
 															 BigDecimal amount) {
-
+		
 		return SettlementPayoutOutbox.builder()
 				.eventId(UUID.randomUUID().toString())
 				.occurredAt(Instant.now())
@@ -139,5 +139,33 @@ public class SettlementPayoutOutbox extends BaseEntity {
 				.amount(amount)
 				.status(SettlementPayoutOutboxStatus.PENDING)
 				.retryCount(0);
+	}
+	
+	public void markProcessing() {
+		
+		this.status = SettlementPayoutOutboxStatus.PROCESSING;
+	}
+	
+	public void markSent() {
+		
+		this.status = SettlementPayoutOutboxStatus.SENT;
+		this.nextAttemptAt = null;
+		this.lastError = null;
+	}
+	
+	public void markRetry(Instant nextAttemptAt, String errorMessage) {
+		
+		this.status = SettlementPayoutOutboxStatus.PENDING;
+		this.retryCount += 1;
+		this.nextAttemptAt = nextAttemptAt;
+		this.lastError = errorMessage;
+	}
+	
+	public void markFailed(String errorMessage) {
+		
+		this.status = SettlementPayoutOutboxStatus.FAILED;
+		this.retryCount += 1;
+		this.nextAttemptAt = null;
+		this.lastError = errorMessage;
 	}
 }
