@@ -11,9 +11,13 @@ import com.coc.modi.account.wallet.domain.MemberWallet;
 import com.coc.modi.account.wallet.domain.MemberWalletRepository;
 import com.coc.modi.account.wallet.domain.WalletTransaction;
 import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
+import com.coc.modi.account.wallet.domain.WalletTransactionType;
+import com.coc.modi.account.wallet.exception.AccountException;
+import com.coc.modi.common.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,4 +133,32 @@ public class WalletCommandService {
 
         return RentalPaymentResponse.from(wallet);
     }
+
+	@Transactional
+	public boolean payoutSettlement(Long memberId, Long settlementId, BigDecimal amount) {
+
+		if (memberId == null || settlementId == null || amount == null) {
+			throw new AccountException(ErrorCode.INVALID_INPUT, "정산 지급 요청 정보가 올바르지 않습니다.");
+		}
+		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new AccountException(ErrorCode.INVALID_INPUT, "정산 지급 금액은 0보다 커야 합니다.");
+		}
+
+		boolean alreadyProcessed = walletTransactionRepository.existsByRelatedSettlementIdAndTxType(
+				settlementId,
+				WalletTransactionType.SETTLEMENT_PAYOUT
+		);
+		if (alreadyProcessed) {
+			return false;
+		}
+
+		try {
+			createTransactionAndUpdateBalance(
+					WalletTransactionCommand.forSettlementPayout(memberId, settlementId, amount)
+			);
+			return true;
+		} catch (DataIntegrityViolationException ex) {
+			return false;
+		}
+	}
 }

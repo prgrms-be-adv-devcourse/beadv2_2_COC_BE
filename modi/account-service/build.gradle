@@ -1,6 +1,9 @@
 dependencies {
     // 공통 모듈 공유
     implementation project(':common')
+    implementation project(':common-kafka')
+
+    implementation 'org.springframework.kafka:spring-kafka'
 
     testRuntimeOnly 'com.h2database:h2'
 
