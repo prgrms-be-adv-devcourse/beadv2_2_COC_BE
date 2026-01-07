@@ -4,5 +4,6 @@ public enum SellerSettlementStatus {
     READY,
     PENDING,
     PAID,
+    FAILED,
     CANCELED
 }

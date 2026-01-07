@@ -69,6 +69,9 @@ public class SellerSettlement extends BaseEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "failure_reason", length = 255)
+    private String failureReason;
+
     @OneToMany(mappedBy = "sellerSettlement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SellerSettlementLine> lines = new ArrayList<>();
 
@@ -85,7 +88,8 @@ public class SellerSettlement extends BaseEntity {
                              BigDecimal totalFeeAmount,
                              BigDecimal settlementAmount,
                              SellerSettlementStatus status,
-                             LocalDateTime paidAt) {
+                             LocalDateTime paidAt,
+                             String failureReason) {
 
         this.batch = batch;
         this.sellerId = sellerId;
@@ -95,6 +99,7 @@ public class SellerSettlement extends BaseEntity {
         this.settlementAmount = settlementAmount != null ? settlementAmount : ZERO;
         this.status = status != null ? status : SellerSettlementStatus.READY;
         this.paidAt = paidAt;
+        this.failureReason = failureReason;
     }
 
     public static SellerSettlement create(SettlementBatch batch,
@@ -126,6 +131,7 @@ public class SellerSettlement extends BaseEntity {
             throw new SellerSettlementStatusConflictException("canceled settlement cannot be requested");
         }
         this.status = SellerSettlementStatus.PENDING;
+        this.failureReason = null;
     }
 
     public void pay(LocalDateTime paidAt) {
@@ -141,6 +147,27 @@ public class SellerSettlement extends BaseEntity {
         }
         this.status = SellerSettlementStatus.PAID;
         this.paidAt = paidAt;
+        this.failureReason = null;
+    }
+
+    public void fail(String reason) {
+
+        if (this.status == SellerSettlementStatus.PAID) {
+            throw new SellerSettlementStatusConflictException("paid settlement cannot be failed");
+        }
+        if (this.status == SellerSettlementStatus.CANCELED) {
+            throw new SellerSettlementStatusConflictException("canceled settlement cannot be failed");
+        }
+        if (this.status == SellerSettlementStatus.FAILED) {
+            if (this.failureReason == null && reason != null && !reason.isBlank()) {
+                this.failureReason = reason;
+            }
+            return;
+        }
+        this.status = SellerSettlementStatus.FAILED;
+        if (reason != null && !reason.isBlank()) {
+            this.failureReason = reason;
+        }
     }
 
     // 정산 취소
