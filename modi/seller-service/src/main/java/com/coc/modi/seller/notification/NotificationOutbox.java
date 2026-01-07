@@ -116,4 +116,32 @@ public class NotificationOutbox extends BaseEntity {
 				.retryCount(0)
 				.build();
 	}
+
+	public void markSent() {
+
+		this.status = NotificationOutboxStatus.SENT;
+		this.nextAttemptAt = null;
+		this.lastError = null;
+	}
+
+	public void markProcessing() {
+
+		this.status = NotificationOutboxStatus.PROCESSING;
+	}
+
+	public void markRetry(Instant nextAttemptAt, String errorMessage) {
+
+		this.status = NotificationOutboxStatus.PENDING;
+		this.retryCount += 1;
+		this.nextAttemptAt = nextAttemptAt;
+		this.lastError = errorMessage;
+	}
+
+	public void markFailed(String errorMessage) {
+
+		this.status = NotificationOutboxStatus.FAILED;
+		this.retryCount += 1;
+		this.nextAttemptAt = null;
+		this.lastError = errorMessage;
+	}
 }
