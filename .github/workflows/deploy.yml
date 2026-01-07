@@ -12,7 +12,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: prgrms-be-adv-devcourse
-  TAG: dev-cicd
+  TAG: latest
 
 jobs:
   build-push-deploy:
