@@ -4,11 +4,11 @@ spring:
   config:
     import: configserver:http://modi-config:8888
 
-#  cloud:
-#    config:
-#      discovery:
-#        enabled: true
-#        service-id: modi-config
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
 
 eureka:
   client:

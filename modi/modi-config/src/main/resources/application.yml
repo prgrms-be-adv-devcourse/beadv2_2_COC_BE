@@ -8,7 +8,6 @@ spring:
     config:
       server:
         overrides:
-          spring.datasource.url: ${DB_URL}
           spring.datasource.username: ${DB_USER}
           spring.datasource.password: ${DB_PASSWORD}
           toss.payments.client-key: ${TOSS_CLIENT_KEY}
