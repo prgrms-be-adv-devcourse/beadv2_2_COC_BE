@@ -2,7 +2,8 @@ package com.coc.modi.seller.settlement.application;
 
 import com.coc.modi.common.NotificationType;
 import com.coc.modi.kafka.event.NotificationEvent;
-import com.coc.modi.kafka.topic.KafkaTopics;
+import com.coc.modi.seller.notification.NotificationOutbox;
+import com.coc.modi.seller.notification.NotificationOutboxRepository;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
@@ -10,7 +11,6 @@ import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class SettlementNotificationService {
 
 	private final SellerRepository sellerRepository;
-	private final KafkaTemplate<String, Object> kafkaTemplate;
+	private final NotificationOutboxRepository notificationOutboxRepository;
 
 	public void notifySettlementPaid(SellerSettlement settlement) {
 
@@ -49,11 +49,7 @@ public class SettlementNotificationService {
 				settlementId.toString()
 		);
 
-		try {
-			kafkaTemplate.send(KafkaTopics.NOTIFICATION_EVENTS, seller.getMemberId().toString(), event);
-		} catch (Exception ex) {
-			log.warn("정산 알림 발행 실패. settlementId={} sellerId={} memberId={}",
-					settlementId, sellerId, seller.getMemberId(), ex);
-		}
+		NotificationOutbox outbox = NotificationOutbox.from(event);
+		notificationOutboxRepository.save(outbox);
 	}
 }
