@@ -2,12 +2,10 @@ package com.coc.modi.account.wallet.event;
 
 import java.math.BigDecimal;
 
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import com.coc.modi.kafka.event.SettlementPayoutCompletedEvent;
-import com.coc.modi.kafka.event.SettlementPayoutFailedEvent;
-import com.coc.modi.kafka.topic.KafkaTopics;
+import com.coc.modi.account.wallet.event.outbox.SettlementPayoutOutbox;
+import com.coc.modi.account.wallet.event.outbox.SettlementPayoutOutboxRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,22 +13,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SettlementPayoutEventPublisher {
 
-	private final KafkaTemplate<String, Object> kafkaTemplate;
+	private final SettlementPayoutOutboxRepository settlementPayoutOutboxRepository;
 
 	public void publishCompleted(Long settlementId, Long sellerId, Long memberId, BigDecimal amount) {
 
-		SettlementPayoutCompletedEvent event = SettlementPayoutCompletedEvent.of(
+		SettlementPayoutOutbox outbox = SettlementPayoutOutbox.completed(
 				settlementId,
 				sellerId,
 				memberId,
 				amount
 		);
-
-		kafkaTemplate.send(
-				KafkaTopics.SETTLEMENT_PAYOUT_COMPLETED_EVENTS,
-				settlementId.toString(),
-				event
-		);
+		settlementPayoutOutboxRepository.save(outbox);
 	}
 
 	public void publishFailed(Long settlementId,
@@ -39,18 +32,13 @@ public class SettlementPayoutEventPublisher {
 							  BigDecimal amount,
 							  String failureReason) {
 
-		SettlementPayoutFailedEvent event = SettlementPayoutFailedEvent.of(
+		SettlementPayoutOutbox outbox = SettlementPayoutOutbox.failed(
 				settlementId,
 				sellerId,
 				memberId,
 				amount,
 				failureReason
 		);
-
-		kafkaTemplate.send(
-				KafkaTopics.SETTLEMENT_PAYOUT_FAILED_EVENTS,
-				settlementId.toString(),
-				event
-		);
+		settlementPayoutOutboxRepository.save(outbox);
 	}
 }
