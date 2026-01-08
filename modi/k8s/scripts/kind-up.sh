@@ -72,6 +72,8 @@ IMAGES=(
   modi/rental-service:local
   modi/seller-service:local
   modi/member-service:local
+  modi/delivery-service:local
+  modi/ai-service:local
 )
 
 LOAD_EXTERNAL_IMAGES="${LOAD_EXTERNAL_IMAGES:-false}"
@@ -123,6 +125,8 @@ DEPLOYMENTS=(
   deployment/rental-service
   deployment/seller-service
   deployment/member-service
+  deployment/delivery-service
+  deployment/ai-service
 )
 
 echo "Scaling down services before infra readiness..." >&2

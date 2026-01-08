@@ -26,6 +26,14 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('G
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PUT', '/product-service/api/products/{productId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/product-service/api/products/{productId}/active', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/product-service/api/products/{productId}/inactive', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/products/reindex', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/products/embeddings/reindex', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/popular-keywords', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/popular-products', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/{productId}/embedding', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/recommendations', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/ai-service/api/ai/recommendations/recent', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/ai/chat-test', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/rental-service/api/carts', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/rental-service/api/carts/items', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('DELETE', '/rental-service/api/carts/me/items/{cartItemId}', 'MEMBER');

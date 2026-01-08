@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
@@ -47,8 +47,8 @@ public class ProductDocument {
 	@Field(type = FieldType.Keyword)
 	private String thumbnailUrl;
 	
-	@Field(type = FieldType.Date, format = DateFormat.date_time)
-	private OffsetDateTime createdAt;
+	@Field(type = FieldType.Date, format = DateFormat.epoch_millis)
+	private Instant createdAt;
 	
 	public ProductDocument(Long id,
 						   String name,
@@ -58,7 +58,7 @@ public class ProductDocument {
 						   Long sellerId,
 						   String category,
 						   String thumbnailUrl,
-						   OffsetDateTime createdAt) {
+						   Instant createdAt) {
 		
 		this.id = id;
 		this.name = name;
@@ -73,10 +73,11 @@ public class ProductDocument {
 	
 	public static ProductDocument from(Product product, String thumbnailUrl) {
 		
-		OffsetDateTime createdAt = null;
+		Instant createdAt = null;
 		if (product.getCreatedAt() != null) {
 			createdAt = product.getCreatedAt()
 					.atOffset(ZoneOffset.ofHours(9))
+					.toInstant()
 					.truncatedTo(ChronoUnit.MILLIS);
 		}
 		

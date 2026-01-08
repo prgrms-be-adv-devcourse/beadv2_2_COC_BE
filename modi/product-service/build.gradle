@@ -1,5 +1,4 @@
 dependencies {
-    implementation project(':common-ai')
     implementation project(':common-kafka')
     implementation 'org.springframework.kafka:spring-kafka'
 
