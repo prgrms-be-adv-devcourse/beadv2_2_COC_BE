@@ -16,6 +16,30 @@ spring:
           toss.success-url: ${TOSS_SUCCESS_URL}
           toss.fail-url: ${TOSS_FAIL_URL}
           jwt.secret: ${JWT_SECRET}
+          auth.oauth2.enabled: false
+          auth.oauth2.success-redirect: https://coc-modi.vercel.app
+          auth.oauth2.failure-redirect: https://coc-modi.vercel.app/intro
+          auth.oauth2.link-required-redirect: https://coc-modi.vercel.app/intro
+          spring.security.oauth2.client.registration.google.client-id: ${OAUTH2_GOOGLE_CLIENT_ID:}
+          spring.security.oauth2.client.registration.google.client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET:}
+          spring.security.oauth2.client.registration.google.scope: profile,email
+          spring.security.oauth2.client.registration.kakao.client-id: ${OAUTH2_KAKAO_CLIENT_ID:}
+          spring.security.oauth2.client.registration.kakao.client-authentication-method: none
+          spring.security.oauth2.client.registration.kakao.authorization-grant-type: authorization_code
+          spring.security.oauth2.client.registration.kakao.scope: profile,nickname
+          spring.security.oauth2.client.provider.kakao.authorization-uri: https://kauth.kakao.com/oauth/authorize
+          spring.security.oauth2.client.provider.kakao.token-uri: https://kauth.kakao.com/oauth/token
+          spring.security.oauth2.client.provider.kakao.user-info-uri: https://kapi.kakao.com/v2/user/me
+          spring.security.oauth2.client.provider.kakao.user-name-attribute: id
+          spring.security.oauth2.client.registration.naver.client-id: ${OAUTH2_NAVER_CLIENT_ID:}
+          spring.security.oauth2.client.registration.naver.client-secret: ${OAUTH2_NAVER_CLIENT_SECRET:}
+          spring.security.oauth2.client.registration.naver.client-authentication-method: client_secret_post
+          spring.security.oauth2.client.registration.naver.authorization-grant-type: authorization_code
+          spring.security.oauth2.client.registration.naver.scope: profile,nickname
+          spring.security.oauth2.client.provider.naver.authorization-uri: https://nid.naver.com/oauth2.0/authorize
+          spring.security.oauth2.client.provider.naver.token-uri: https://nid.naver.com/oauth2.0/token
+          spring.security.oauth2.client.provider.naver.user-info-uri: https://openapi.naver.com/v1/nid/me
+          spring.security.oauth2.client.provider.naver.user-name-attribute: response
           spring.mail.username: ${EMAIL_ADDRESS}
           spring.mail.password: ${EMAIL_PASSWORD}
           spring.data.redis.host: ${REDIS_HOST}
