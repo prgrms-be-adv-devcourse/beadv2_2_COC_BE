@@ -100,6 +100,7 @@ public class MemberAuthController {
 				.body(ApiResponse.ok(response.accessToken()));
 	}
 	
+	
 	@PostMapping("/logout")
 	public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest servletRequest) {
 		
@@ -110,7 +111,8 @@ public class MemberAuthController {
 				.header(HttpHeaders.SET_COOKIE, response.clear().toString())
 				.body(ApiResponse.ok(null));
 	}
-
+	
+	// OAuth2 회원가입
 	@PostMapping("/oauth2/signup")
 	public ResponseEntity<ApiResponse<?>> oauth2Signup(@Valid @RequestBody OAuth2SignupRequest request,
 													   HttpServletRequest httpServletRequest) {
@@ -122,7 +124,8 @@ public class MemberAuthController {
 				.header(HttpHeaders.SET_COOKIE, response.refreshCookie().toString())
 				.body(ApiResponse.ok(response.accessToken()));
 	}
-
+	
+	// OAuth2 계정 연결
 	@PostMapping("/oauth2/connect")
 	public ResponseEntity<ApiResponse<Void>> oauth2Connect(@AuthenticationPrincipal CustomMember member,
 														   @Valid @RequestBody OAuth2ConnectRequest request) {
