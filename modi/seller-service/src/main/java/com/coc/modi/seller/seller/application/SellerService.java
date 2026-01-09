@@ -65,7 +65,6 @@ public class SellerService {
                 command.bizRegNo(),
                 command.storePhone()
         );
-        seller.changeStatus(command.status());
 
         return SellerDetailResponse.from(seller);
     }
