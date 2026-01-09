@@ -14,3 +14,4 @@ resources:
   - rental-service.yaml
   - seller-service.yaml
   - member-service.yaml
+  - seller-settlement-cronjob.yaml
