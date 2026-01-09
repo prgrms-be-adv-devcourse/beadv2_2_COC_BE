@@ -3,6 +3,7 @@ package com.coc.modi.seller.seller.application;
 import java.util.Optional;
 
 import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRejectedEvent;
 import com.coc.modi.seller.outbox.SellerOutboxService;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.domain.Seller;
@@ -66,5 +67,38 @@ class SellerApprovalServiceTest {
 
 		verify(sellerRepository).save(seller);
 		verify(sellerOutboxService, never()).enqueueSellerApproved(any(SellerApprovedEvent.class));
+	}
+
+	@Test
+	void rejectSeller_enqueuesOutboxWhenPending() {
+
+		Seller seller = Seller.create(12L, "store-12", "biz-12", "010-0000-0002");
+		ReflectionTestUtils.setField(seller, "id", 3L);
+
+		when(sellerRepository.findById(3L)).thenReturn(Optional.of(seller));
+
+		SellerDetailResponse response = sellerApprovalService.rejectSeller(3L);
+
+		verify(sellerRepository).save(seller);
+		ArgumentCaptor<SellerRejectedEvent> captor = ArgumentCaptor.forClass(SellerRejectedEvent.class);
+		verify(sellerOutboxService).enqueueSellerRejected(captor.capture());
+		assertThat(captor.getValue().sellerId()).isEqualTo(3L);
+		assertThat(captor.getValue().memberId()).isEqualTo(12L);
+		assertThat(response.status()).isEqualTo(SellerStatus.REJECTED);
+	}
+
+	@Test
+	void rejectSeller_skipsOutboxWhenAlreadyRejected() {
+
+		Seller seller = Seller.create(13L, "store-13", "biz-13", "010-0000-0003");
+		seller.reject();
+		ReflectionTestUtils.setField(seller, "id", 4L);
+
+		when(sellerRepository.findById(4L)).thenReturn(Optional.of(seller));
+
+		sellerApprovalService.rejectSeller(4L);
+
+		verify(sellerRepository).save(seller);
+		verify(sellerOutboxService, never()).enqueueSellerRejected(any(SellerRejectedEvent.class));
 	}
 }

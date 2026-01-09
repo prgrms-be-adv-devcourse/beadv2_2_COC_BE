@@ -11,4 +11,5 @@ public final class KafkaTopics {
 	public static final String NOTIFICATION_EVENTS = "notification-events";
 	public static final String MEMBER_CREATED = "member-created";
 	public static final String SELLER_APPROVED = "seller-approved";
+	public static final String SELLER_REJECTED = "seller-rejected";
 }

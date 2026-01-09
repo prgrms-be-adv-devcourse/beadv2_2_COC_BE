@@ -3,6 +3,7 @@ package com.coc.modi.seller.outbox;
 import java.util.List;
 
 import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRejectedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,6 +52,13 @@ public class SellerOutboxPublisher {
 
 		if (event.getEventType() == SellerOutboxEventType.SELLER_APPROVED) {
 			SellerApprovedEvent payload = readPayload(event.getPayload(), SellerApprovedEvent.class);
+			kafkaTemplate
+					.send(event.getEventType().getTopic(), payload.sellerId().toString(), payload)
+					.get();
+			return;
+		}
+		if (event.getEventType() == SellerOutboxEventType.SELLER_REJECTED) {
+			SellerRejectedEvent payload = readPayload(event.getPayload(), SellerRejectedEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.sellerId().toString(), payload)
 					.get();
