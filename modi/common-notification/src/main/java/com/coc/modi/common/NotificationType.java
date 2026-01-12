@@ -7,5 +7,6 @@ public enum NotificationType {
 	RENTAL_PAID,
 	RENTAL_STARTED,
 	RENTAL_ENDED,
+	SELLER_APPROVED,
 	SELLER_REJECTED
 }
