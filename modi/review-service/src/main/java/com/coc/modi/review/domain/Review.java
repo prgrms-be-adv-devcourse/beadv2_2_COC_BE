@@ -22,7 +22,7 @@ public class Review extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long reviewId;
+	private Long id;
 
 	@Column(name = "rental_item_id", nullable = false)
 	private Long rentalItemId;
@@ -39,15 +39,12 @@ public class Review extends BaseEntity {
 	@Column(name = "content", nullable = false, columnDefinition = "text")
 	private String content;
 
-	@Column(name = "summary", columnDefinition = "text")
-	private String summary;
-
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20, columnDefinition = "varchar(20) default 'ACTIVE'")
 	private ReviewStatus status;
 
 	@Builder
-	private Review(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content, String summary) {
+	private Review(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content) {
 
 		validateRating(rating);
 		
@@ -56,11 +53,10 @@ public class Review extends BaseEntity {
 		this.memberId = memberId;
 		this.rating = rating;
 		this.content = content;
-		this.summary = summary;
 		this.status = ReviewStatus.ACTIVE;
 	}
 
-	public static Review create(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content, String summary) {
+	public static Review create(Long rentalItemId, Long sellerId, Long memberId, Short rating, String content) {
 
 		return Review.builder()
 				.rentalItemId(rentalItemId)
@@ -68,11 +64,10 @@ public class Review extends BaseEntity {
 				.memberId(memberId)
 				.rating(rating)
 				.content(content)
-				.summary(summary)
 				.build();
 	}
 
-	public void update(Short rating, String content, String summary) {
+	public void update(Short rating, String content) {
 
 		if (rating != null) {
 			validateRating(rating);
@@ -81,9 +76,6 @@ public class Review extends BaseEntity {
 
 		if (content != null) {
 			this.content = content;
-			if (summary != null) {
-				this.summary = summary;
-			}
 		}
 	}
 
@@ -98,4 +90,5 @@ public class Review extends BaseEntity {
 		
 		this.status = ReviewStatus.DELETED;
 	}
+
 }

@@ -1,31 +1,23 @@
 package com.coc.modi.review.application.dto;
 
-import com.coc.modi.review.domain.Review;
+import com.coc.modi.review.domain.ReviewSummary;
 
 import java.time.LocalDateTime;
 
 public record ReviewSummaryResponse(
-
-		Long reviewId,
-		Long rentalItemId,
 		Long sellerId,
-		Long memberId,
-		Short rating,
 		String summary,
-		LocalDateTime createdAt
+		long reviewCount,
+		LocalDateTime summarizedAt
 ) {
 
-	public static ReviewSummaryResponse from(Review review) {
-		
-		return new ReviewSummaryResponse(
+	public static ReviewSummaryResponse from(ReviewSummary summary) {
 
-				review.getReviewId(),
-				review.getRentalItemId(),
-				review.getSellerId(),
-				review.getMemberId(),
-				review.getRating(),
-				review.getSummary(),
-				review.getCreatedAt()
+		return new ReviewSummaryResponse(
+				summary.getSellerId(),
+				summary.getSummary(),
+				summary.getReviewCount(),
+				summary.getUpdatedAt()
 		);
 	}
 }

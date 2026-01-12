@@ -1,8 +1,8 @@
 package com.coc.modi.review.application;
 
 import com.coc.modi.review.application.dto.CreateReviewCommand;
+import com.coc.modi.review.application.dto.ReviewListResponse;
 import com.coc.modi.review.application.dto.ReviewResponse;
-import com.coc.modi.review.application.dto.ReviewSummaryResponse;
 import com.coc.modi.review.application.dto.UpdateReviewCommand;
 import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
@@ -24,22 +24,18 @@ public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
 //	private final NotificationEventPublisher notificationEventPublisher;
-	private final ReviewSummaryService reviewSummaryService;
 
 	
 	// 판매자 리뷰 생성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
 
-		String summary = reviewSummaryService.summarize(command.content());
-
 		Review review = Review.create(
 				command.rentalItemid(),
 				command.sellerId(),
 				command.memberId(),
 				command.rating(),
-				command.content(),
-				summary
+				command.content()
 		);
 
 		Review saved = reviewRepository.save(review);
@@ -62,13 +58,12 @@ public class ReviewService {
 	@Transactional
 	public ReviewResponse updateReview(UpdateReviewCommand command) {
 		
-		Review review = reviewRepository.findByReviewIdAndStatus(command.reviewId(), ReviewStatus.ACTIVE)
+		Review review = reviewRepository.findByIdAndStatus(command.reviewId(), ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(command.reviewId()));
 
 		validateOwnership(review, command.memberId());
 
-		String summary = command.content() != null ? reviewSummaryService.summarize(command.content()) : null;
-		review.update(command.rating(), command.content(), summary);
+		review.update(command.rating(), command.content());
 		
 		return ReviewResponse.from(review);
 	}
@@ -77,7 +72,7 @@ public class ReviewService {
 	@Transactional
 	public void deleteReview(Long reviewId, Long memberId) {
 		
-		Review review = reviewRepository.findByReviewIdAndStatus(reviewId, ReviewStatus.ACTIVE)
+		Review review = reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
 		validateOwnership(review, memberId);
@@ -89,30 +84,30 @@ public class ReviewService {
 	@Transactional(readOnly = true)
 	public ReviewResponse getReview(Long reviewId) {
 		
-		return reviewRepository.findByReviewIdAndStatus(reviewId, ReviewStatus.ACTIVE)
+		return reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
 				.map(ReviewResponse::from)
 				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
 	}
 	
 	// 특정 판매자 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
-	public List<ReviewSummaryResponse> getReviewsBySeller(Long sellerId, Pageable pageable) {
+	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Pageable pageable) {
 		
 		Page<Review> reviews = reviewRepository.findBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE, pageable);
 
 		return reviews.stream()
-				.map(ReviewSummaryResponse::from)
+				.map(ReviewListResponse::from)
 				.toList();
 	}
 	
 	// 내가 작성한 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
-	public List<ReviewSummaryResponse> getReviewsByMember(Long memberId, Pageable pageable) {
+	public List<ReviewListResponse> getReviewsByMember(Long memberId, Pageable pageable) {
 		
 		Page<Review> reviews = reviewRepository.findByMemberIdAndStatus(memberId, ReviewStatus.ACTIVE, pageable);
 
 		return reviews.stream()
-				.map(ReviewSummaryResponse::from)
+				.map(ReviewListResponse::from)
 				.toList();
 	}
 

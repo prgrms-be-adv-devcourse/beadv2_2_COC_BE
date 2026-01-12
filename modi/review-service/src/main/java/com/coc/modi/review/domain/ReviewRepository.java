@@ -9,9 +9,13 @@ public interface ReviewRepository {
 
 	Review save(Review review);
 
-	Optional<Review> findByReviewIdAndStatus(Long reviewId, ReviewStatus status);
+	Optional<Review> findByIdAndStatus(Long reviewId, ReviewStatus status);
 
 	Page<Review> findBySellerIdAndStatus(Long sellerId, ReviewStatus status, Pageable pageable);
 
 	Page<Review> findByMemberIdAndStatus(Long memberId, ReviewStatus status, Pageable pageable);
+
+	long countBySellerIdAndStatus(Long sellerId, ReviewStatus status);
+
+	java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status);
 }

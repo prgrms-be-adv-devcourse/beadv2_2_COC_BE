@@ -24,9 +24,9 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	}
 
 	@Override
-	public Optional<Review> findByReviewIdAndStatus(Long reviewId, ReviewStatus status) {
+	public Optional<Review> findByIdAndStatus(Long reviewId, ReviewStatus status) {
 		
-		return reviewJpaRepository.findByReviewIdAndStatus(reviewId, status);
+		return reviewJpaRepository.findByIdAndStatus(reviewId, status);
 	}
 
 	@Override
@@ -39,5 +39,17 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	public Page<Review> findByMemberIdAndStatus(Long memberId, ReviewStatus status, Pageable pageable) {
 		
 		return reviewJpaRepository.findByMemberIdAndStatus(memberId, status, pageable);
+	}
+
+	@Override
+	public long countBySellerIdAndStatus(Long sellerId, ReviewStatus status) {
+		
+		return reviewJpaRepository.countBySellerIdAndStatus(sellerId, status);
+	}
+
+	@Override
+	public java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status) {
+		
+		return reviewJpaRepository.findDistinctSellerIdsByStatus(status);
 	}
 }

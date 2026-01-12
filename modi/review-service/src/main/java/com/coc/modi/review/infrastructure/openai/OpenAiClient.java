@@ -20,19 +20,19 @@ public class OpenAiClient {
 		this.properties = properties;
 	}
 
-	public String summarize(String content) {
+	public String summarizeSellerReviews(String content) {
 
 		OpenAiChatRequest request = new OpenAiChatRequest(
 				properties.getModel(),
 				List.of(
 						new OpenAiChatRequest.Message(
 								"system",
-								"Summarize the review in 1-2 sentences from the reviewer's perspective. Use first-person voice. Keep it concise and neutral."
+								"Summarize overall feedback about a seller based on multiple customer reviews. Highlight common themes and notable concerns in 2-3 neutral sentences."
 						),
 						new OpenAiChatRequest.Message("user", content)
 				),
 				0.2,
-				100
+				160
 		);
 
 		HttpHeaders headers = new HttpHeaders();
