@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.coc.modi.ai.chat.application.ChatService;
 import com.coc.modi.ai.chat.domain.ChatResult;
+import com.coc.modi.ai.recommendation.application.ProductDescriptionService;
 import com.coc.modi.ai.recommendation.application.ProductRecommendationService;
 import com.coc.modi.ai.recommendation.presentation.dto.ProductRecommendationRequest;
 import com.coc.modi.ai.recommendation.presentation.dto.ProductRecommendationResponse;
@@ -52,6 +53,9 @@ class ProductRecommendationControllerTest {
 
     @MockitoBean
     private ChatService chatService;
+
+    @MockitoBean
+    private ProductDescriptionService productDescriptionService;
 
     @Test
     void recommendProducts_returnsResponse() throws Exception {
@@ -163,5 +167,27 @@ class ProductRecommendationControllerTest {
                         .header(ROLES_HEADER, "MEMBER")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void recommendDescription_returns_content() throws Exception {
+        when(productDescriptionService.recommendDescription(any()))
+                .thenReturn("추천 설명");
+
+        Map<String, Object> request = Map.of(
+                "productName", "아이폰15",
+                "category", "MOBILE",
+                "specs", Map.of("storage", "256GB")
+        );
+
+        mockMvc.perform(post("/api/ai/descriptions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(MEMBER_ID_HEADER, "1")
+                        .header(ROLES_HEADER, "MEMBER")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value("추천 설명"));
+
+        verify(productDescriptionService).recommendDescription(any());
     }
 }
