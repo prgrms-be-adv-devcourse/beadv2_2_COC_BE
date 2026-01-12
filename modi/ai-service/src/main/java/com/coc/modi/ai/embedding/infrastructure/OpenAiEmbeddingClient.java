@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import com.coc.modi.ai.config.AiEmbeddingProperties;
 import com.coc.modi.ai.embedding.domain.EmbeddingClient;
@@ -47,18 +48,30 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
 		}
 
 		EmbeddingRequest request = new EmbeddingRequest(model, input, dimensions);
-		EmbeddingResponse response = restClient.post()
-				.uri("/v1/embeddings")
-				.body(request)
-				.retrieve()
-				.body(EmbeddingResponse.class);
+		EmbeddingResponse response;
+		try {
+			response = restClient.post()
+					.uri("/v1/embeddings")
+					.body(request)
+					.retrieve()
+					.body(EmbeddingResponse.class);
+		} catch (RestClientException ex) {
+			log.warn("OpenAI embedding request failed.", ex);
+			return List.of();
+		}
 
 		if (response == null || response.data() == null || response.data().isEmpty()) {
 			log.warn("OpenAI embedding response is empty.");
 			return List.of();
 		}
 
-		return response.data().get(0).embedding();
+		List<Double> embedding = response.data().get(0).embedding();
+		if (embedding == null || embedding.isEmpty()) {
+			log.warn("OpenAI embedding vector is empty.");
+			return List.of();
+		}
+
+		return embedding;
 	}
 
 	public record EmbeddingRequest(String model, String input, Integer dimensions) {

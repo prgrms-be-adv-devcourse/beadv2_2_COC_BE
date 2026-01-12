@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import com.coc.modi.ai.config.AiChatProperties;
 import com.coc.modi.ai.chat.domain.ChatMessage;
@@ -36,12 +37,9 @@ public class OpenAiChatModel implements ChatModel {
 			AiChatProperties chatProperties) {
 
 		this.apiKey = apiKey;
-		this.model = chatProperties.options() != null && chatProperties.options().model() != null
-				? chatProperties.options().model() : "gpt-5-nano";
-		this.temperature = chatProperties.options() != null && chatProperties.options().temperature() != null
-				? chatProperties.options().temperature() : 1.0;
-		this.maxTokens = chatProperties.options() != null && chatProperties.options().maxTokens() != null
-				? chatProperties.options().maxTokens() : 200;
+		this.model = chatProperties.options() != null ? chatProperties.options().model() : null;
+		this.temperature = chatProperties.options() != null ? chatProperties.options().temperature() : null;
+		this.maxTokens = chatProperties.options() != null ? chatProperties.options().maxTokens() : null;
 		this.systemPrompt = buildSystemPrompt(chatProperties);
 		this.restClient = RestClient.builder()
 				.baseUrl(trimTrailingSlash(baseUrl))
@@ -69,11 +67,17 @@ public class OpenAiChatModel implements ChatModel {
 
 		ChatRequest request = new ChatRequest(model, temperature, maxTokens, messages);
 
-		JsonNode response = restClient.post()
-				.uri("/v1/chat/completions")
-				.body(request)
-				.retrieve()
-				.body(JsonNode.class);
+		JsonNode response;
+		try {
+			response = restClient.post()
+					.uri("/v1/chat/completions")
+					.body(request)
+					.retrieve()
+					.body(JsonNode.class);
+		} catch (RestClientException ex) {
+			log.warn("OpenAI chat request failed.", ex);
+			return new ChatResult("", Map.of("source", "openai", "error", "request_failed"));
+		}
 
 		if (response != null) {
 			log.info("OpenAI chat raw response: {}", response);
@@ -88,11 +92,17 @@ public class OpenAiChatModel implements ChatModel {
 		if ((content == null || content.isBlank()) && isLengthFinish(response)) {
 			int retryTokens = Math.max(maxTokens * 2, 512);
 			ChatRequest retryRequest = new ChatRequest(model, temperature, retryTokens, messages);
-			JsonNode retryResponse = restClient.post()
-					.uri("/v1/chat/completions")
-					.body(retryRequest)
-					.retrieve()
-					.body(JsonNode.class);
+			JsonNode retryResponse;
+			try {
+				retryResponse = restClient.post()
+						.uri("/v1/chat/completions")
+						.body(retryRequest)
+						.retrieve()
+						.body(JsonNode.class);
+			} catch (RestClientException ex) {
+				log.warn("OpenAI chat retry request failed.", ex);
+				retryResponse = null;
+			}
 
 			if (retryResponse != null) {
 				log.info("OpenAI chat retry response: {}", retryResponse);
@@ -248,11 +258,17 @@ public class OpenAiChatModel implements ChatModel {
 	}
 
 	private JsonNode callResponses(ResponsesRequest request) {
-		JsonNode response = restClient.post()
-				.uri("/v1/responses")
-				.body(request)
-				.retrieve()
-				.body(JsonNode.class);
+		JsonNode response;
+		try {
+			response = restClient.post()
+					.uri("/v1/responses")
+					.body(request)
+					.retrieve()
+					.body(JsonNode.class);
+		} catch (RestClientException ex) {
+			log.warn("OpenAI responses request failed.", ex);
+			return null;
+		}
 
 		if (response != null) {
 			log.info("OpenAI responses raw response: {}", response);
