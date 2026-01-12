@@ -6,6 +6,6 @@ public class SellerStatusConflictException extends SellerException {
 
 	public SellerStatusConflictException(String detailMessage) {
 
-		super(ErrorCode.CONFLICT, detailMessage);
+		super(ErrorCode.SELLER_STATUS_CONFLICT, detailMessage);
 	}
 }
