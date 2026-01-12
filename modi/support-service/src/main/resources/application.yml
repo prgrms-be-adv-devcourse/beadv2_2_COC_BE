@@ -1,6 +1,6 @@
 spring:
   application:
-    name: review-service
+    name: support-service
   config:
     import: configserver:http://modi-config:8888
 
