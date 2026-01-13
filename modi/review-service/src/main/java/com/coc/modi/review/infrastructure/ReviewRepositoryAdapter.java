@@ -48,8 +48,14 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	}
 
 	@Override
-	public java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status) {
+	public boolean existsByRentalItemIdAndStatus(Long rentalItemId, ReviewStatus status) {
 		
+		return reviewJpaRepository.existsByRentalItemIdAndStatus(rentalItemId, status);
+	}
+
+	@Override
+	public java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status) {
+
 		return reviewJpaRepository.findDistinctSellerIdsByStatus(status);
 	}
 }

@@ -18,4 +18,6 @@ public interface ReviewRepository {
 	long countBySellerIdAndStatus(Long sellerId, ReviewStatus status);
 
 	java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status);
+
+	boolean existsByRentalItemIdAndStatus(Long rentalItemId, ReviewStatus status);
 }

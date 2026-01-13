@@ -8,8 +8,12 @@ import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
 import com.coc.modi.review.domain.ReviewStatus;
 //import com.coc.modi.review.event.NotificationEventPublisher;
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.review.exception.ReviewAccessDeniedException;
+import com.coc.modi.review.exception.ReviewException;
 import com.coc.modi.review.exception.ReviewNotFoundException;
+import com.coc.modi.review.infrastructure.client.RentalClientAdapter;
+import com.coc.modi.review.infrastructure.client.dto.RentalItemInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,12 +27,15 @@ import java.util.List;
 public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
+	private final RentalClientAdapter rentalClientAdapter;
 //	private final NotificationEventPublisher notificationEventPublisher;
 
 	
 	// 판매자 리뷰 생성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
+
+		validateReviewEligibility(command);
 
 		Review review = Review.create(
 				command.rentalItemid(),
@@ -116,6 +123,30 @@ public class ReviewService {
 		if (!review.getMemberId().equals(memberId)) {
 			
 			throw new ReviewAccessDeniedException();
+		}
+	}
+
+	private void validateReviewEligibility(CreateReviewCommand command) {
+		RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
+
+		if (rentalItem == null) {
+			throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 아이템 정보를 찾을 수 없습니다.");
+		}
+
+		if (!command.memberId().equals(rentalItem.memberId())) {
+			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
+		}
+
+		if (!command.sellerId().equals(rentalItem.sellerId())) {
+			throw new ReviewException(ErrorCode.INVALID_INPUT, "판매자 정보가 일치하지 않습니다.");
+		}
+
+		if (!"RETURNED".equals(rentalItem.status())) {
+			throw new ReviewException(ErrorCode.CONFLICT, "반납 완료된 상품만 리뷰를 작성할 수 있습니다.");
+		}
+
+		if (reviewRepository.existsByRentalItemIdAndStatus(command.rentalItemid(), ReviewStatus.ACTIVE)) {
+			throw new ReviewException(ErrorCode.CONFLICT, "이미 리뷰가 작성된 대여 상품입니다.");
 		}
 	}
 }

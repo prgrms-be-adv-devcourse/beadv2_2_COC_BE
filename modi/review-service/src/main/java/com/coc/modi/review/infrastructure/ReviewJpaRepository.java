@@ -22,6 +22,8 @@ public interface ReviewJpaRepository extends JpaRepository<Review, Long> {
 
 	long countBySellerIdAndStatus(Long sellerId, ReviewStatus status);
 
+	boolean existsByRentalItemIdAndStatus(Long rentalItemId, ReviewStatus status);
+
 	@Query("select distinct r.sellerId from Review r where r.status = :status")
 	List<Long> findDistinctSellerIdsByStatus(@Param("status") ReviewStatus status);
 }

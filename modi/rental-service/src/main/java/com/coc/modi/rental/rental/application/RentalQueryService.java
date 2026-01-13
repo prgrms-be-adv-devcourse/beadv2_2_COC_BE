@@ -5,12 +5,14 @@ import com.coc.modi.rental.rental.application.dto.RentalItemResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalItem;
+import com.coc.modi.rental.rental.domain.RentalItemRepository;
 import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
 import com.coc.modi.rental.rental.exception.RentalException;
+import com.coc.modi.rental.rental.exception.RentalItemNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfo;
@@ -36,6 +38,7 @@ public class RentalQueryService {
 	
 	private final RentalRepository rentalRepository;
 	private final RentalQueryRepository rentalQueryRepository;
+	private final RentalItemRepository rentalItemRepository;
 	
 	public RentalResponse getRentalDetails(Long rentalId, Long memberId) {
 		
@@ -107,6 +110,13 @@ public class RentalQueryService {
 		List<RentalItemInfo> rentalItemInfoList = rentalItems.stream().map(this::toRentalItemInfo).toList();
 		
 		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
+	}
+
+	public RentalItemInfo getRentalItemInfo(Long rentalItemId) {
+		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
+				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
+
+		return toRentalItemInfo(rentalItem);
 	}
 	
 	private void validateCondition(RentalInternalSearchCondition condition) {
