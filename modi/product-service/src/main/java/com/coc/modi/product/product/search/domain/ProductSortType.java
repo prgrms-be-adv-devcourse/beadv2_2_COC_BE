@@ -1,4 +1,4 @@
-package com.coc.modi.product.search.domain;
+package com.coc.modi.product.product.search.domain;
 
 public enum ProductSortType {
 	LATEST,       // createdAt DESC

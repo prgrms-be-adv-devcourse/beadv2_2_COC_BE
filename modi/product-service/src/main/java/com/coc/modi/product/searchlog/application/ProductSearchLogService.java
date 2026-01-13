@@ -1,7 +1,7 @@
 package com.coc.modi.product.searchlog.application;
 
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
-import com.coc.modi.product.search.domain.ProductSortType;
+import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.domain.ProductSearchLog;
 import com.coc.modi.product.searchlog.domain.ProductSearchLogRepository;
 
@@ -19,6 +19,7 @@ import java.util.Locale;
 public class ProductSearchLogService {
 
 	private final ProductSearchLogRepository productSearchLogRepository;
+	private final KeywordNormalizationService keywordNormalizationService;
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void recordSearchLog(ProductSearchCondition condition,
@@ -27,14 +28,21 @@ public class ProductSearchLogService {
 								int size,
 								Long memberId) {
 
-		String keyword = normalizeKeyword(condition.keyword());
-		if (keyword == null) {
+		String keywordRaw = normalizeRawKeyword(condition.keyword());
+		if (keywordRaw == null) {
+			return;
+		}
+
+		String keywordNorm = keywordNormalizationService.normalize(keywordRaw);
+		if (keywordNorm == null) {
 			return;
 		}
 
 		ProductSearchLog logEntity = ProductSearchLog.create(
 				memberId,
-				keyword,
+				keywordRaw,
+				keywordRaw,
+				keywordNorm,
 				condition.category(),
 				condition.minPrice(),
 				condition.maxPrice(),
@@ -49,7 +57,7 @@ public class ProductSearchLogService {
 		productSearchLogRepository.save(logEntity);
 	}
 
-	private String normalizeKeyword(String keyword) {
+	private String normalizeRawKeyword(String keyword) {
 		if (keyword == null) {
 			return null;
 		}

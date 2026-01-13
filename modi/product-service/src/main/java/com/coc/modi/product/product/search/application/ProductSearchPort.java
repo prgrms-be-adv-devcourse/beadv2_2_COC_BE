@@ -1,9 +1,8 @@
-package com.coc.modi.product.search.application;
+package com.coc.modi.product.product.search.application;
 
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
-import com.coc.modi.product.search.domain.ProductDocument;
-import com.coc.modi.product.search.domain.ProductSortType;
+import com.coc.modi.product.product.search.domain.ProductSortType;
 
 public interface ProductSearchPort {
 	
@@ -11,8 +10,4 @@ public interface ProductSearchPort {
 										 String cursor,
 										 int size,
 										 ProductSortType sortType);
-	
-	void index(ProductDocument doc);
-	
-	void deleteById(Long productId);
 }
