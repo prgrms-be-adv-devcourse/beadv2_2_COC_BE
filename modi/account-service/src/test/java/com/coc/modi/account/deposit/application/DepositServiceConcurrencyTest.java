@@ -83,7 +83,7 @@ class DepositServiceConcurrencyTest {
                         "payment-key",
                         "order-id",
                         "DONE",
-                        1000L,
+                        1030L,
                         null,
                         null,
                         null,
@@ -96,10 +96,11 @@ class DepositServiceConcurrencyTest {
 
         DepositResponse request = depositService.requestDeposit(new DepositCommand(memberId, amount));
         String paymentKey = "payment-key";
+        BigDecimal approvedAmount = request.totalAmount();
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),
-                amount
+                approvedAmount
         );
 
         ExecutorService executor = Executors.newFixedThreadPool(2);

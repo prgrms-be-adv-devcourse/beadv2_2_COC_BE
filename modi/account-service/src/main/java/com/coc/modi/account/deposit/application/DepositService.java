@@ -75,7 +75,7 @@ public class DepositService {
 
         if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
 
-            BigDecimal requestedAmount = deposit.getAmount();
+            BigDecimal requestedAmount = deposit.getTotalAmount();
             BigDecimal approvedAmount = command.amount();
 
             if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
@@ -97,7 +97,7 @@ public class DepositService {
         }
 
         // 2. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal approvedAmount = command.amount();
 
         if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
@@ -126,7 +126,12 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(
+                deposit.getMemberId(),
+                deposit,
+                deposit.getAmount(),
+                deposit.getPaymentKey()
+        );
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -159,7 +164,7 @@ public class DepositService {
         }
 
         // 3. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
@@ -188,8 +193,8 @@ public class DepositService {
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
                         deposit,
-                        cancelAmount,
-						deposit.getPaymentKey()
+                        deposit.getAmount(),
+                        deposit.getPaymentKey()
                 )
         );
 
