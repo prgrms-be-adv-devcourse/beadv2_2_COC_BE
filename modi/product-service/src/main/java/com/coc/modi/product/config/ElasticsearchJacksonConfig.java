@@ -16,7 +16,8 @@ public class ElasticsearchJacksonConfig {
 	public JacksonJsonpMapper elasticsearchJsonpMapper() {
 		ObjectMapper mapper = new ObjectMapper()
 				.registerModule(new JavaTimeModule())
-				.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+				.enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+				.disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
 		
 		return new JacksonJsonpMapper(mapper);
 	}

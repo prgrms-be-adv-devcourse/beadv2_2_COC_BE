@@ -32,4 +32,11 @@ public class ProductIndexingEventPublisher {
 		}
 		productIndexEventPublisher.publishDelete(productId);
 	}
+
+	public void publishEmbeddingUpdate(Long productId) {
+		if (productId == null) {
+			return;
+		}
+		productEmbeddingEventPublisher.publishUpdate(productId);
+	}
 }

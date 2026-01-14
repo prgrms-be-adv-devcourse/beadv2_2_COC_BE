@@ -18,6 +18,7 @@ import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
+import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
 import com.coc.modi.product.event.ProductIndexingEventPublisher;
 import com.coc.modi.product.search.application.ProductSearchPort;
 import com.coc.modi.product.search.domain.ProductSortType;
@@ -194,6 +195,25 @@ public class ProductService {
 				.orElse(null);
 		
 		return ProductInternalSellerResponse.from(product, thumbnailImageUrl);
+	}
+
+	// 내부 api
+	@Transactional(readOnly = true)
+	public ProductEmbeddingResponse getEmbeddingTarget(Long productId) {
+		
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ProductNotFoundException(productId));
+		
+		return ProductEmbeddingResponse.from(product);
+	}
+
+	// 내부 api
+	@Transactional(readOnly = true)
+	public List<Long> getEmbeddingTargetIds() {
+		
+		return productRepository.findByStatusNot(ProductStatus.DELETE).stream()
+				.map(Product::getId)
+				.toList();
 	}
 	
 	private Map<Long, Product> getProductMapByIds(List<Long> productIds) {

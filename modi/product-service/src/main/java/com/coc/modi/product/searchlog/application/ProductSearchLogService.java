@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -57,5 +58,14 @@ public class ProductSearchLogService {
 			return null;
 		}
 		return trimmed.toLowerCase(Locale.ROOT);
+	}
+
+	@Transactional(readOnly = true)
+	public List<String> getRecentKeywords(Long memberId, int size) {
+		if (memberId == null) {
+			return List.of();
+		}
+		int resolvedSize = size > 0 ? size : 10;
+		return productSearchLogRepository.findRecentKeywords(memberId, resolvedSize);
 	}
 }

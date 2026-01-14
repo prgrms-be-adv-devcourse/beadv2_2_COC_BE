@@ -16,7 +16,7 @@ public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
 	
 	@Query(value = """
 			SELECT *
-				FROM public.delivery d
+				FROM delivery.delivery d
 			WHERE d.status not in('DELIVERED', 'CANCELLED')
 				AND (d.last_tracked_at is null
 					OR d.last_tracked_at < (now() - make_interval(mins => :intervalMinutes)))

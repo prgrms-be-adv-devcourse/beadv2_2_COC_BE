@@ -201,7 +201,7 @@ public class ElasticsearchProductSearchAdapter implements ProductSearchPort {
 					yield null;
 				}
 				
-				String rawCursor = target.getCreatedAt().toString() + "|" + target.getId();
+				String rawCursor = target.getCreatedAt().toEpochMilli() + "|" + target.getId();
 				
 				yield Base64.getUrlEncoder()
 						.encodeToString(rawCursor.getBytes(StandardCharsets.UTF_8));
