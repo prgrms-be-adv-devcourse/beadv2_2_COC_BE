@@ -8,6 +8,7 @@ import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.kafka.event.SellerApprovedEvent;
 import com.coc.modi.kafka.topic.KafkaTopics;
 import com.coc.modi.notification.application.NotificationApplicationService;
+import com.coc.modi.notification.application.SellerApprovalMailService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +20,7 @@ public class SellerApprovedEventListener {
 	private static final String CONTENT = "판매자 등록이 승인되었습니다.";
 
 	private final NotificationApplicationService notificationApplicationService;
+	private final SellerApprovalMailService sellerApprovalMailService;
 
 	@KafkaListener(
 			topics = KafkaTopics.SELLER_APPROVED,
@@ -37,5 +39,6 @@ public class SellerApprovedEventListener {
 		);
 
 		notificationApplicationService.handle(notification);
+		sellerApprovalMailService.sendApprovedMail(event.email());
 	}
 }

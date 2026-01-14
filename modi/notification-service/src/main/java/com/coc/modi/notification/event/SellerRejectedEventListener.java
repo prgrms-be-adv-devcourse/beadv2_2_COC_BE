@@ -8,6 +8,7 @@ import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.kafka.event.SellerRejectedEvent;
 import com.coc.modi.kafka.topic.KafkaTopics;
 import com.coc.modi.notification.application.NotificationApplicationService;
+import com.coc.modi.notification.application.SellerApprovalMailService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +20,7 @@ public class SellerRejectedEventListener {
 	private static final String CONTENT = "판매자 등록이 거부되었습니다. 자세한 내용은 고객센터에 문의해주세요.";
 
 	private final NotificationApplicationService notificationApplicationService;
+	private final SellerApprovalMailService sellerApprovalMailService;
 
 	@KafkaListener(
 			topics = KafkaTopics.SELLER_REJECTED,
@@ -37,5 +39,6 @@ public class SellerRejectedEventListener {
 		);
 
 		notificationApplicationService.handle(notification);
+		sellerApprovalMailService.sendRejectedMail(event.email());
 	}
 }
