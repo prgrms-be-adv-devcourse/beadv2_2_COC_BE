@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.settlement.application.SellerSettlementService;

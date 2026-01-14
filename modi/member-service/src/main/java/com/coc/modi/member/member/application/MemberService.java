@@ -5,6 +5,7 @@ import com.coc.modi.member.auth.application.EmailVerificationService;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
+import com.coc.modi.kafka.event.MemberCreatedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
@@ -22,7 +23,7 @@ import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
 import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
-import com.coc.modi.member.member.exception.WalletCreationFailedException;
+import com.coc.modi.member.outbox.MemberOutboxService;
 import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
 import com.coc.modi.member.member.infrastructure.client.dto.MemberWalletResponse;
 import com.coc.modi.member.security.JwtTokenProvider;
@@ -37,8 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class MemberService {
 	
@@ -50,6 +51,7 @@ public class MemberService {
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final EmailVerificationService emailVerificationService;
+	private final MemberOutboxService memberOutboxService;
 	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
@@ -82,16 +84,9 @@ public class MemberService {
 		
 		Member saved = memberRepository.save(member);
 		
-		// 회원 지갑 생성 요청
-		try {
-			
-			accountClientAdapter.createWallet(saved.getId());
-		} catch (Exception ex) {
-			
-			log.error("Failed to create wallet for memberId={}", saved.getId(), ex);
-			
-			throw new WalletCreationFailedException();
-		}
+		memberOutboxService.enqueueMemberCreated(
+				MemberCreatedEvent.of(saved.getId(), saved.getEmail())
+		);
 
 		emailVerificationTokenStore.deleteToken(command.verificationToken());
 		

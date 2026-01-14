@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "delivery", schema = "public")
+@Table(name = "delivery", schema = "delivery")
 public class Delivery extends BaseEntity {
 	
 	@Id

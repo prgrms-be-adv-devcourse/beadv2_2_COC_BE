@@ -21,7 +21,7 @@ public class DeliveryStatusMapper {
 		return switch (result.rawStatus()) {
 			case "AT_PICKUP" -> DeliveryStatus.PICKED_UP;
 			case "IN_TRANSIT" -> DeliveryStatus.IN_TRANSIT;
-			case "OUT_FOR_DELIVERY", "AVAILABLE_FOR_PICKU" -> DeliveryStatus.OUT_FOR_DELIVERY;
+			case "OUT_FOR_DELIVERY", "AVAILABLE_FOR_PICKUP" -> DeliveryStatus.OUT_FOR_DELIVERY;
 			case "DELIVERED" -> DeliveryStatus.DELIVERED;
 			case "ATTEMPT_FAIL", "EXCEPTION" -> DeliveryStatus.EXCEPTION;
 			case "CANCELLED" -> DeliveryStatus.CANCELLED;

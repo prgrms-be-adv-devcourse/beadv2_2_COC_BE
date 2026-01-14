@@ -16,7 +16,7 @@ public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
 	
 	@Query(value = """
 			SELECT *
-				FROM public.delivery d
+				FROM delivery.delivery d
 			WHERE d.status not in('DELIVERED', 'CANCELLED')
 				AND (d.last_tracked_at is null
 					OR d.last_tracked_at < (now() - make_interval(mins => :intervalMinutes)))
@@ -25,8 +25,8 @@ public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
 			LIMIT :limit
 			""", nativeQuery = true)
 	List<Delivery> findTargetsForTrackingWithSkipLocked(
-			@Param("limit") int limit,
-			@Param("intervalMinutes") int intervalMinutes
+			@Param("intervalMinutes") int intervalMinutes,
+			@Param("limit") int limit
 	);
 }
 

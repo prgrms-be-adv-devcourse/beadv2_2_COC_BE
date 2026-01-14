@@ -3,7 +3,7 @@ package com.coc.modi.seller.seller.infrastructure.client.member;
 import org.springframework.stereotype.Component;
 
 import com.coc.modi.common.ErrorCode;
-import com.coc.modi.seller.exception.SellerException;
+import com.coc.modi.seller.seller.exception.SellerException;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
