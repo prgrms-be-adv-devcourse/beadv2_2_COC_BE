@@ -9,6 +9,8 @@ import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
+import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
+import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +35,9 @@ class SellerApprovalServiceTest {
 	@Mock
 	private SellerOutboxService sellerOutboxService;
 
+	@Mock
+	private MemberClientAdapter memberClientAdapter;
+
 	@InjectMocks
 	private SellerApprovalService sellerApprovalService;
 
@@ -43,6 +48,7 @@ class SellerApprovalServiceTest {
 		ReflectionTestUtils.setField(seller, "id", 1L);
 
 		when(sellerRepository.findById(1L)).thenReturn(Optional.of(seller));
+		when(memberClientAdapter.getMemberEmail(10L)).thenReturn(new MemberEmailResponse(10L, "seller10@example.com"));
 
 		SellerDetailResponse response = sellerApprovalService.approveSeller(1L);
 
@@ -51,6 +57,7 @@ class SellerApprovalServiceTest {
 		verify(sellerOutboxService).enqueueSellerApproved(captor.capture());
 		assertThat(captor.getValue().sellerId()).isEqualTo(1L);
 		assertThat(captor.getValue().memberId()).isEqualTo(10L);
+		assertThat(captor.getValue().email()).isEqualTo("seller10@example.com");
 		assertThat(response.status()).isEqualTo(SellerStatus.ACTIVE);
 	}
 
@@ -76,6 +83,7 @@ class SellerApprovalServiceTest {
 		ReflectionTestUtils.setField(seller, "id", 3L);
 
 		when(sellerRepository.findById(3L)).thenReturn(Optional.of(seller));
+		when(memberClientAdapter.getMemberEmail(12L)).thenReturn(new MemberEmailResponse(12L, "seller12@example.com"));
 
 		SellerDetailResponse response = sellerApprovalService.rejectSeller(3L);
 
@@ -84,6 +92,7 @@ class SellerApprovalServiceTest {
 		verify(sellerOutboxService).enqueueSellerRejected(captor.capture());
 		assertThat(captor.getValue().sellerId()).isEqualTo(3L);
 		assertThat(captor.getValue().memberId()).isEqualTo(12L);
+		assertThat(captor.getValue().email()).isEqualTo("seller12@example.com");
 		assertThat(response.status()).isEqualTo(SellerStatus.REJECTED);
 	}
 

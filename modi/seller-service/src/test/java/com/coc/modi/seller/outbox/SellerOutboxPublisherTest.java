@@ -48,7 +48,7 @@ class SellerOutboxPublisherTest {
 	@Test
 	void publishPendingEvents_marksSentOnSuccess() throws Exception {
 
-		SellerApprovedEvent payload = SellerApprovedEvent.of(1L, 10L);
+		SellerApprovedEvent payload = SellerApprovedEvent.of(1L, 10L, "seller10@example.com");
 		ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		String json = mapper.writeValueAsString(payload);
 		SellerOutboxEvent event = SellerOutboxEvent.create(
@@ -70,7 +70,7 @@ class SellerOutboxPublisherTest {
 	@Test
 	void publishPendingEvents_handlesRejectedEvent() throws Exception {
 
-		SellerRejectedEvent payload = SellerRejectedEvent.of(2L, 20L);
+		SellerRejectedEvent payload = SellerRejectedEvent.of(2L, 20L, "seller20@example.com");
 		ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		String json = mapper.writeValueAsString(payload);
 		SellerOutboxEvent event = SellerOutboxEvent.create(

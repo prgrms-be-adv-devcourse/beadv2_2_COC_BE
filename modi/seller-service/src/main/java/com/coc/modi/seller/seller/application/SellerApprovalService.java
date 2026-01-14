@@ -11,6 +11,8 @@ import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.seller.domain.SellerStatus;
 import com.coc.modi.seller.seller.exception.SellerNotFoundException;
+import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
+import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +22,7 @@ public class SellerApprovalService {
 
 	private final SellerRepository sellerRepository;
 	private final SellerOutboxService sellerOutboxService;
+	private final MemberClientAdapter memberClientAdapter;
 
 	@Transactional
 	public SellerDetailResponse approveSeller(Long sellerId) {
@@ -32,8 +35,9 @@ public class SellerApprovalService {
 		sellerRepository.save(seller);
 
 		if (wasPending) {
+			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
 			sellerOutboxService.enqueueSellerApproved(
-					SellerApprovedEvent.of(seller.getId(), seller.getMemberId())
+					SellerApprovedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
 			);
 		}
 
@@ -51,8 +55,9 @@ public class SellerApprovalService {
 		sellerRepository.save(seller);
 
 		if (wasPending) {
+			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
 			sellerOutboxService.enqueueSellerRejected(
-					SellerRejectedEvent.of(seller.getId(), seller.getMemberId())
+					SellerRejectedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
 			);
 		}
 

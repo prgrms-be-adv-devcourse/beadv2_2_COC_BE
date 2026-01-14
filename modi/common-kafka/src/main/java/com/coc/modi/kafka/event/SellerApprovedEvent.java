@@ -7,16 +7,18 @@ public record SellerApprovedEvent(
 		String eventId,
 		Instant occurredAt,
 		Long sellerId,
-		Long memberId
+		Long memberId,
+		String email
 ) {
 
-	public static SellerApprovedEvent of(Long sellerId, Long memberId) {
+	public static SellerApprovedEvent of(Long sellerId, Long memberId, String email) {
 
 		return new SellerApprovedEvent(
 				UUID.randomUUID().toString(),
 				Instant.now(),
 				sellerId,
-				memberId
+				memberId,
+				email
 		);
 	}
 }
