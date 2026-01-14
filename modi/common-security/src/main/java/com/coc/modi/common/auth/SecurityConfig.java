@@ -58,7 +58,12 @@ public class SecurityConfig {
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/oauth2/connect").authenticated()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-							.requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+							.requestMatchers(
+									"/oauth2/**",
+									"/login/oauth2/**",
+									"/member-service/oauth2/**",
+									"/member-service/login/oauth2/**"
+							).permitAll()
 							.requestMatchers("/internal/**").hasRole("INTERNAL")
 							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/actuator/**").permitAll()
