@@ -140,7 +140,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: CHANGED_SERVICES
           script: |
+            set -euo pipefail
+            echo "▶ CHANGED_SERVICES=$CHANGED_SERVICES"
             echo "▶ Restarting deployments on k3s (sequential)"
 
             priority=(modi-config modi-discovery modi-gateway)
