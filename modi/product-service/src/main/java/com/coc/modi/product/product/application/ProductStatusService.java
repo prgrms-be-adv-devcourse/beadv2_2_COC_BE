@@ -59,9 +59,10 @@ public class ProductStatusService {
 		if (status == ProductStatus.DELETE) {
 			// ES에서도 제거 이벤트 발행
 			productIndexingEventPublisher.publishDelete(productId);
+			productIndexingEventPublisher.publishEmbeddingUpdate(productId);
 		} else {
 			// ACTIVE/INACTIVE 등의 상태 변경 → ES 문서 갱신 이벤트 발행
-			productIndexingEventPublisher.publishIndex(product.getId());
+			productIndexingEventPublisher.publishIndexAndEmbedding(product.getId());
 		}
 	}
 }

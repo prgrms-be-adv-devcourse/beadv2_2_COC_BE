@@ -108,7 +108,7 @@ public class ProductSearchQueryRepository {
 			if (parsed == null) {
 				return;
 			}
-			String cursorDate = parsed.date;
+			Long cursorDate = parsed.date;
 			Long cursorId = parsed.id;
 			
 			if (cursorId != null) {
@@ -117,9 +117,9 @@ public class ProductSearchQueryRepository {
 						.should(s -> s.range(r -> r.date(d -> {
 							d.field("createdAt");
 							if (isAsc) {
-								d.gt(cursorDate);
+								d.gt(cursorDate.toString());
 							} else {
-								d.lt(cursorDate);
+								d.lt(cursorDate.toString());
 							}
 							return d;
 						})))
@@ -146,9 +146,9 @@ public class ProductSearchQueryRepository {
 						.date(d -> {
 							d.field("createdAt");
 							if (isAsc) {
-								d.gt(cursorDate);
+								d.gt(cursorDate.toString());
 							} else {
-								d.lt(cursorDate);
+								d.lt(cursorDate.toString());
 							}
 							return d;
 						})));
@@ -212,7 +212,8 @@ public class ProductSearchQueryRepository {
 		if (parts.length == 2) {
 			id = Long.parseLong(parts[1]);
 		}
-		return new CreatedAtCursor(parts[0], id);
+		Long date = Long.parseLong(parts[0]);
+		return new CreatedAtCursor(date, id);
 	}
 
 	private PriceCursor parsePriceCursor(String cursor) {
@@ -273,10 +274,10 @@ public class ProductSearchQueryRepository {
 	}
 
 	private static final class CreatedAtCursor {
-		private final String date;
+		private final Long date;
 		private final Long id;
 
-		private CreatedAtCursor(String date, Long id) {
+		private CreatedAtCursor(Long date, Long id) {
 			this.date = date;
 			this.id = id;
 		}
