@@ -147,14 +147,18 @@ jobs:
 
             for service in "${priority[@]}"; do
               if echo "$CHANGED_SERVICES" | grep -qw "$service"; then
+                echo "▶ rollout restart $service"
                 kubectl rollout restart deploy "$service"
+                echo "▶ rollout status $service"
                 kubectl rollout status deploy "$service"
               fi
             done
 
             for service in $CHANGED_SERVICES; do
               if [[ ! " ${priority[*]} " =~ " ${service} " ]]; then
+                echo "▶ rollout restart $service"
                 kubectl rollout restart deploy "$service"
+                echo "▶ rollout status $service"
                 kubectl rollout status deploy "$service"
               fi
             done
