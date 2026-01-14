@@ -6,8 +6,8 @@ import com.coc.modi.review.domain.ReviewRepository;
 import com.coc.modi.review.domain.ReviewStatus;
 import com.coc.modi.review.domain.ReviewSummary;
 import com.coc.modi.review.domain.ReviewSummaryRepository;
-import com.coc.modi.review.infrastructure.openai.OpenAiClient;
-import com.coc.modi.review.infrastructure.openai.OpenAiProperties;
+import com.coc.modi.ai.chat.application.ChatService;
+import com.coc.modi.ai.chat.domain.ChatResult;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +27,7 @@ public class ReviewSummaryService {
 	private static final Logger log = LoggerFactory.getLogger(ReviewSummaryService.class);
 	private final ReviewRepository reviewRepository;
 	private final ReviewSummaryRepository reviewSummaryRepository;
-	private final OpenAiClient openAiClient;
-	private final OpenAiProperties openAiProperties;
+	private final ChatService chatService;
 	private final ReviewSummaryPolicyProperties policyProperties;
 
 	@Transactional(readOnly = true)
@@ -125,17 +124,13 @@ public class ReviewSummaryService {
 			return null;
 		}
 
-		if (openAiProperties.getApiKey() == null || openAiProperties.getApiKey().isBlank()) {
-			return fallback(payload);
-		}
-
 		try {
-			String summary = openAiClient.summarizeSellerReviews(payload);
-			if (summary == null || summary.isBlank()) {
+			ChatResult result = chatService.chat(buildPrompt(payload));
+			if (result == null || isFallback(result) || result.content() == null || result.content().isBlank()) {
 				return fallback(payload);
 			}
 
-			return normalize(summary);
+			return normalize(result.content());
 
 		} catch (Exception ex) {
 
@@ -166,7 +161,7 @@ public class ReviewSummaryService {
 	private String normalize(String summary) {
 
 		String trimmed = summary.replace("\n", " ").trim();
-		int maxLength = openAiProperties.getSummary().getMaxLength();
+		int maxLength = policyProperties.getMaxLength();
 		if (trimmed.length() <= maxLength) {
 
 			return trimmed;
@@ -178,12 +173,31 @@ public class ReviewSummaryService {
 	private String fallback(String content) {
 
 		String trimmed = content.replace("\n", " ").trim();
-		int maxLength = openAiProperties.getSummary().getMaxLength();
+		int maxLength = policyProperties.getMaxLength();
 		if (trimmed.length() <= maxLength) {
 
 			return trimmed;
 		}
 
 		return trimmed.substring(0, maxLength).trim();
+	}
+
+	private String buildPrompt(String payload) {
+		return """
+				Summarize overall feedback about a seller based on multiple customer reviews.
+				- Use up to 6 sentences and keep the total length within %d characters.
+				- Include common praise, recurring concerns, and an overall assessment.
+				- Avoid speculation and keep a neutral tone.
+				Reviews:
+				%s
+				""".formatted(policyProperties.getMaxLength(), payload);
+	}
+
+	private boolean isFallback(ChatResult result) {
+		if (result.metadata() == null) {
+			return false;
+		}
+		Object source = result.metadata().get("source");
+		return "fallback".equals(source);
 	}
 }

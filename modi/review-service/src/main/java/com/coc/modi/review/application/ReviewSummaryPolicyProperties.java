@@ -24,4 +24,8 @@ public class ReviewSummaryPolicyProperties {
 	@NotNull
 	@Min(1)
 	private Integer recentLimit;
+
+	@NotNull
+	@Min(1)
+	private Integer maxLength;
 }
