@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "pg_deposit",
-        schema = "public",
+        schema = "account",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key")
         }

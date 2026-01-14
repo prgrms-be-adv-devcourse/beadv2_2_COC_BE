@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
-import com.coc.modi.seller.exception.SettlementPeriodResolveException;
+import com.coc.modi.seller.settlement.exception.SettlementPeriodResolveException;
 
 import org.springframework.batch.item.ItemProcessor;
 

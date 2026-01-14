@@ -70,6 +70,7 @@ project(':common-security') {
 
     dependencies {
 
+        compileOnly 'io.github.openfeign:feign-core'
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -80,10 +81,11 @@ project(':common-security') {
 
 
 project(':common-kafka') {
+    apply plugin: 'java-library'
 
     dependencies {
 
-        implementation 'org.springframework.kafka:spring-kafka'
+        api 'org.springframework.kafka:spring-kafka'
         implementation 'com.fasterxml.jackson.core:jackson-databind'
         implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -96,6 +98,19 @@ project(':common-openapi') {
     dependencies {
 
         implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+    }
+}
+
+project(':common-ai') {
+
+    dependencies {
+
+        implementation 'org.springframework:spring-web'
+        implementation 'io.projectreactor:reactor-core'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'org.slf4j:slf4j-api'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     }
 }
 

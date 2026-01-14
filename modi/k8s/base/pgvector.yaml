@@ -1,4 +1,19 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgvector-initdb
+data:
+  01-init-schemas.sql: |
+    CREATE SCHEMA IF NOT EXISTS account;
+    CREATE SCHEMA IF NOT EXISTS product;
+    CREATE SCHEMA IF NOT EXISTS rental;
+    CREATE SCHEMA IF NOT EXISTS seller;
+    CREATE SCHEMA IF NOT EXISTS member;
+    CREATE SCHEMA IF NOT EXISTS review;
+    CREATE SCHEMA IF NOT EXISTS notification;
+    CREATE SCHEMA IF NOT EXISTS delivery;
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: pgvector
@@ -52,11 +67,18 @@ spec:
           volumeMounts:
             - name: pgvector-data
               mountPath: /var/lib/postgresql
+            - name: pgvector-initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
           readinessProbe:
             tcpSocket:
               port: 5432
             initialDelaySeconds: 10
             periodSeconds: 10
+      volumes:
+        - name: pgvector-initdb
+          configMap:
+            name: pgvector-initdb
   volumeClaimTemplates:
     - metadata:
         name: pgvector-data

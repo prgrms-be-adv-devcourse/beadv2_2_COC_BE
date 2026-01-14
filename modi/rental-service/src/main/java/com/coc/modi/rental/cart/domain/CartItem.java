@@ -1,6 +1,8 @@
 package com.coc.modi.rental.cart.domain;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +12,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@Table(name = "cart_item", schema = "rental")
 public class CartItem {
 
     private Long id;
