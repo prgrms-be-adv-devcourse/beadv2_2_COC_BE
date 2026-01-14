@@ -27,12 +27,12 @@ public class OpenAiClient {
 				List.of(
 						new OpenAiChatRequest.Message(
 								"system",
-								"Summarize overall feedback about a seller based on multiple customer reviews. Highlight common themes and notable concerns in 2-3 neutral sentences."
+								"Summarize overall feedback about a seller based on multiple customer reviews. Use up to 6 sentences and keep the total length within 250 characters. Include common praise, recurring concerns, and an overall assessment. Avoid speculation and keep a neutral tone."
 						),
 						new OpenAiChatRequest.Message("user", content)
 				),
 				0.2,
-				160
+				null
 		);
 
 		HttpHeaders headers = new HttpHeaders();
