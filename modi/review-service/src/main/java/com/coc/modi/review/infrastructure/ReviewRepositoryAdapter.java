@@ -40,4 +40,22 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 		
 		return reviewJpaRepository.findByMemberIdAndStatus(memberId, status, pageable);
 	}
+
+	@Override
+	public long countBySellerIdAndStatus(Long sellerId, ReviewStatus status) {
+		
+		return reviewJpaRepository.countBySellerIdAndStatus(sellerId, status);
+	}
+
+	@Override
+	public boolean existsByRentalItemIdAndStatus(Long rentalItemId, ReviewStatus status) {
+		
+		return reviewJpaRepository.existsByRentalItemIdAndStatus(rentalItemId, status);
+	}
+
+	@Override
+	public java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status) {
+
+		return reviewJpaRepository.findDistinctSellerIdsByStatus(status);
+	}
 }
