@@ -10,6 +10,7 @@ public record ReviewListResponse(
 		Long sellerId,
 		Long memberId,
 		Short rating,
+		String content,
 		LocalDateTime createdAt
 ) {
 
@@ -21,6 +22,7 @@ public record ReviewListResponse(
 				review.getSellerId(),
 				review.getMemberId(),
 				review.getRating(),
+				review.getContent(),
 				review.getCreatedAt()
 		);
 	}

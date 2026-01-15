@@ -71,12 +71,6 @@ public class ReviewController {
 	}
 	
 	// 리뷰 상세 조회
-	@GetMapping("/{reviewId}")
-	public ResponseEntity<ApiResponse<ReviewResponse>> getReview(@PathVariable Long reviewId) {
-
-		return ResponseEntity.ok(ApiResponse.ok(reviewService.getReview(reviewId)));
-	}
-	
 	// 판매자 리뷰 목록 조회
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<ReviewListResponse>>> getReviewsBySeller(

@@ -92,15 +92,6 @@ public class ReviewService {
 		review.delete();
 	}
 	
-	// 단건 리뷰 조회 (삭제된 리뷰 제외)
-	@Transactional(readOnly = true)
-	public ReviewResponse getReview(Long reviewId) {
-		
-		return reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
-				.map(ReviewResponse::from)
-				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
-	}
-	
 	// 특정 판매자 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
 	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Pageable pageable) {
