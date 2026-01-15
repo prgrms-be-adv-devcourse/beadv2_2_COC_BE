@@ -22,7 +22,9 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -59,6 +61,9 @@ class SettlementPayoutStepTest {
 
     @Autowired
     private SettlementPayoutTestConfig.RecordingSettlementPayoutWriter writer;
+
+    @MockBean(name = "redisMessageListenerContainer")
+    private RedisMessageListenerContainer redisMessageListenerContainer;
 
     @BeforeEach
     void setUp() {

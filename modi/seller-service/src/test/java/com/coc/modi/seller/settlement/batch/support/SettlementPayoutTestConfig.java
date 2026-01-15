@@ -1,5 +1,6 @@
 package com.coc.modi.seller.settlement.batch.support;
 
+import com.coc.modi.seller.settlement.batch.SettlementBatchJobListener;
 import com.coc.modi.seller.settlement.batch.SettlementPayoutItem;
 import com.coc.modi.seller.settlement.batch.SettlementPayoutWriter;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
@@ -30,9 +31,12 @@ public class SettlementPayoutTestConfig {
 
     @Bean
     @Primary
-    public Job settlementPayoutTestJob(JobRepository jobRepository, Step settlementPayoutStep) {
+    public Job settlementPayoutTestJob(JobRepository jobRepository,
+                                       Step settlementPayoutStep,
+                                       SettlementBatchJobListener settlementBatchJobListener) {
 
         return new JobBuilder("settlementPayoutTestJob", jobRepository)
+                .listener(settlementBatchJobListener)
                 .start(settlementPayoutStep)
                 .build();
     }
