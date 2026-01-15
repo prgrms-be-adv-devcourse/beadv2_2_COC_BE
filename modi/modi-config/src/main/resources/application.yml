@@ -8,7 +8,6 @@ spring:
     config:
       server:
         overrides:
-          spring.datasource.url: ${DB_URL}
           spring.datasource.username: ${DB_USER}
           spring.datasource.password: ${DB_PASSWORD}
           toss.payments.client-key: ${TOSS_CLIENT_KEY}
@@ -21,6 +20,7 @@ spring:
           spring.mail.password: ${EMAIL_PASSWORD}
           spring.data.redis.host: ${REDIS_HOST}
           spring.data.redis.port: ${REDIS_PORT}
+          internal.api.token: ${INTERNAL_API_TOKEN:}
           mail.from-address: ${EMAIL_ADDRESS}
           product-service.url: ${PRODUCT_SERVICE_URL}
           account-service.url: ${ACCOUNT_SERVICE_URL}

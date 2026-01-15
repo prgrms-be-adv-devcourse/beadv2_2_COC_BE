@@ -44,9 +44,19 @@ spec:
               value: "8082"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: PRODUCT_DB_URL
           envFrom:
             - secretRef:
                 name: modi-env
+          startupProbe:
+            tcpSocket:
+              port: 8082
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8082

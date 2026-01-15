@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: modi
 resources:
   - namespace.yaml
+  - kafka.yaml
   - pgvector.yaml
   - redis.yaml
   - elasticsearch.yaml
