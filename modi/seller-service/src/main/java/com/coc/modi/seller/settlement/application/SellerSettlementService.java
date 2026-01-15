@@ -65,11 +65,27 @@ public class SellerSettlementService {
 				.map(SellerSettlementLineResponse::from)
 				.toList();
 	}
+
+	@Transactional
+	public SellerSettlementResponse requestPayoutByAdmin(Long sellerSettlementId, LocalDateTime requestedAt) {
+
+		SellerSettlement settlement = sellerSettlementRepository.findById(sellerSettlementId)
+				.orElseThrow(() -> new SellerSettlementNotFoundException(
+						"정산서를 찾을 수 없습니다. sellerSettlementId=" + sellerSettlementId
+				));
+		return processPayoutRequest(settlement, requestedAt);
+	}
 	
 	@Transactional
-	public SellerSettlementResponse requestPayout(Long sellerId, Long sellerSettlementId, LocalDateTime requestedAt) {
+	public SellerSettlementResponse cancelSettlement(Long sellerId, Long sellerSettlementId) {
 		
 		SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
+		settlement.cancel();
+		return SellerSettlementResponse.from(settlement);
+	}
+
+	private SellerSettlementResponse processPayoutRequest(SellerSettlement settlement, LocalDateTime requestedAt) {
+
 		if (settlement.getSettlementAmount() == null || settlement.getSettlementAmount().signum() <= 0) {
 			LocalDateTime paidAt = requestedAt != null ? requestedAt : LocalDateTime.now();
 			settlement.pay(paidAt);
@@ -80,14 +96,6 @@ public class SellerSettlementService {
 		settlement.requestPayout();
 		sellerSettlementRepository.save(settlement);
 		settlementPayoutRequestPublisher.publish(settlement);
-		return SellerSettlementResponse.from(settlement);
-	}
-	
-	@Transactional
-	public SellerSettlementResponse cancelSettlement(Long sellerId, Long sellerSettlementId) {
-		
-		SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
-		settlement.cancel();
 		return SellerSettlementResponse.from(settlement);
 	}
 	
