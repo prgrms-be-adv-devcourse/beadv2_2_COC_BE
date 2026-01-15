@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: member-service-test
+
+account-service:
+  url: http://localhost

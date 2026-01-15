@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.when;
                 "spring.cloud.discovery.enabled=false",
                 "eureka.client.enabled=false",
                 "app.gateway-prefix=test",
-                "spring.datasource.url=jdbc:h2:mem:accounttest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                "spring.datasource.url=jdbc:h2:mem:accounttest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS account",
                 "spring.datasource.driverClassName=org.h2.Driver",
                 "spring.datasource.username=sa",
                 "spring.datasource.password=",
@@ -78,12 +79,13 @@ class DepositServiceConcurrencyTest {
     @Test
     void approveDeposit_isIdempotentWithConcurrentRequests() throws Exception {
 
+        String paymentKey = "payment-key-" + UUID.randomUUID();
         when(tossPaymentsClient.approvePayment(anyString(), anyString(), any()))
                 .thenReturn(new TossPaymentApprovalResponse(
-                        "payment-key",
+                        paymentKey,
                         "order-id",
                         "DONE",
-                        1000L,
+                        1030L,
                         null,
                         null,
                         null,
@@ -95,11 +97,11 @@ class DepositServiceConcurrencyTest {
         walletCommandService.createWalletForMember(memberId);
 
         DepositResponse request = depositService.requestDeposit(new DepositCommand(memberId, amount));
-        String paymentKey = "payment-key";
+        BigDecimal approvedAmount = request.totalAmount();
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),
-                amount
+                approvedAmount
         );
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
