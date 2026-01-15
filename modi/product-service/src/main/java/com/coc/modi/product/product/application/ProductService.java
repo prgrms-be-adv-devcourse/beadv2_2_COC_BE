@@ -18,9 +18,10 @@ import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.event.ProductIndexingEventPublisher;
-import com.coc.modi.product.search.application.ProductSearchPort;
-import com.coc.modi.product.search.domain.ProductSortType;
+import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
+import com.coc.modi.product.event.KafkaProductEmbeddingEventPublisher;
+import com.coc.modi.product.product.search.application.ProductSearchPort;
+import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
 import com.coc.modi.product.viewlog.application.ProductViewService;
 
@@ -47,7 +48,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final ProductIndexingEventPublisher productIndexingEventPublisher;
+	private final KafkaProductEmbeddingEventPublisher productEmbeddingEventPublisher;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -129,7 +130,7 @@ public class ProductService {
 		saved.refreshThumbnailImage();
 		
 		// ES 인덱싱/임베딩 이벤트 발행
-		productIndexingEventPublisher.publishIndexAndEmbedding(saved.getId());
+		productEmbeddingEventPublisher.publishUpdate(saved.getId());
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -165,7 +166,7 @@ public class ProductService {
 		
 		product.refreshThumbnailImage();
 		
-		productIndexingEventPublisher.publishIndexAndEmbedding(product.getId());
+		productEmbeddingEventPublisher.publishUpdate(product.getId());
 	
 		return ProductDetailResponse.from(product);
 	}
@@ -194,6 +195,25 @@ public class ProductService {
 				.orElse(null);
 		
 		return ProductInternalSellerResponse.from(product, thumbnailImageUrl);
+	}
+
+	// 내부 api
+	@Transactional(readOnly = true)
+	public ProductEmbeddingResponse getEmbeddingTarget(Long productId) {
+		
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ProductNotFoundException(productId));
+		
+		return ProductEmbeddingResponse.from(product);
+	}
+
+	// 내부 api
+	@Transactional(readOnly = true)
+	public List<Long> getEmbeddingTargetIds() {
+		
+		return productRepository.findByStatusNot(ProductStatus.DELETE).stream()
+				.map(Product::getId)
+				.toList();
 	}
 	
 	private Map<Long, Product> getProductMapByIds(List<Long> productIds) {

@@ -16,3 +16,5 @@ resources:
   - seller-service.yaml
   - member-service.yaml
   - seller-settlement-cronjob.yaml
+  - delivery-service.yaml
+  - ai-service.yaml

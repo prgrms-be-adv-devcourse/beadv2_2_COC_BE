@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,5 +29,14 @@ public class ProductViewService {
 		ProductViewLog log = ProductViewLog.create(productId, memberId, viewDate);
 		productViewLogRepository.save(log);
 		productViewDailyRepository.increment(viewDate, productId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Long> getRecentViewedProductIds(Long memberId, int limit) {
+		if (memberId == null) {
+			return List.of();
+		}
+		int resolvedLimit = limit > 0 ? limit : 10;
+		return productViewLogRepository.findRecentViewedProductIds(memberId, resolvedLimit);
 	}
 }

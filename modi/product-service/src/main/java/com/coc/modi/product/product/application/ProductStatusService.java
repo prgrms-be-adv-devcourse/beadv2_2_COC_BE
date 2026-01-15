@@ -9,7 +9,7 @@ import com.coc.modi.product.product.domain.ProductRepository;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
-import com.coc.modi.product.event.ProductIndexingEventPublisher;
+import com.coc.modi.product.event.KafkaProductEmbeddingEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductStatusService {
 	
 	private final ProductRepository productRepository;
-	private final ProductIndexingEventPublisher productIndexingEventPublisher;
+	private final KafkaProductEmbeddingEventPublisher productEmbeddingEventPublisher;
 	private final SellerIdResolver sellerIdResolver;
 	
 	// 3-6. 상품 활성화
@@ -56,12 +56,6 @@ public class ProductStatusService {
 		
 		product.updateStatus(status);
 		
-		if (status == ProductStatus.DELETE) {
-			// ES에서도 제거 이벤트 발행
-			productIndexingEventPublisher.publishDelete(productId);
-		} else {
-			// ACTIVE/INACTIVE 등의 상태 변경 → ES 문서 갱신 이벤트 발행
-			productIndexingEventPublisher.publishIndex(product.getId());
-		}
+		productEmbeddingEventPublisher.publishUpdate(productId);
 	}
 }
