@@ -42,6 +42,12 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	}
 
 	@Override
+	public Page<Review> findBySellerIdAndStatusAndIdGreaterThan(Long sellerId, ReviewStatus status, Long reviewId, Pageable pageable) {
+		
+		return reviewJpaRepository.findBySellerIdAndStatusAndIdGreaterThan(sellerId, status, reviewId, pageable);
+	}
+
+	@Override
 	public long countBySellerIdAndStatus(Long sellerId, ReviewStatus status) {
 		
 		return reviewJpaRepository.countBySellerIdAndStatus(sellerId, status);

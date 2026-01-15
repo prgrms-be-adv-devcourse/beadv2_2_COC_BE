@@ -15,6 +15,8 @@ public interface ReviewRepository {
 
 	Page<Review> findByMemberIdAndStatus(Long memberId, ReviewStatus status, Pageable pageable);
 
+	Page<Review> findBySellerIdAndStatusAndIdGreaterThan(Long sellerId, ReviewStatus status, Long reviewId, Pageable pageable);
+
 	long countBySellerIdAndStatus(Long sellerId, ReviewStatus status);
 
 	java.util.List<Long> findDistinctSellerIdsByStatus(ReviewStatus status);

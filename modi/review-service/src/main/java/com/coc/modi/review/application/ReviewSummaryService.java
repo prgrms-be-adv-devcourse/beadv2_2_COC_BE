@@ -3,6 +3,8 @@ package com.coc.modi.review.application;
 import com.coc.modi.review.application.dto.ReviewSummaryResponse;
 import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
+import com.coc.modi.review.domain.ReviewSummaryBucket;
+import com.coc.modi.review.domain.ReviewSummaryBucketRepository;
 import com.coc.modi.review.domain.ReviewStatus;
 import com.coc.modi.review.domain.ReviewSummary;
 import com.coc.modi.review.domain.ReviewSummaryRepository;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,6 +31,7 @@ public class ReviewSummaryService {
 	private static final Logger log = LoggerFactory.getLogger(ReviewSummaryService.class);
 	private final ReviewRepository reviewRepository;
 	private final ReviewSummaryRepository reviewSummaryRepository;
+	private final ReviewSummaryBucketRepository reviewSummaryBucketRepository;
 	private final ChatService chatService;
 	private final ReviewSummaryPolicyProperties policyProperties;
 
@@ -34,6 +39,7 @@ public class ReviewSummaryService {
 	public Optional<ReviewSummaryResponse> getSummary(Long sellerId) {
 
 		return reviewSummaryRepository.findBySellerId(sellerId)
+				.filter(summary -> summary.getSummary() != null && !summary.getSummary().isBlank())
 				.map(ReviewSummaryResponse::from);
 	}
 
@@ -49,62 +55,203 @@ public class ReviewSummaryService {
 	@Transactional
 	public void refreshSummaryIfNeeded(Long sellerId) {
 
-		long totalCount = reviewRepository.countBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE);
-		Optional<ReviewSummary> existingOptional = reviewSummaryRepository.findBySellerId(sellerId);
-
-		if (totalCount < policyProperties.getMinTotalCount()) {
+		Optional<ReviewSummaryBucket> latestBucketOptional = reviewSummaryBucketRepository.findLatestBySellerId(sellerId);
+		if (latestBucketOptional.isEmpty()) {
 			return;
 		}
 
-		if (existingOptional.isEmpty()) {
-			createSummary(sellerId, totalCount);
+		Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(sellerId);
+		Long latestBucketId = latestBucketOptional.get().getId();
+		if (summaryOptional.isPresent()
+				&& latestBucketId.equals(summaryOptional.get().getLastBucketId())
+				&& summaryOptional.get().getSummary() != null
+				&& !summaryOptional.get().getSummary().isBlank()) {
 			return;
 		}
 
-		ReviewSummary existing = existingOptional.get();
-		long delta = totalCount - existing.getReviewCount();
+		long totalCount = resolveTotalCount(summaryOptional, sellerId);
+		updateFinalSummary(sellerId, totalCount);
+	}
 
-		if (delta >= policyProperties.getMinNewCount() || delta < 0) {
-			updateSummary(existing, totalCount);
+	@Transactional
+	public void handleReviewCreated(Long sellerId) {
+
+		int minTotal = policyProperties.getMinTotalCount();
+		int minNew = policyProperties.getMinNewCount();
+
+		Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(sellerId);
+		long totalCount = resolveTotalCount(summaryOptional, sellerId);
+
+		Optional<ReviewSummaryBucket> latestBucketOptional = reviewSummaryBucketRepository.findLatestBySellerId(sellerId);
+		if (latestBucketOptional.isEmpty()) {
+			if (totalCount < minTotal) {
+				return;
+			}
+
+			List<Review> seedReviews = fetchLatestReviews(sellerId, minTotal);
+			if (seedReviews.size() < minTotal) {
+				return;
+			}
+
+			ReviewSummaryBucket bucket = buildBucketFromReviews(sellerId, seedReviews, minTotal);
+			reviewSummaryBucketRepository.save(bucket);
+
+			if (summaryOptional.isEmpty()
+					|| summaryOptional.get().getSummary() == null
+					|| summaryOptional.get().getSummary().isBlank()) {
+				updateFinalSummary(sellerId, totalCount);
+			}
+			return;
+		}
+
+		Long lastReviewId = latestBucketOptional.get().getLastReviewId();
+		boolean created = false;
+		while (true) {
+			List<Review> newReviews = fetchNewReviewsAfter(sellerId, lastReviewId, minNew);
+			if (newReviews.size() < minNew) {
+				break;
+			}
+			ReviewSummaryBucket bucket = buildBucketFromReviews(sellerId, newReviews, minNew);
+			reviewSummaryBucketRepository.save(bucket);
+			lastReviewId = bucket.getLastReviewId();
+			created = true;
+		}
+
+		if (created
+				&& (summaryOptional.isEmpty()
+				|| summaryOptional.get().getSummary() == null
+				|| summaryOptional.get().getSummary().isBlank())) {
+			updateFinalSummary(sellerId, totalCount);
 		}
 	}
 
-	private void createSummary(Long sellerId, long totalCount) {
+	private long resolveTotalCount(Optional<ReviewSummary> summaryOptional, Long sellerId) {
+		return summaryOptional
+				.map(ReviewSummary::getTotalReviewCount)
+				.filter(count -> count > 0)
+				.orElseGet(() -> reviewRepository.countBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE));
+	}
 
-		String summary = generateSummary(sellerId);
+	private void updateFinalSummary(Long sellerId, long totalCount) {
+
+		SummaryPayload payload = generateSummaryPayload(sellerId);
+		if (payload == null || payload.summary() == null || payload.summary().isBlank()) {
+			return;
+		}
+
+		reviewSummaryRepository.findBySellerId(sellerId)
+				.ifPresentOrElse(
+						existing -> existing.updateSummary(payload.summary(), totalCount, totalCount, payload.lastBucketId()),
+						() -> reviewSummaryRepository.save(
+								ReviewSummary.create(sellerId, totalCount, totalCount, payload.lastBucketId(), payload.summary())
+						)
+				);
+	}
+
+	private SummaryPayload generateSummaryPayload(Long sellerId) {
+
+		List<ReviewSummaryBucket> buckets = fetchLatestBucketsForRecentLimit(sellerId);
+		if (buckets.isEmpty()) {
+			return null;
+		}
+
+		Long lastBucketId = buckets.get(buckets.size() - 1).getId();
+		if (buckets.size() == 1) {
+			return new SummaryPayload(buckets.get(0).getSummary(), lastBucketId);
+		}
+
+		List<String> summaries = buckets.stream()
+				.map(ReviewSummaryBucket::getSummary)
+				.toList();
+
+		String summary = summarizeSellerReviews(summaries);
 		if (summary == null || summary.isBlank()) {
-			return;
+			return null;
 		}
 
-		reviewSummaryRepository.save(ReviewSummary.create(sellerId, totalCount, summary));
+		return new SummaryPayload(summary, lastBucketId);
 	}
 
-	private void updateSummary(ReviewSummary existing, long totalCount) {
+	private List<ReviewSummaryBucket> fetchLatestBucketsForRecentLimit(Long sellerId) {
 
-		String summary = generateSummary(existing.getSellerId());
-		if (summary == null || summary.isBlank()) {
-			return;
+		int minNew = policyProperties.getMinNewCount();
+		int recentLimit = policyProperties.getRecentLimit();
+		int bucketLimit = (recentLimit + minNew - 1) / minNew + 1;
+
+		List<ReviewSummaryBucket> latestBuckets = reviewSummaryBucketRepository.findLatestBySellerId(
+				sellerId,
+				PageRequest.of(0, bucketLimit, Sort.by(Sort.Direction.DESC, "lastReviewId"))
+		);
+
+		if (latestBuckets.isEmpty()) {
+			return List.of();
 		}
 
-		existing.updateSummary(summary, totalCount);
+		int total = 0;
+		List<ReviewSummaryBucket> selected = new ArrayList<>();
+		for (ReviewSummaryBucket bucket : latestBuckets) {
+			selected.add(bucket);
+			total += bucket.getReviewCount();
+			if (total >= recentLimit) {
+				break;
+			}
+		}
+
+		Collections.reverse(selected);
+		return selected;
 	}
 
-	private String generateSummary(Long sellerId) {
+	private List<Review> fetchLatestReviews(Long sellerId, int limit) {
 
 		PageRequest pageRequest = PageRequest.of(
 				0,
-				policyProperties.getRecentLimit(),
-				Sort.by(Sort.Direction.DESC, "createdAt")
+				limit,
+				Sort.by(Sort.Direction.DESC, "id")
 		);
 
-		List<Review> reviews = reviewRepository.findBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE, pageRequest)
+		return reviewRepository.findBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE, pageRequest)
 				.getContent();
+	}
 
-		List<String> contents = reviews.stream()
+	private List<Review> fetchNewReviewsAfter(Long sellerId, Long lastReviewId, int limit) {
+
+		PageRequest pageRequest = PageRequest.of(
+				0,
+				limit,
+				Sort.by(Sort.Direction.ASC, "id")
+		);
+
+		return reviewRepository.findBySellerIdAndStatusAndIdGreaterThan(
+						sellerId,
+						ReviewStatus.ACTIVE,
+						lastReviewId,
+						pageRequest
+				)
+				.getContent();
+	}
+
+	private ReviewSummaryBucket buildBucketFromReviews(Long sellerId, List<Review> reviews, int expectedCount) {
+
+		List<Review> ordered = reviews.stream()
+				.sorted((a, b) -> a.getId().compareTo(b.getId()))
+				.toList();
+
+		List<String> contents = ordered.stream()
 				.map(Review::getContent)
 				.toList();
 
-		return summarizeSellerReviews(contents);
+		String summary = summarizeSellerReviews(contents);
+		if (summary == null || summary.isBlank()) {
+			throw new IllegalStateException("Failed to summarize review bucket");
+		}
+
+		Long lastReviewId = ordered.get(ordered.size() - 1).getId();
+		int reviewCount = Math.min(expectedCount, ordered.size());
+
+		return ReviewSummaryBucket.create(sellerId, reviewCount, lastReviewId, summary);
+	}
+
+	private record SummaryPayload(String summary, Long lastBucketId) {
 	}
 
 	private String summarizeSellerReviews(List<String> contents) {

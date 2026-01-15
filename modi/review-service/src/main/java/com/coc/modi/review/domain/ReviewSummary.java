@@ -28,29 +28,56 @@ public class ReviewSummary extends BaseEntity {
 	@Column(name = "review_count", nullable = false)
 	private long reviewCount;
 
-	@Column(name = "summary", nullable = false, columnDefinition = "text")
+	@Column(name = "total_review_count", nullable = false)
+	private long totalReviewCount;
+
+	@Column(name = "last_bucket_id")
+	private Long lastBucketId;
+
+	@Column(name = "summary", columnDefinition = "text")
 	private String summary;
 
 	@Builder
-	private ReviewSummary(Long sellerId, long reviewCount, String summary) {
+	private ReviewSummary(Long sellerId, long reviewCount, long totalReviewCount, Long lastBucketId, String summary) {
 
 		this.sellerId = sellerId;
 		this.reviewCount = reviewCount;
+		this.totalReviewCount = totalReviewCount;
+		this.lastBucketId = lastBucketId;
 		this.summary = summary;
 	}
 
-	public static ReviewSummary create(Long sellerId, long reviewCount, String summary) {
+	public static ReviewSummary create(Long sellerId, long reviewCount, long totalReviewCount, Long lastBucketId, String summary) {
 
 		return ReviewSummary.builder()
 				.sellerId(sellerId)
 				.reviewCount(reviewCount)
+				.totalReviewCount(totalReviewCount)
+				.lastBucketId(lastBucketId)
 				.summary(summary)
 				.build();
 	}
 
-	public void updateSummary(String summary, long reviewCount) {
+	public static ReviewSummary createCounter(Long sellerId, long totalReviewCount) {
+
+		return ReviewSummary.builder()
+				.sellerId(sellerId)
+				.reviewCount(0L)
+				.totalReviewCount(totalReviewCount)
+				.lastBucketId(null)
+				.summary(null)
+				.build();
+	}
+
+	public void updateSummary(String summary, long reviewCount, long totalReviewCount, Long lastBucketId) {
 
 		this.summary = summary;
 		this.reviewCount = reviewCount;
+		this.totalReviewCount = totalReviewCount;
+		this.lastBucketId = lastBucketId;
+	}
+
+	public void updateTotalReviewCount(long totalReviewCount) {
+		this.totalReviewCount = totalReviewCount;
 	}
 }
