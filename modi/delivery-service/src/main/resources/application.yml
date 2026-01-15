@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: delivery-service
+  config:
+    import: configserver:http://modi-config:8888
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://modi-discovery:8761/eureka/}

@@ -12,7 +12,10 @@ import java.math.BigDecimal;
 @Table(
 		name = "wallet_transaction",
 		schema = "account",
-		uniqueConstraints = @UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"})
+		uniqueConstraints = {
+				@UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"}),
+				@UniqueConstraint(columnNames = {"tx_type", "request_id"})
+		}
 )
 public class WalletTransaction extends BaseEntity {
 
@@ -54,6 +57,9 @@ public class WalletTransaction extends BaseEntity {
 	
 	@Column(name = "payment_key", length = 100)
 	private String paymentKey;
+	
+	@Column(name = "request_id", length = 120)
+	private String requestId;
 
     public static WalletTransaction create(
             MemberWallet wallet,
@@ -62,10 +68,11 @@ public class WalletTransaction extends BaseEntity {
             BigDecimal balanceAfter,
             PgDeposit pgDeposit,
             Long relatedRentalId,
-            Long relatedRentalItemId,
-            Long relatedSettlementId,
-            String description,
-			String paymentKey
+			Long relatedRentalItemId,
+			Long relatedSettlementId,
+			String description,
+			String paymentKey,
+			String requestId
     ) {
 
         WalletTransaction tx = new WalletTransaction();
@@ -78,9 +85,10 @@ public class WalletTransaction extends BaseEntity {
         tx.pgDeposit = pgDeposit;
         tx.relatedRentalId = relatedRentalId;
         tx.relatedRentalItemId = relatedRentalItemId;
-        tx.relatedSettlementId = relatedSettlementId;
-        tx.description = description;
+		tx.relatedSettlementId = relatedSettlementId;
+		tx.description = description;
 		tx.paymentKey = paymentKey;
+		tx.requestId = requestId;
 
         return tx;
     }

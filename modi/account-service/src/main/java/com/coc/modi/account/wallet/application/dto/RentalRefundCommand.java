@@ -8,7 +8,8 @@ public record RentalRefundCommand(
         Long memberId,
         Long rentalId,
         Long rentalItemId,
-        BigDecimal amount
+        BigDecimal amount,
+		String requestId
 ) {
 
     public static RentalRefundCommand from(RentalRefundRequest request) {
@@ -17,7 +18,8 @@ public record RentalRefundCommand(
                 request.memberId(),
                 request.rentalId(),
                 request.rentalItemId(),
-                request.amount()
+                request.amount(),
+				request.requestId()
         );
     }
 }

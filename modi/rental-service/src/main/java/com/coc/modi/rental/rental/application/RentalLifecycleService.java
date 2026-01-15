@@ -13,9 +13,12 @@ import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RentalLifecycleService {
 	
 	private final RentalAppSupport rentalAppSupport;
@@ -117,8 +121,11 @@ public class RentalLifecycleService {
 		validateAvailability(rentalItem.getProductId(), oldEndDate.plusDays(1), command.newEndDate(), rentalItem.getId());
 		
 		BigDecimal extraAmount = rentalItem.extendRental(command.newEndDate());
-		
-		accountClientAdapter.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount));
+
+		String chargeRequestId = WalletRequestId.extend(rentalItem.getId(), command.newEndDate());
+		accountClientAdapter.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount, chargeRequestId));
+
+		registerExtendCompensationOnRollback(rentalItem, rental, extraAmount, command);
 		
 		rental.recalculateAmountsAndStatus();
 		
@@ -140,5 +147,41 @@ public class RentalLifecycleService {
 			throw new RentalStatusInvalidException(
 					"요청한 기간에 이미 예약된 상품입니다. productId=" + productId + ", startDate=" + startDate + ", endDate=" + endDate);
 		}
+	}
+
+	private void registerExtendCompensationOnRollback(RentalItem rentalItem, Rental rental, BigDecimal extraAmount, ExtendRentalCommand command) {
+
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			return;
+		}
+
+		Long rentalItemId = rentalItem.getId();
+		if (rentalItemId == null) {
+			return;
+		}
+
+		Long rentalId = rental.getId();
+		LocalDate newEndDate = command.newEndDate();
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCompletion(int status) {
+				if (status != STATUS_ROLLED_BACK) {
+					return;
+				}
+				String requestId = WalletRequestId.extendCompRefund(rentalItemId, newEndDate);
+				try {
+					accountClientAdapter.refund(new RefundWalletCommand(
+							command.memberId(),
+							rentalId,
+							rentalItemId,
+							extraAmount,
+							requestId
+					));
+				} catch (Exception ex) {
+					log.error("연장 결제 보상 환불 실패. rentalId={}, rentalItemId={}", rentalId, rentalItemId, ex);
+				}
+			}
+		});
 	}
 }

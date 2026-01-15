@@ -10,4 +10,5 @@ public final class KafkaTopics {
 	
 	public static final String NOTIFICATION_EVENTS = "notification-events";
 	public static final String MEMBER_CREATED = "member-created";
+	public static final String MEMBER_ROLE_CHANGED = "member-role-changed";
 }

@@ -19,6 +19,7 @@ import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,7 +101,11 @@ public class RentalCreationService {
 		}
 		
 		rental.updateTotalAmount(total);
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT, "해당 기간에 이미 예약된 상품이 포함되어 있습니다.", ex);
+		}
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),
@@ -136,7 +141,13 @@ public class RentalCreationService {
 		
 		rental.addItem(rentalItem);
 		rental.updateTotalAmount(rentalItem.calculateRentalAmount());
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT,
+					"해당 기간에 이미 예약된 상품입니다. productId=" + command.productId()
+							+ ", startDate=" + command.startDate() + ", endDate=" + command.endDate(), ex);
+		}
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),

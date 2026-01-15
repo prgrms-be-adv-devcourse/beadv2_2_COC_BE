@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record ChargeWalletCommand(
 		Long memberId,
 		Long rentalId,
-		BigDecimal amount
+		BigDecimal amount,
+		String requestId
 ) {
 }
