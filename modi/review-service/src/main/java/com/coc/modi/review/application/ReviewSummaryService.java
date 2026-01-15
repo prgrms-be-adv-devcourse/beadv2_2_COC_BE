@@ -33,11 +33,6 @@ public class ReviewSummaryService {
 	@Transactional(readOnly = true)
 	public Optional<ReviewSummaryResponse> getSummary(Long sellerId) {
 
-		long totalCount = reviewRepository.countBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE);
-		if (totalCount < policyProperties.getMinTotalCount()) {
-			return Optional.empty();
-		}
-
 		return reviewSummaryRepository.findBySellerId(sellerId)
 				.map(ReviewSummaryResponse::from);
 	}
@@ -58,7 +53,6 @@ public class ReviewSummaryService {
 		Optional<ReviewSummary> existingOptional = reviewSummaryRepository.findBySellerId(sellerId);
 
 		if (totalCount < policyProperties.getMinTotalCount()) {
-			existingOptional.ifPresent(reviewSummaryRepository::delete);
 			return;
 		}
 
