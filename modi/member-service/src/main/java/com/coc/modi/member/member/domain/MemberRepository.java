@@ -9,6 +9,8 @@ public interface MemberRepository {
 	boolean existsByPhone(String phone);
 	
 	Optional<Member> findByEmail(String email);
+
+	Optional<Member> findByProviderAndProviderId(String provider, String providerId);
 	
 	Member save(Member member);
 	

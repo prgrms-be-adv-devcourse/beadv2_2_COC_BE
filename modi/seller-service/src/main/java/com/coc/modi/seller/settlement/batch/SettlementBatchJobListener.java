@@ -1,7 +1,10 @@
 package com.coc.modi.seller.settlement.batch;
 
+import com.coc.modi.seller.settlement.application.SettlementBatchExecutionLogService;
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogEventType;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogLevel;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +30,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 	
 	private final SettlementBatchExecutionService executionService;
 	private final SettlementBatchService batchService;
+	private final SettlementBatchExecutionLogService executionLogService;
 	
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
@@ -41,6 +45,13 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 		if (batchId != null) {
 			jobExecution.getExecutionContext().putLong(BATCH_ID_KEY, batchId);
 		}
+		executionLogService.append(
+				executionId,
+				SettlementBatchExecutionLogEventType.STARTED,
+				SettlementBatchExecutionLogLevel.INFO,
+				"Batch execution started. jobName=" + batchType + ", batchId=" + batchId,
+				null
+		);
 	}
 	
 	@Override
@@ -98,6 +109,13 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 					feeAmount,
 					lastCursor
 			);
+			executionLogService.append(
+					executionId,
+					SettlementBatchExecutionLogEventType.COMPLETED,
+					SettlementBatchExecutionLogLevel.INFO,
+					"Batch execution completed. read=" + readCount + ", write=" + writeCount + ", fail=" + failTotal,
+					null
+			);
 		} else {
 			String errorMessage = jobExecution.getAllFailureExceptions().stream()
 					.findFirst()
@@ -110,6 +128,13 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 					Math.toIntExact(writeCount),
 					Math.toIntExact(failTotal),
 					lastCursor
+			);
+			executionLogService.append(
+					executionId,
+					SettlementBatchExecutionLogEventType.FAILED,
+					SettlementBatchExecutionLogLevel.ERROR,
+					"Batch execution failed. error=" + errorMessage,
+					null
 			);
 		}
 		
