@@ -14,10 +14,6 @@ Authorization: Bearer {{access_token}}
 GET {{host}}/account-service/api/accounts/transactions
 Authorization: Bearer {{access_token}}
 
-### 회원 지갑 생성
-
-POST {{host}}/account-service/internal/wallets/{{member_id}}
-
 ### Rental 결제 전용 - 결제
 
 POST {{host}}/account-service/internal/wallets/rental-payment

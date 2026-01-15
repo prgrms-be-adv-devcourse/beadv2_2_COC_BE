@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "rental_event_log", schema = "public")
+@Table(name = "rental_event_log", schema = "rental")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RentalEventLog {
 	

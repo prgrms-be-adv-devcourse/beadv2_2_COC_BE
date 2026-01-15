@@ -18,7 +18,9 @@ public class SettlementPayoutTestConfig {
     @Bean
     public Job settlementPayoutTestJob(JobRepository jobRepository, Step settlementPayoutStep) {
 
+
         return new JobBuilder("settlementPayoutTestJob", jobRepository)
+                .listener(settlementBatchJobListener)
                 .start(settlementPayoutStep)
                 .build();
     }

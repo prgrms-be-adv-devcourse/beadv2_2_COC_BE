@@ -87,6 +87,9 @@ class SettlementPayoutStepTest {
     @MockBean
     private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
 
+    @MockBean(name = "redisMessageListenerContainer")
+    private RedisMessageListenerContainer redisMessageListenerContainer;
+
     @BeforeEach
     void setUp() {
 

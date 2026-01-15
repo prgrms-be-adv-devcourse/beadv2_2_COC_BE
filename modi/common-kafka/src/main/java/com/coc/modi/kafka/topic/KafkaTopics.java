@@ -15,4 +15,6 @@ public final class KafkaTopics {
 	public static final String SETTLEMENT_PAYOUT_COMPLETED_EVENTS = "settlement-payout-completed-events";
 
 	public static final String SETTLEMENT_PAYOUT_FAILED_EVENTS = "settlement-payout-failed-events";
+
+	public static final String MEMBER_CREATED = "member-created";
 }

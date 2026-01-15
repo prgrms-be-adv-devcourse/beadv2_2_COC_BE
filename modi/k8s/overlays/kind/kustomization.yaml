@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: modi
 resources:
   - ../../base
+  - ingress.yaml
 secretGenerator:
   - name: modi-env
     envs:

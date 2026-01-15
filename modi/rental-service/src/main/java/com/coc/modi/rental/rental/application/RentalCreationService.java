@@ -14,6 +14,8 @@ import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.exception.RentalException;
 import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
+import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +39,7 @@ public class RentalCreationService {
 	private final ProductClientAdapter productClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public void createRentalFromCart(CreateRentalFromCartCommand command) {
@@ -104,6 +107,7 @@ public class RentalCreationService {
 						"status", rental.getStatus().name(),
 						"totalAmount", rental.getTotalAmount(),
 						"itemCount", rental.getItems() == null ? 0 : rental.getItems().size()));
+		enqueueRentalRequestedNotifications(rental);
 	}
 	
 	@Transactional
@@ -139,6 +143,7 @@ public class RentalCreationService {
 						"status", rental.getStatus().name(),
 						"totalAmount", rental.getTotalAmount(),
 						"itemCount", rental.getItems() == null ? 0 : rental.getItems().size()));
+		enqueueRentalRequestedNotifications(rental);
 	}
 	
 	private List<ProductResponseDto> fetchProducts(List<Long> productIds) {
@@ -163,6 +168,33 @@ public class RentalCreationService {
 			throw new RentalException(ErrorCode.CONFLICT,
 					"해당 기간에 이미 예약된 상품입니다. productId=" + productId + ", startDate=" + startDate + ", endDate="
 							+ endDate);
+		}
+	}
+	
+	private void enqueueRentalRequestedNotifications(Rental rental) {
+		
+		if (rental == null || rental.getItems() == null || rental.getItems().isEmpty()) {
+			return;
+		}
+		
+		for (RentalItem item : rental.getItems()) {
+			if (item == null) {
+				continue;
+			}
+			if (item.getId() == null) {
+				throw new IllegalStateException("Rental item id is required to enqueue notification.");
+			}
+			
+			NotificationEvent event = NotificationEvent.of(
+					item.getSellerId(),
+					"RENTAL_REQUESTED",
+					"새 대여 요청이 도착했습니다!",
+					"대여 요청을 확인해주세요.",
+					"RENTAL_ITEM",
+					String.valueOf(item.getId())
+			);
+			
+			rentalOutboxService.enqueueNotificationEvent(item.getId(), event);
 		}
 	}
 }

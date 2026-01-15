@@ -46,9 +46,19 @@ spec:
               value: "kafka:9092"
             - name: SETTLEMENT_SCHEDULER_ENABLED
               value: "false"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: SELLER_DB_URL
           envFrom:
             - secretRef:
                 name: modi-env
+          startupProbe:
+            tcpSocket:
+              port: 8084
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             tcpSocket:
               port: 8084
