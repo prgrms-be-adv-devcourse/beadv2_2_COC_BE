@@ -2,7 +2,7 @@ dependencies {
     // 공통 모듈 공유
     implementation project(':common')
     implementation project(':common-kafka')
-    implementation 'org.springframework.kafka:spring-kafka'
+
 
     // 배치 처리
     implementation 'org.springframework.boot:spring-boot-starter-batch'

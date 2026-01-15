@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.coc.modi.common.ErrorCode;
 import com.coc.modi.seller.seller.exception.SellerException;
+import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -23,10 +24,23 @@ public class MemberClientAdapter {
 		
 		return memberFeignClient.changeMemberRole(memberId);
 	}
+
+	@Retry(name = "memberEmailRetry")
+	@CircuitBreaker(name = "memberEmailCircuitBreaker", fallbackMethod = "fallbackGetMemberEmail")
+	public MemberEmailResponse getMemberEmail(Long memberId) {
+		
+		return memberFeignClient.getMemberEmail(memberId);
+	}
 	
 	private void fallbackChangeMemberRole(Long memberId, Throwable throwable) {
 		
 		log.warn("회원 역할 변경 요청 실패 memberId={}", memberId, throwable);
+		throw new SellerException(ErrorCode.INTERNAL_ERROR, "회원 서비스 호출에 실패했습니다.");
+	}
+
+	private MemberEmailResponse fallbackGetMemberEmail(Long memberId, Throwable throwable) {
+		
+		log.warn("회원 이메일 조회 실패 memberId={}", memberId, throwable);
 		throw new SellerException(ErrorCode.INTERNAL_ERROR, "회원 서비스 호출에 실패했습니다.");
 	}
 }

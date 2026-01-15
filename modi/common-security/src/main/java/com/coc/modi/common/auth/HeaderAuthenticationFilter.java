@@ -57,7 +57,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 				.filter(StringUtils::hasText)
 				.toList();
 		
-		String role = roles.stream().anyMatch(r -> r.equalsIgnoreCase("SELLER")) ? "SELLER" : "MEMBER";
+		String role = resolvePrimaryRole(roles);
 		
 		List<SimpleGrantedAuthority> authorities = roles.stream()
 				.map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()))
@@ -75,5 +75,15 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		filterChain.doFilter(request, response);
 	}
+	
+	private String resolvePrimaryRole(List<String> roles) {
+		
+		if (roles.stream().anyMatch(r -> r.equalsIgnoreCase("ADMIN"))) {
+			return "ADMIN";
+		}
+		if (roles.stream().anyMatch(r -> r.equalsIgnoreCase("SELLER"))) {
+			return "SELLER";
+		}
+		return "MEMBER";
+	}
 }
-
