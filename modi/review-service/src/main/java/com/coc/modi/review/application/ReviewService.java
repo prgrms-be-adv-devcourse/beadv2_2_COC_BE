@@ -1,4 +1,4 @@
-﻿package com.coc.modi.review.application;
+package com.coc.modi.review.application;
 
 import com.coc.modi.common.ErrorCode;
 import com.coc.modi.kafka.event.NotificationEvent;
