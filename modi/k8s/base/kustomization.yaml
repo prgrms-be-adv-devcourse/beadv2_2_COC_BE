@@ -7,6 +7,9 @@ resources:
   - pgvector.yaml
   - redis.yaml
   - elasticsearch.yaml
+  - fluent-bit.yaml
+  - logstash.yaml
+  - kibana.yaml
   - modi-discovery.yaml
   - modi-config.yaml
   - modi-gateway.yaml

@@ -17,7 +17,7 @@
 
 ### 회원
 - **POST /api/members/signup** — 회원가입
-  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
+  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`, `verificationToken:string`
   - Res: `MemberSignupResponse { email, name, phone, createdAt:datetime }`
 - **GET /api/members/profile** — 내 정보 조회 (Auth)
   - Res: `MemberProfileResponse { id:long, name, phone }`
@@ -59,7 +59,7 @@
   - Res: `EmailVerificationSendResponse { result:"OK" }`
 - **POST /api/auth/email/verify/confirm**
   - Req: `email`, `code:string(6)`
-  - Res: `EmailVerificationConfirmResponse { verified:boolean }`
+  - Res: `EmailVerificationConfirmResponse { verified:boolean, verificationToken:string }`
 - **POST /api/auth/password/reset/send**
   - Req: `email`
   - Res: `Void`

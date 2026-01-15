@@ -1,0 +1,356 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline
+  labels:
+    app: logstash
+data:
+  logstash.conf: |
+    input {
+      http {
+        port => 5044
+        codec => plain
+      }
+    }
+
+    filter {
+      # Strip container log prefix before JSON detection.
+      if [log] {
+        mutate { copy => { "log" => "log_payload" } }
+        mutate {
+          gsub => [
+            "log_payload", "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[^ ]+ (stdout|stderr) [^ ]+ ", ""
+          ]
+        }
+      }
+
+      # JSON 문자열일 때만 파싱 (비-JSON 로그는 그대로 통과)
+      if [log_payload] and [log_payload] =~ /^\s*\{/ {
+        json {
+          source => "log_payload"
+          target => "event"
+          skip_on_invalid_json => true
+        }
+      }
+
+      if "_jsonparsefailure" in [tags] {
+        drop { }
+      }
+
+      if [event][message] =~ /^Hibernate:/ {
+        drop { }
+      }
+
+      if [event][logger_name] == "org.hibernate.SQL" or [event][logger_name] == "org.hibernate.orm.jdbc.bind" {
+        drop { }
+      }
+
+      if [kubernetes][labels][app] {
+        mutate { add_field => { "service" => "%{[kubernetes][labels][app]}" } }
+      }
+
+      if [kubernetes][labels][app] == "fluent-bit" or [kubernetes][container][name] == "fluent-bit" {
+        drop { }
+      }
+
+      if [kubernetes][container][name] == "kindnet-cni" or [service] == "kindnet" {
+        drop { }
+      }
+
+      if [kubernetes][labels][app] == "logstash" or [kubernetes][container][name] == "logstash" {
+        drop { }
+      }
+
+      if ![service] {
+        mutate { add_field => { "service" => "unknown-service" } }
+      }
+
+      if [service] == "unknown-service" and [kubernetes][container][name] {
+        mutate { replace => { "service" => "%{[kubernetes][container][name]}" } }
+      }
+
+      # Drop outbox SQL noise fragments (non-JSON logs only).
+      if [log_payload] and [log_payload] =~ /(?i:\b\w+_outbox\b)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*Hibernate:)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\*\s*$)/ {
+        drop { }
+      }
+
+      # Throttle Elasticsearch INFO logs (30 minutes).
+      if [service] == "elasticsearch" and
+         ([event][log][level] == "INFO" or [event][level] == "INFO") and
+         [event][message] {
+        mutate { copy => { "[event][message]" => "es_info_message" } }
+        mutate {
+          gsub => [
+            "es_info_message", "\\[[^\\]]+\\]", "[ID]",
+            "es_info_message", "\\d+", "N"
+          ]
+        }
+        throttle {
+          key => "%{service}:%{es_info_message}"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_es_info"]
+        }
+        if "throttled_es_info" in [tags] { drop { } }
+        mutate { remove_field => ["es_info_message"] }
+      }
+
+      # Throttle noisy Kibana INFO logs (30 minutes).
+      if [service] == "kibana" and
+         [log_payload] and
+         [log_payload] =~ /(?i:OUTDATED_DOCUMENTS_SEARCH|UPDATE_SOURCE_MAPPINGS_PROPERTIES|WAIT_FOR_YELLOW_SOURCE)/ {
+        mutate { copy => { "log_payload" => "kibana_info_message" } }
+        mutate { gsub => ["kibana_info_message", "\\d+", "N"] }
+        throttle {
+          key => "%{service}:%{kibana_info_message}"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_kibana_info"]
+        }
+        if "throttled_kibana_info" in [tags] { drop { } }
+        mutate { remove_field => ["kibana_info_message"] }
+      }
+
+      # Throttle kube-system logs (30 minutes).
+      if [kubernetes][namespace_name] == "kube-system" and
+         ([event][message] or [event][msg] or [log_payload]) {
+        if [event][msg] {
+          mutate { add_field => { "kube_system_key" => "%{service}:%{[event][level]}:%{[event][msg]}" } }
+        } else if [event][message] {
+          mutate { add_field => { "kube_system_key" => "%{service}:%{[event][level]}:%{[event][message]}" } }
+        } else if [log_payload] {
+          mutate { add_field => { "kube_system_key" => "%{service}:%{log_payload}" } }
+        }
+
+        mutate { gsub => ["kube_system_key", "\\d+", "N"] }
+
+        throttle {
+          key => "%{kube_system_key}"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_kube_system"]
+        }
+        if "throttled_kube_system" in [tags] { drop { } }
+        mutate { remove_field => ["kube_system_key"] }
+      }
+
+      # Throttle repetitive system INFO/DEBUG logs (30 minutes).
+      if ([event][log_type] == "system" or [log_type] == "system") and
+         ([event][level] == "INFO" or [event][level] == "DEBUG" or [event][log][level] == "INFO" or [event][log][level] == "DEBUG") and
+         [event][message] {
+        throttle {
+          key => "%{service}:%{[event][message]}"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_system_log"]
+        }
+        if "throttled_system_log" in [tags] { drop { } }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\bfor update\b|\bskip locked\b)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\b\w+\.\w+\s+not\s+in\s*\()/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\?)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*(and|or|values|insert|update|delete|from|where|group by|order by|having|limit|offset|into|set|on conflict)\b)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\([^)]*\)\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\b\w+_\d+\.\w+\s+in\s*\(\?\))/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\w+(\.\w+)?\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\bview_count\b\s*=\s*\w+(\.\w+)*\.\bview_count\b\s*\+\s*\d+\s*,?\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\b\w+\.\w+_daily\b)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\(\s*\?\s*(,\s*\?\s*)*\)\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\w+_\d+\.\w+\s*,?\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\w+\.\w+\s+\w+_\d+\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\w+\.\w+\s+\w+\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\b\w+_\d+\.\w+\s*=\s*\?\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*\)+\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*[\w\.]+\s+(is\s+null|nulls\s+first|nulls\s+last)\s*,?\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*now\(\)\s*-\s*make_interval\(\s*mins\s*=>\s*\?\s*\)\s*$)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:Resolving eureka endpoints via configuration)/ {
+        throttle {
+          key => "%{service}:eureka_resolve"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_eureka_info"]
+        }
+        if "throttled_eureka_info" in [tags] { drop { } }
+      }
+
+      # Drop Spring Boot banner / startup noise.
+      if [log_payload] and [log_payload] =~ /(?i:^\s*::\s*Spring Boot\s*::|Standard Commons Logging discovery in action|logback\.classic\.model\.processor\.ConfigurationModelHandlerFull)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*(\.\s+____|\/\\\\\s+\/___'_|\\\\\/\s+___\)\||'\s+\|____|=+\\|_\\|=+))/ {
+        drop { }
+      }
+
+      if [service] == "unknown-service" and [log_payload] and [log_payload] =~ /^\s*$/ {
+        drop { }
+      }
+
+      if [service] == "redis" and [log_payload] {
+        throttle {
+          key => "%{service}:%{log_payload}"
+          period => 1800
+          max_age => 1800
+          before_count => -1
+          after_count => 1
+          add_tag => ["throttled_redis_info"]
+        }
+        if "throttled_redis_info" in [tags] { drop { } }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:\bstatus\s*=\s*'.+')/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:^\s*(select|from|where|order by|limit|for update|skip locked|created_at)\b)/ {
+        drop { }
+      }
+
+      if ![event] and [log_payload] {
+        mutate { add_field => { "[event][message]" => "%{[log_payload]}" } }
+      }
+
+      if [event][message] and [event][message] =~ /(?i:health[- ]?check|HTTP status=200|HTTP 200)/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /(?i:health[- ]?check|HTTP status=200|HTTP 200)/ {
+        drop { }
+      }
+
+      # Avoid Elasticsearch mapping conflicts from dotted label keys.
+      mutate { remove_field => ["[kubernetes][labels]"] }
+    }
+
+    output {
+      if [event][log_type] == "access" or [event][event] == "access_log" {
+        elasticsearch {
+          hosts => ["http://elasticsearch:9200"]
+          index => "modi-access-logs-%{service}-%{+YYYY.MM.dd}"
+        }
+      } else {
+        elasticsearch {
+          hosts => ["http://elasticsearch:9200"]
+          index => "modi-logs-%{service}-%{+YYYY.MM.dd}"
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  labels:
+    app: logstash
+spec:
+  ports:
+    - name: http
+      port: 5044
+      targetPort: 5044
+  selector:
+    app: logstash
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  labels:
+    app: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:8.11.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LS_JAVA_OPTS
+              value: "-Xms256m -Xmx256m"
+          ports:
+            - name: http
+              containerPort: 5044
+          volumeMounts:
+            - name: logstash-pipeline
+              mountPath: /usr/share/logstash/pipeline/logstash.conf
+              subPath: logstash.conf
+      volumes:
+        - name: logstash-pipeline
+          configMap:
+            name: logstash-pipeline

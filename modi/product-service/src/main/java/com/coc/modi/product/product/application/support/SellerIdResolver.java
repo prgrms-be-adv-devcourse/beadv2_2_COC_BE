@@ -11,6 +11,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -45,7 +47,10 @@ public class SellerIdResolver {
 	
 	private Long fallbackGetSellerId(Long memberId, Throwable throwable) {
 		
-		log.warn("판매자 조회 실패, circuit breaker 동작 memberId={}", memberId, throwable);
+		log.warn("seller_lookup_fallback",
+				kv("member.id", memberId),
+				kv("exception.class", throwable.getClass().getName()),
+				throwable);
 		throw new ProductInvalidInputException("판매자 서비스 호출 중 오류가 발생했습니다.");
 	}
 }

@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -65,7 +67,14 @@ public class ProductService {
 		try {
 			productSearchLogService.recordSearchLog(condition, sortType, cursor, size, memberId);
 		} catch (Exception e) {
-			log.warn("상품 검색 로그 저장 실패. keyword={}", condition.keyword(), e);
+			log.warn("product_search_log_record_failed",
+					kv("product.search.keyword", condition.keyword()),
+					kv("product.search.sort_type", sortType),
+					kv("product.search.cursor", cursor),
+					kv("product.search.size", size),
+					kv("member.id", memberId),
+					kv("exception.class", e.getClass().getName()),
+					e);
 		}
 		return response;
 	}
@@ -105,7 +114,11 @@ public class ProductService {
 		try {
 			productViewService.recordView(productId, memberId);
 		} catch (Exception e) {
-			log.warn("상품 조회 로그 저장 실패. productId={}", productId, e);
+			log.warn("product_view_log_record_failed",
+					kv("product.id", productId),
+					kv("member.id", memberId),
+					kv("exception.class", e.getClass().getName()),
+					e);
 		}
 
 		return ProductDetailResponse.from(product);
@@ -128,6 +141,11 @@ public class ProductService {
 		
 		Product saved = productRepository.saveAndFlush(product);
 		saved.refreshThumbnailImage();
+		log.info("product_created",
+				kv("product.id", saved.getId()),
+				kv("seller.id", sellerId),
+				kv("product.category", saved.getCategory()),
+				kv("product.price_per_day", saved.getPricePerDay()));
 		
 		// ES 인덱싱/임베딩 이벤트 발행
 		productEmbeddingEventPublisher.publishUpdate(saved.getId());
@@ -165,6 +183,11 @@ public class ProductService {
 		productRepository.flush();
 		
 		product.refreshThumbnailImage();
+		log.info("product_updated",
+				kv("product.id", product.getId()),
+				kv("seller.id", sellerId),
+				kv("product.category", product.getCategory()),
+				kv("product.price_per_day", product.getPricePerDay()));
 		
 		productEmbeddingEventPublisher.publishUpdate(product.getId());
 	
