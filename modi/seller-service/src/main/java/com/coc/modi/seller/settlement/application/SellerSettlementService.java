@@ -38,6 +38,19 @@ public class SellerSettlementService {
 		
 		return settlements.map(SellerSettlementResponse::from);
 	}
+
+	public Page<SellerSettlementResponse> getAllSettlements(String periodYm, Pageable pageable) {
+
+		Page<SellerSettlement> settlements;
+
+		if (periodYm != null && !periodYm.isBlank()) {
+			settlements = sellerSettlementRepository.findByPeriodYm(periodYm, pageable);
+		} else {
+			settlements = sellerSettlementRepository.findAll(pageable);
+		}
+
+		return settlements.map(SellerSettlementResponse::from);
+	}
 	
 	public SellerSettlementResponse getSellerSettlement(Long sellerId, Long sellerSettlementId) {
 		

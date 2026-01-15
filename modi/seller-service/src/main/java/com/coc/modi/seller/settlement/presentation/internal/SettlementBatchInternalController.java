@@ -15,10 +15,8 @@ import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import com.coc.modi.seller.settlement.application.SettlementBatchTriggerService;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
 import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
-import com.coc.modi.seller.settlement.presentation.dto.SettlementBatchCreateRequest;
 import com.coc.modi.seller.settlement.presentation.dto.SettlementBatchMonthlyRunRequest;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.time.YearMonth;
@@ -35,29 +33,11 @@ public class SettlementBatchInternalController {
 	private final SettlementBatchService settlementBatchService;
 	private final SettlementBatchTriggerService settlementBatchTriggerService;
 	
-	@PostMapping
-	public ApiResponse<SettlementBatchResponse> createBatch(@Valid @RequestBody SettlementBatchCreateRequest request) {
-		
-		return ApiResponse.ok(settlementBatchService.createBatch(request.toCommand()));
-	}
-	
-	@PostMapping("/{batchId}/start")
-	public ApiResponse<SettlementBatchResponse> startBatch(@PathVariable Long batchId) {
-		
-		return ApiResponse.ok(settlementBatchService.startBatch(batchId));
-	}
-	
 	@PostMapping("/monthly/run")
 	public ApiResponse<SettlementBatchResponse> runMonthly(@RequestBody(required = false) SettlementBatchMonthlyRunRequest request) {
 		
 		YearMonth targetMonth = resolveTargetMonth(request == null ? null : request.periodYm());
 		return ApiResponse.ok(settlementBatchTriggerService.runMonthly(targetMonth));
-	}
-	
-	@PostMapping("/{batchId}/complete")
-	public ApiResponse<SettlementBatchResponse> completeBatch(@PathVariable Long batchId) {
-		
-		return ApiResponse.ok(settlementBatchService.completeBatch(batchId));
 	}
 	
 	@GetMapping
