@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
         name = "pg_deposit",
         schema = "account",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key")
+                @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key"),
+                @UniqueConstraint(name = "uk_pg_deposit_pg_tid", columnNames = "pg_tid")
         }
 )
 public class PgDeposit extends BaseEntity {
