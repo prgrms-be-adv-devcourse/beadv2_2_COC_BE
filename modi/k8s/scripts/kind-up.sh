@@ -123,6 +123,9 @@ DEPLOYMENTS=(
   deployment/rental-service
   deployment/seller-service
   deployment/member-service
+  deployment/notification-service
+  deployment/review-service
+  deployment/delivery-service
 )
 
 echo "Scaling down services before infra readiness..." >&2

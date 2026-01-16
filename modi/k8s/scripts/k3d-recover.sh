@@ -18,6 +18,32 @@ require_cmd() {
 require_cmd kubectl
 require_cmd k3d
 
+ensure_nodes_ready() {
+  local timeout="$1"
+  if kubectl wait --for=condition=Ready node --all --timeout="${timeout}"; then
+    return 0
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Node(s) not Ready and docker is not available for restart." >&2
+    return 1
+  fi
+
+  mapfile -t not_ready < <(kubectl get nodes --no-headers | awk '$2 != "Ready" {print $1}')
+  if [ "${#not_ready[@]}" -eq 0 ]; then
+    return 1
+  fi
+
+  echo "Restarting NotReady k3d nodes: ${not_ready[*]}" >&2
+  for node in "${not_ready[@]}"; do
+    if k3d node list | awk 'NR>1 {print $1}' | grep -qx "${node}"; then
+      docker restart "${node}" >/dev/null || true
+    fi
+  done
+
+  kubectl wait --for=condition=Ready node --all --timeout="${timeout}"
+}
+
 if [ -n "${KUBE_CONTEXT:-}" ]; then
   kubectl config use-context "${KUBE_CONTEXT}" >/dev/null
 fi
@@ -36,7 +62,10 @@ if ! kubectl cluster-info >/dev/null 2>&1; then
 fi
 
 echo "Waiting for nodes to become Ready..." >&2
-kubectl wait --for=condition=Ready node --all --timeout="${WAIT_TIMEOUT}"
+if ! ensure_nodes_ready "${WAIT_TIMEOUT}"; then
+  echo "Nodes did not become Ready within ${WAIT_TIMEOUT}." >&2
+  exit 1
+fi
 
 if ! kubectl get namespace "${NAMESPACE}" >/dev/null 2>&1; then
   echo "Namespace '${NAMESPACE}' not found." >&2
