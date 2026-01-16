@@ -36,9 +36,21 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	}
 
 	@Override
+	public Page<Review> findBySellerIdAndStatusAndRating(Long sellerId, ReviewStatus status, Short rating, Pageable pageable) {
+		
+		return reviewJpaRepository.findBySellerIdAndStatusAndRating(sellerId, status, rating, pageable);
+	}
+
+	@Override
 	public Page<Review> findByMemberIdAndStatus(Long memberId, ReviewStatus status, Pageable pageable) {
 		
 		return reviewJpaRepository.findByMemberIdAndStatus(memberId, status, pageable);
+	}
+
+	@Override
+	public Page<Review> findByMemberIdAndStatusAndRating(Long memberId, ReviewStatus status, Short rating, Pageable pageable) {
+		
+		return reviewJpaRepository.findByMemberIdAndStatusAndRating(memberId, status, rating, pageable);
 	}
 
 	@Override
@@ -51,6 +63,12 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
 	public long countBySellerIdAndStatus(Long sellerId, ReviewStatus status) {
 		
 		return reviewJpaRepository.countBySellerIdAndStatus(sellerId, status);
+	}
+
+	@Override
+	public long sumRatingBySellerIdAndStatus(Long sellerId, ReviewStatus status) {
+		
+		return reviewJpaRepository.sumRatingBySellerIdAndStatus(sellerId, status);
 	}
 
 	@Override

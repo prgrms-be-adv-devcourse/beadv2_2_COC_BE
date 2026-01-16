@@ -5,6 +5,7 @@
 ----
 리뷰 요약 로직(버킷 요약) 변경과 관련 API 동작 변경을 정리한 문서입니다.
 SQL/마이그레이션 단계는 제외했습니다.
+리뷰 작성 가능 기간은 `review.reviewable-window` 설정으로 제어됩니다. (기본값: 7d)
 
 요약 흐름 (신규)
 ---------------
@@ -14,6 +15,7 @@ SQL/마이그레이션 단계는 제외했습니다.
 - 최종 요약은 최근 `c`개의 리뷰를 커버하는 최신 버킷들로 합성됩니다.
 - 최종 요약은 `review_summary`, 버킷 요약은 `review_summary_bucket`에 저장됩니다.
 - `review_summary.total_review_count`는 리뷰 생성/삭제 시 갱신됩니다.
+- `review_summary.rating_sum`은 리뷰 생성/수정/삭제 시 갱신됩니다.
 
 핵심 동작
 ---------
@@ -27,6 +29,10 @@ API 변경 사항
 리뷰 목록
 - `GET /api/reviews?sellerId={sellerId}` 응답의 `ReviewListResponse`에 `content` 포함
 - `GET /api/reviews/me` 응답의 `ReviewListResponse`에 `content` 포함
+- `GET /api/reviews`와 `GET /api/reviews/me`는 `rating=1~5` 필터 지원
+- `GET /api/reviews`와 `GET /api/reviews/me`는 `sort` 파라미터로 정렬 지원
+  - 예: `sort=createdAt,desc`(최신순), `sort=createdAt,asc`(오래된순)
+  - 예: `sort=rating,desc`(별점 높은순), `sort=rating,asc`(별점 낮은순)
 
 리뷰 상세
 - `GET /api/reviews/{reviewId}` 제거됨
@@ -41,6 +47,9 @@ ReviewSummaryResponse
   "sellerId": 3,
   "summary": "text",
   "reviewCount": 4,
+  "totalReviewCount": 10,
+  "ratingSum": 45,
+  "averageRating": 4.5,
   "summarizedAt": "2026-01-15T11:00:00"
 }
 ```

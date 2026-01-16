@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -139,11 +140,14 @@ public class ReviewSummaryService {
 			return;
 		}
 
-		reviewSummaryRepository.findBySellerId(sellerId)
+		Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(sellerId);
+		long ratingSum = resolveRatingSum(summaryOptional, sellerId);
+
+		summaryOptional
 				.ifPresentOrElse(
-						existing -> existing.updateSummary(payload.summary(), totalCount, totalCount, payload.lastBucketId()),
+						existing -> existing.updateSummary(payload.summary(), totalCount, totalCount, ratingSum, payload.lastBucketId()),
 						() -> reviewSummaryRepository.save(
-								ReviewSummary.create(sellerId, totalCount, totalCount, payload.lastBucketId(), payload.summary())
+								ReviewSummary.create(sellerId, totalCount, totalCount, ratingSum, payload.lastBucketId(), payload.summary())
 						)
 				);
 	}
@@ -201,6 +205,12 @@ public class ReviewSummaryService {
 		return selected;
 	}
 
+	private long resolveRatingSum(Optional<ReviewSummary> summaryOptional, Long sellerId) {
+		
+		return summaryOptional.map(ReviewSummary::getRatingSum)
+				.orElseGet(() -> reviewRepository.sumRatingBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE));
+	}
+
 	private List<Review> fetchLatestReviews(Long sellerId, int limit) {
 
 		PageRequest pageRequest = PageRequest.of(
@@ -233,7 +243,7 @@ public class ReviewSummaryService {
 	private ReviewSummaryBucket buildBucketFromReviews(Long sellerId, List<Review> reviews, int expectedCount) {
 
 		List<Review> ordered = reviews.stream()
-				.sorted((a, b) -> a.getId().compareTo(b.getId()))
+				.sorted(Comparator.comparing(Review::getId))
 				.toList();
 
 		List<String> contents = ordered.stream()

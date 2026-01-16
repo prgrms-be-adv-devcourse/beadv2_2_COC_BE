@@ -31,6 +31,9 @@ public class ReviewSummary extends BaseEntity {
 	@Column(name = "total_review_count", nullable = false)
 	private long totalReviewCount;
 
+	@Column(name = "rating_sum", nullable = false)
+	private long ratingSum;
+
 	@Column(name = "last_bucket_id")
 	private Long lastBucketId;
 
@@ -38,46 +41,55 @@ public class ReviewSummary extends BaseEntity {
 	private String summary;
 
 	@Builder
-	private ReviewSummary(Long sellerId, long reviewCount, long totalReviewCount, Long lastBucketId, String summary) {
+	private ReviewSummary(Long sellerId, long reviewCount, long totalReviewCount, long ratingSum, Long lastBucketId, String summary) {
 
 		this.sellerId = sellerId;
 		this.reviewCount = reviewCount;
 		this.totalReviewCount = totalReviewCount;
+		this.ratingSum = ratingSum;
 		this.lastBucketId = lastBucketId;
 		this.summary = summary;
 	}
 
-	public static ReviewSummary create(Long sellerId, long reviewCount, long totalReviewCount, Long lastBucketId, String summary) {
+	public static ReviewSummary create(Long sellerId, long reviewCount, long totalReviewCount, long ratingSum, Long lastBucketId, String summary) {
 
 		return ReviewSummary.builder()
 				.sellerId(sellerId)
 				.reviewCount(reviewCount)
 				.totalReviewCount(totalReviewCount)
+				.ratingSum(ratingSum)
 				.lastBucketId(lastBucketId)
 				.summary(summary)
 				.build();
 	}
 
-	public static ReviewSummary createCounter(Long sellerId, long totalReviewCount) {
+	public static ReviewSummary createCounter(Long sellerId, long totalReviewCount, long ratingSum) {
 
 		return ReviewSummary.builder()
 				.sellerId(sellerId)
 				.reviewCount(0L)
 				.totalReviewCount(totalReviewCount)
+				.ratingSum(ratingSum)
 				.lastBucketId(null)
 				.summary(null)
 				.build();
 	}
 
-	public void updateSummary(String summary, long reviewCount, long totalReviewCount, Long lastBucketId) {
+	public void updateSummary(String summary, long reviewCount, long totalReviewCount, long ratingSum, Long lastBucketId) {
 
 		this.summary = summary;
 		this.reviewCount = reviewCount;
 		this.totalReviewCount = totalReviewCount;
+		this.ratingSum = ratingSum;
 		this.lastBucketId = lastBucketId;
 	}
 
 	public void updateTotalReviewCount(long totalReviewCount) {
 		this.totalReviewCount = totalReviewCount;
+	}
+
+	public void updateTotals(long totalReviewCount, long ratingSum) {
+		this.totalReviewCount = totalReviewCount;
+		this.ratingSum = ratingSum;
 	}
 }

@@ -70,14 +70,14 @@ public class ReviewController {
 		return ResponseEntity.noContent().build();
 	}
 	
-	// 리뷰 상세 조회
 	// 판매자 리뷰 목록 조회
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<ReviewListResponse>>> getReviewsBySeller(
 			@RequestParam Long sellerId,
+			@RequestParam(required = false) Integer rating,
 			@PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-		List<ReviewListResponse> responses = reviewService.getReviewsBySeller(sellerId, pageable);
+		List<ReviewListResponse> responses = reviewService.getReviewsBySeller(sellerId, rating, pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}
@@ -94,9 +94,10 @@ public class ReviewController {
 	// 내가 작성한 리뷰 목록 조회
 	@GetMapping("/me")
 	public ResponseEntity<ApiResponse<List<ReviewListResponse>>> getMyReviews(@AuthenticationPrincipal CustomMember member,
+																			 @RequestParam(required = false) Integer rating,
 																				 @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 		
-		List<ReviewListResponse> responses = reviewService.getReviewsByMember(member.memberId(), pageable);
+		List<ReviewListResponse> responses = reviewService.getReviewsByMember(member.memberId(), rating, pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}

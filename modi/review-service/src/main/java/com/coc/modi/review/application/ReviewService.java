@@ -60,7 +60,7 @@ public class ReviewService {
 		);
 
 		Review saved = reviewRepository.save(review);
-		updateTotalReviewCount(saved.getSellerId(), 1L);
+		updateReviewAggregates(saved.getSellerId(), 1L, saved.getRating());
 		reviewSummaryService.handleReviewCreated(saved.getSellerId());
 		Long sellerMemberId = sellerClientAdapter.getSellerMemberId(saved.getSellerId());
 
@@ -88,7 +88,12 @@ public class ReviewService {
 
 		validateOwnership(review, command.memberId());
 
+		short beforeRating = review.getRating();
 		review.update(command.rating(), command.content());
+		if (command.rating() != null) {
+			short afterRating = review.getRating();
+			updateReviewAggregates(review.getSellerId(), 0L, (long) afterRating - beforeRating);
+		}
 		
 		return ReviewResponse.from(review);
 	}
@@ -103,14 +108,25 @@ public class ReviewService {
 		validateOwnership(review, memberId);
 
 		review.delete();
-		updateTotalReviewCount(review.getSellerId(), -1L);
+		updateReviewAggregates(review.getSellerId(), -1L, -review.getRating());
 	}
 	
 	// 특정 판매자 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
-	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Pageable pageable) {
-		
-		Page<Review> reviews = reviewRepository.findBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE, pageable);
+	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Integer rating, Pageable pageable) {
+
+		Page<Review> reviews;
+		if (rating != null) {
+			validateRatingFilter(rating);
+			reviews = reviewRepository.findBySellerIdAndStatusAndRating(
+					sellerId,
+					ReviewStatus.ACTIVE,
+					rating.shortValue(),
+					pageable
+			);
+		} else {
+			reviews = reviewRepository.findBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE, pageable);
+		}
 
 		return reviews.stream()
 				.map(ReviewListResponse::from)
@@ -119,9 +135,20 @@ public class ReviewService {
 	
 	// 내가 작성한 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
-	public List<ReviewListResponse> getReviewsByMember(Long memberId, Pageable pageable) {
-		
-		Page<Review> reviews = reviewRepository.findByMemberIdAndStatus(memberId, ReviewStatus.ACTIVE, pageable);
+	public List<ReviewListResponse> getReviewsByMember(Long memberId, Integer rating, Pageable pageable) {
+
+		Page<Review> reviews;
+		if (rating != null) {
+			validateRatingFilter(rating);
+			reviews = reviewRepository.findByMemberIdAndStatusAndRating(
+					memberId,
+					ReviewStatus.ACTIVE,
+					rating.shortValue(),
+					pageable
+			);
+		} else {
+			reviews = reviewRepository.findByMemberIdAndStatus(memberId, ReviewStatus.ACTIVE, pageable);
+		}
 
 		return reviews.stream()
 				.map(ReviewListResponse::from)
@@ -133,6 +160,12 @@ public class ReviewService {
 		if (!review.getMemberId().equals(memberId)) {
 			
 			throw new ReviewAccessDeniedException();
+		}
+	}
+
+	private void validateRatingFilter(Integer rating) {
+		if (rating < 1 || rating > 5) {
+			throw new ReviewException(ErrorCode.INVALID_INPUT, "평점 필터는 1~5 사이여야 합니다.");
 		}
 	}
 
@@ -196,17 +229,22 @@ public class ReviewService {
 		LocalDateTime deadline = returnedAt.plus(reviewableWindow);
 		return !LocalDateTime.now().isAfter(deadline);
 	}
-	private void updateTotalReviewCount(Long sellerId, long delta) {
-		if (delta == 0) {
+	private void updateReviewAggregates(Long sellerId, long countDelta, long ratingDelta) {
+		if (countDelta == 0 && ratingDelta == 0) {
 			return;
 		}
 
 		reviewSummaryRepository.findBySellerId(sellerId)
 				.ifPresentOrElse(
-						summary -> summary.updateTotalReviewCount(Math.max(0, summary.getTotalReviewCount() + delta)),
+						summary -> {
+							long updatedTotal = Math.max(0, summary.getTotalReviewCount() + countDelta);
+							long updatedRatingSum = Math.max(0, summary.getRatingSum() + ratingDelta);
+							summary.updateTotals(updatedTotal, updatedRatingSum);
+						},
 						() -> {
-							if (delta > 0) {
-								reviewSummaryRepository.save(ReviewSummary.createCounter(sellerId, delta));
+							if (countDelta > 0) {
+								long initialRatingSum = Math.max(0, ratingDelta);
+								reviewSummaryRepository.save(ReviewSummary.createCounter(sellerId, countDelta, initialRatingSum));
 							}
 						}
 				);
