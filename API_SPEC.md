@@ -1,6 +1,6 @@
 # MODI 서비스 API 명세
 
-본 문서는 member-service, account-service, seller-service, product-service, rental-service, review-service, notification-service, delivery-service, ai-service의 컨트롤러 기반 API 명세입니다. 기본 응답은 `ApiResponse<T>`(`success:boolean, code:string, message:string, data:T`)이며, 내부 지갑/상품/대여/판매자/회원 컨트롤러는 래퍼 없이 원본을 반환하고 리뷰 삭제는 204 No Content, 알림 스트림은 `text/event-stream`을 반환합니다. 인증/재발급/로그아웃 과정에서 리프레시 토큰은 HttpOnly 쿠키로 전달됩니다.
+본 문서는 member-service, account-service, seller-service, product-service, rental-service, review-service, notification-service, delivery-service, ai-service의 컨트롤러 기반 API 명세입니다. 기본 응답은 `ApiResponse<T>`(`success:boolean, code:string, message:string, data:T`)이며, 일부 내부/관리자 API는 래퍼 없이 원본을 반환합니다. 리뷰 삭제는 204 No Content, 알림 스트림은 `text/event-stream`을 반환하며 채팅 메시지는 WebSocket(STOMP)로 전송됩니다. 인증/재발급/로그아웃 과정에서 리프레시 토큰은 HttpOnly 쿠키로 전달됩니다.
 
 ## 인증/권한
 - JWT Bearer: 헤더 `Authorization: Bearer <accessToken>`
@@ -17,7 +17,7 @@
 
 ### 회원
 - **POST /api/members/signup** — 회원가입
-  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
+  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`, `verificationToken:string`
   - Res: `MemberSignupResponse { email, name, phone, createdAt:datetime }`
 - **GET /api/members/profile** — 내 정보 조회 (Auth)
   - Res: `MemberProfileResponse { id:long, name, phone }`
@@ -59,13 +59,18 @@
   - Res: `EmailVerificationSendResponse { result:"OK" }`
 - **POST /api/auth/email/verify/confirm**
   - Req: `email`, `code:string(6)`
-  - Res: `EmailVerificationConfirmResponse { verified:boolean }`
+  - Res: `EmailVerificationConfirmResponse { verified:boolean, verificationToken:string }`
 - **POST /api/auth/password/reset/send**
   - Req: `email`
   - Res: `Void`
 - **POST /api/auth/password/reset/confirm**
   - Req: `email`, `code:string(6)`, `newPassword:string(규칙 동일)`
   - Res: `Void`
+
+### 관리자
+- **POST /api/admin/members** — 관리자 계정 생성 (Auth)
+    - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
+    - Res: `AdminMemberCreateResponse { memberId, email, role }`
 
 ### 내부
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
@@ -82,12 +87,12 @@
 - **GET /api/accounts/balance** — 내 예치금 (Auth)
   - Res: `MemberWalletResponse { balance:decimal, createdAt:datetime }`
 - **GET /api/accounts/transactions** — 내 거래내역 (Auth)
-  - Res: `WalletTransactionResponse[] { txType:WalletTransactionType, amount, balanceAfter, relatedRentalId?:long, relatedPgDepositId?:long, relatedSettlementId?:long, description, createdAt, paymentKey?:string }`
+  - Res: `WalletTransactionResponse[] { txType:WalletTransactionType, amount, balanceAfter, relatedRentalId?:long, relatedSettlementId?:long, description, createdAt, paymentKey?:string, pgTid?:string }`
 
 ### PG 예치금
 - **POST /api/deposits/pg/request** — 충전 요청 (Auth)
   - Req: `amount:decimal>0`
-  - Res: `DepositResponse { id, memberId, amount, status:PgDepositStatus, pgProvider, orderId, requestedAt, approvedAt, failedReason, paymentKey }`
+  - Res: `DepositResponse { id, memberId, amount, feeAmount, totalAmount, status:PgDepositStatus, pgProvider, orderId, requestedAt, approvedAt, failedReason, paymentKey }`
 - **POST /api/deposits/pg/approve** — 결제 승인
   - Req: `paymentKey`, `orderId`, `amount:decimal`
   - Res: `DepositResponse`
@@ -102,9 +107,6 @@
 
 ### 내부 지갑 (래퍼 없음)
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **POST /internal/wallets/{memberId}** — 지갑 생성
-  - Path: `memberId:long`
-  - Res: `Void`
 - **GET /internal/wallets/{memberId}/balance** — 지갑 잔액 조회
   - Path: `memberId:long`
   - Res: `MemberWalletResponse { balance:decimal, createdAt:datetime }`
@@ -132,7 +134,7 @@
   - Query: `productId?:long`, `status:string`, `startDate:yyyy-MM-dd`, `endDate:yyyy-MM-dd`, `page?:int`, `size?:int`
   - Res: `SellerRentalResponse[] { rentalItemId, productId, memberId, sellerId, status, totalAmount:decimal, startDate, endDate, paidAt }`
 - **PUT /api/sellers/self** — 내 판매자 수정 (Auth)
-  - Req: `storeName`, `bizRegNo?`, `storePhone?`, `status:SellerStatus`
+  - Req: `storeName:string<=50`, `bizRegNo?:string<=20`, `storePhone?:string<=20`
   - Res: `SellerDetailResponse`
 - **GET /api/sellers/products/{productId}** — 상품 요약 조회 (Auth)
   - Res: `ProductSummaryResponse { productId, productName, thumbnailImageUrl }`
@@ -144,17 +146,36 @@
 - **GET /internal/sellers/{sellerId}** — 판매자 조회
   - Res: `SellerDetailResponse`
 
+### 관리자
+- **PATCH /api/admin/sellers/{sellerId}/approve** — 판매자 승인 (Auth)
+  - Res: `SellerDetailResponse` (래퍼 없음)
+- **PATCH /api/admin/sellers/{sellerId}/reject** — 판매자 반려 (Auth)
+  - Res: `SellerDetailResponse` (래퍼 없음)
+
+### 채팅
+- **POST /api/chat/rooms** — 채팅방 생성 (Auth)
+  - Req: `sellerId:long`, `memberId:long`
+  - Res: `ChatRoomResponse { roomId, roomKey, sellerId, memberId, createdAt, updatedAt }`
+- **GET /api/chat/rooms/{roomId}** — 채팅방 조회 (Auth)
+  - Res: `ChatRoomResponse`
+- **GET /api/chat/rooms/{roomId}/messages** — 채팅 메시지 조회 (Auth)
+  - Query: `cursorId?:long`, `size?:int`
+  - Res: `ChatMessageSliceResponse { messages:ChatMessageResponse[], nextCursorId, hasNext }`
+  - `ChatMessageResponse { messageId, roomId, senderId, senderRole, content, sentAt }`
+
+### 채팅(WebSocket/STOMP)
+- **SEND /app/chat/rooms/{roomId}/send** — 메시지 전송
+  - Payload: `ChatMessageSendRequest { content }`
+  - Res: `Void`
+
 ### 판매자 정산(셀프)
 - **GET /api/settlements/sellers/self** — 내 정산 목록 (Auth)
   - Query: `periodYm?:yyyy-MM`, `pageable`
-  - Res: `Page<SellerSettlementResponse { id, batchId, sellerId, periodYm, totalRentalAmount, totalFeeAmount, settlementAmount, status:SellerSettlementStatus, paidAt, createdAt, updatedAt }>`
+  - Res: `Page<SellerSettlementResponse { id, batchId, sellerId, periodYm, totalRentalAmount, totalFeeAmount, settlementAmount, status:SellerSettlementStatus, paidAt, failureReason, createdAt, updatedAt }>`
 - **GET /api/settlements/sellers/self/{sellerSettlementId}** — 단건 (Auth)
   - Res: `SellerSettlementResponse`
 - **GET /api/settlements/sellers/self/{sellerSettlementId}/lines** — 라인 상세 (Auth)
   - Res: `SellerSettlementLineResponse[] { id, sellerSettlementId, sellerId, rentalItemId, memberId, productId, rentalAmount, feeAmount }`
-- **POST /api/settlements/sellers/self/{sellerSettlementId}/pay** — 지급 처리 (Auth)
-  - Query: `paidAt?:ISO_LOCAL_DATE_TIME`(기본 now)
-  - Res: `SellerSettlementResponse`
 - **POST /api/settlements/sellers/self/{sellerSettlementId}/cancel** — 정산 취소 (Auth)
   - Res: `SellerSettlementResponse`
 
@@ -165,18 +186,23 @@
 
 ### 정산 배치 내부 (래퍼 ApiResponse)
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **POST /internal/settlements/batches** — 배치 생성
-  - Req: `periodYm:string`
-  - Res: `SettlementBatchResponse`
-- **POST /internal/settlements/batches/{batchId}/start** — 배치 시작 표시
-  - Res: `SettlementBatchResponse`
-- **POST /internal/settlements/batches/{batchId}/complete** — 배치 완료 표시
+- **POST /internal/settlements/batches/monthly/run** — 월 정산 배치 실행
+  - Req: `SettlementBatchMonthlyRunRequest { periodYm?:yyyy-MM }`
   - Res: `SettlementBatchResponse`
 - **GET /internal/settlements/batches** — 배치 목록
   - Query: `periodYm?:string`, `pageable`
   - Res: `Page<SettlementBatchResponse>`
 - **GET /internal/settlements/batches/{batchId}** — 배치 단건
   - Res: `SettlementBatchResponse`
+
+### 정산 관리자 (래퍼 ApiResponse)
+- Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
+- **GET /internal/settlements/seller-settlements** — 판매자 정산 전체 조회
+  - Query: `periodYm?:yyyy-MM`, `pageable`
+  - Res: `Page<SellerSettlementResponse>`
+- **POST /internal/settlements/seller-settlements/{sellerSettlementId}/pay** — 관리자 지급 처리
+  - Query: `paidAt?:ISO_LOCAL_DATE_TIME`(기본 now)
+  - Res: `SellerSettlementResponse`
 
 ---
 ## product-service
@@ -312,20 +338,25 @@
 
 - **POST /api/reviews** — 판매자 리뷰 작성 (Auth)
   - Req: `rentalItemId:long`, `sellerId:long`, `rating:short(1~5)`, `content:string`
-  - Res: `ReviewResponse { id, rentalItemId, sellerId, memberId, rating, content, createdAt, updatedAt }` (201)
+  - Res: `ReviewResponse { reviewId, rentalItemId, sellerId, memberId, rating, content, createdAt, updatedAt }` (201)
 - **PATCH /api/reviews/{reviewId}** — 리뷰 수정 (Auth)
   - Req: `rating?:short(1~5)`, `content?:string`
   - Res: `ReviewResponse`
-- **DELETE /api/reviews/{reviewId}** — 리뷰 삭제(소프트)
+- **DELETE /api/reviews/{reviewId}** — 리뷰 삭제(소프트) (Auth)
   - Res: `204 No Content` (래퍼 없음)
-- **GET /api/reviews/{reviewId}** — 리뷰 상세
-  - Res: `ReviewResponse`
 - **GET /api/reviews** — 판매자 리뷰 목록
-  - Query: `sellerId:long`, `pageable(sort=createdAt,desc 기본)`
-  - Res: `ReviewSummaryResponse[] { id, rentalItemId, sellerId, memberId, rating, content, createdAt }`
+  - Query: `sellerId:long`
+  - Res: `ReviewListResponse[] { reviewId, rentalItemId, sellerId, memberId, rating, content, createdAt }`
 - **GET /api/reviews/me** — 내가 작성한 리뷰 목록 (Auth)
-  - Query: `pageable(sort=createdAt,desc 기본)`
-  - Res: `ReviewSummaryResponse[]`
+  - Res: `ReviewListResponse[]`
+- **GET /api/reviews/summary** — 리뷰 요약 조회
+  - Query: `sellerId:long`
+  - Res: `ReviewSummaryResponse { sellerId, summary, reviewCount, summarizedAt }` or `204 No Content`
+
+### 내부
+- Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
+- **GET /internal/rentals/items/{rentalItemId}** (rental-service)
+  - Res: `RentalItemReviewInfo { rentalItemId, memberId, sellerId, status }`
 
 ---
 ## notification-service
@@ -344,9 +375,16 @@
 - **POST /api/deliveries** — 배송 등록
   - Req: `rentalItemId:long`, `carrierCode:string<=30`, `trackingNumber:string<=50`
   - Res: `DeliveryCreateResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus }` (201)
+- **PATCH /api/deliveries/{rentalItemId}** — 배송 수정
+  - Path: `rentalItemId:long`
+  - Req: `carrierCode:string<=30`, `trackingNumber:string<=50`
+  - Res: `DeliveryDetailResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus, statusRaw, createdAt:datetime, updatedAt:datetime }`
 - **GET /api/deliveries/{deliveryId}** — 배송 단건 조회
   - Path: `deliveryId:long`
   - Res: `DeliveryDetailResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus, statusRaw, createdAt:datetime, updatedAt:datetime }`
+- **GET /api/deliveries/rental-items/{rentalItemId}** — 대여 아이템 배송 단건 조회
+  - Path: `rentalItemId:long`
+  - Res: `DeliveryDetailResponse`
 
 ---
 ## ai-service

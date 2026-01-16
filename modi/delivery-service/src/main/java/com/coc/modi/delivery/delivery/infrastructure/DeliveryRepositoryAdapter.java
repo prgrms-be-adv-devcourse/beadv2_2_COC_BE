@@ -1,6 +1,7 @@
 package com.coc.modi.delivery.delivery.infrastructure;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -22,18 +23,15 @@ public class DeliveryRepositoryAdapter implements DeliveryRepository {
 	}
 	
 	@Override
-	public boolean existsByRentalItemIdAndCarrierCodeAndTrackingNumber(Long rentalItemId,
-																	   String carrierCode,
-																	   String trackingNumber) {
-		
-		return deliveryJpaRepository.existsByRentalItemIdAndCarrierCodeAndTrackingNumber(
-				rentalItemId, carrierCode, trackingNumber);
-	}
-	
-	@Override
 	public java.util.Optional<Delivery> findById(Long id) {
 		
 		return deliveryJpaRepository.findById(id);
+	}
+
+	@Override
+	public Optional<Delivery> findByRentalItemId(Long rentalItemId) {
+		
+		return deliveryJpaRepository.findByRentalItemId(rentalItemId);
 	}
 	
 	@Override
