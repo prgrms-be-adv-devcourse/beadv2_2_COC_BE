@@ -11,6 +11,8 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
+import com.coc.modi.kafka.event.RentalReturnedEvent;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,7 @@ public class RentalLifecycleService {
 	private final AccountClientAdapter accountClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public void stratRenting(Long rentalItemId, Long memberId) {
@@ -90,6 +93,15 @@ public class RentalLifecycleService {
 						"damageReason", command.damageReason(),
 						"lateReason", command.lateReason(),
 						"memo", command.memo()));
+
+		RentalReturnedEvent event = RentalReturnedEvent.of(
+				rentalItem.getId(),
+				rental.getMemberId(),
+				rentalItem.getSellerId(),
+				rentalItem.getProductId(),
+				rentalItem.getStatus().name()
+		);
+		rentalOutboxService.enqueueRentalReturnedEvent(rentalItem.getId(), event);
 		
 		return new RentalReturnResponse(
 				rental.getId(),

@@ -18,6 +18,8 @@ import com.coc.modi.review.exception.ReviewNotFoundException;
 import com.coc.modi.review.infrastructure.client.RentalClientAdapter;
 import com.coc.modi.review.infrastructure.client.SellerClientAdapter;
 import com.coc.modi.review.infrastructure.client.dto.RentalItemInfo;
+import com.coc.modi.review.cache.ReturnedRentalCache;
+import com.coc.modi.review.cache.ReturnedRentalItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +38,7 @@ public class ReviewService {
 	private final RentalClientAdapter rentalClientAdapter;
 	private final SellerClientAdapter sellerClientAdapter;
 	private final NotificationEventPublisher notificationEventPublisher;
+	private final ReturnedRentalCache returnedRentalCache;
 
 	
 	// 판매자 리뷰 작성
@@ -130,26 +133,45 @@ public class ReviewService {
 	}
 
 	private void validateReviewEligibility(CreateReviewCommand command) {
-		RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
+		ReturnedRentalItem cached = returnedRentalCache.find(command.rentalItemid()).orElse(null);
+		if (cached != null) {
+			validateReturnedRental(command, cached.memberId(), cached.sellerId(), cached.status());
+		} else {
+			RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
 
-		if (rentalItem == null) {
-			throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 상품 정보를 찾을 수 없습니다.");
-		}
+			if (rentalItem == null) {
+				throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 상품 정보를 찾을 수 없습니다.");
+			}
 
-		if (!command.memberId().equals(rentalItem.memberId())) {
-			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
-		}
+			validateReturnedRental(command, rentalItem.memberId(), rentalItem.sellerId(), rentalItem.status());
 
-		if (!command.sellerId().equals(rentalItem.sellerId())) {
-			throw new ReviewException(ErrorCode.INVALID_INPUT, "판매자 정보가 일치하지 않습니다.");
-		}
-
-		if (!"RETURNED".equals(rentalItem.status())) {
-			throw new ReviewException(ErrorCode.CONFLICT, "반납 완료된 상품만 리뷰를 작성할 수 있습니다.");
+			if ("RETURNED".equals(rentalItem.status())) {
+				returnedRentalCache.save(new ReturnedRentalItem(
+						rentalItem.rentalItemId(),
+						rentalItem.memberId(),
+						rentalItem.sellerId(),
+						rentalItem.productId(),
+						rentalItem.status()
+				));
+			}
 		}
 
 		if (reviewRepository.existsByRentalItemIdAndStatus(command.rentalItemid(), ReviewStatus.ACTIVE)) {
 			throw new ReviewException(ErrorCode.CONFLICT, "이미 리뷰가 작성된 상품입니다.");
+		}
+	}
+
+	private void validateReturnedRental(CreateReviewCommand command, Long memberId, Long sellerId, String status) {
+		if (!command.memberId().equals(memberId)) {
+			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
+		}
+
+		if (!command.sellerId().equals(sellerId)) {
+			throw new ReviewException(ErrorCode.INVALID_INPUT, "판매자 정보가 일치하지 않습니다.");
+		}
+
+		if (!"RETURNED".equals(status)) {
+			throw new ReviewException(ErrorCode.CONFLICT, "반납 완료된 상품만 리뷰를 작성할 수 있습니다.");
 		}
 	}
 	private void updateTotalReviewCount(Long sellerId, long delta) {
