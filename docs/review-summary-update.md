@@ -72,3 +72,9 @@ ReviewListResponse
 ----
 - `a`와 `b`를 동일하게 두면 버킷 크기를 단순화할 수 있습니다.
 - `c`는 버킷 개수가 아니라 **리뷰 개수 기준**입니다.
+
+최근 변경 요약
+------------
+- 리뷰 작성 가능 기간 설정: `review.reviewable-window` (기본 7d)
+- 리뷰 요약 집계 확장: `review_summary.rating_sum` 추가, 평균은 `rating_sum / totalReviewCount`로 계산
+- 리뷰 목록 기능 확장: `rating=1~5` 필터 및 `sort` 정렬 파라미터 지원
