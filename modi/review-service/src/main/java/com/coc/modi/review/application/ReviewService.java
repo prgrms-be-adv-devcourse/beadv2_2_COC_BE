@@ -20,12 +20,15 @@ import com.coc.modi.review.infrastructure.client.SellerClientAdapter;
 import com.coc.modi.review.infrastructure.client.dto.RentalItemInfo;
 import com.coc.modi.review.cache.ReturnedRentalCache;
 import com.coc.modi.review.cache.ReturnedRentalItem;
+import com.coc.modi.review.config.ReviewPolicyProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 
 @Service
@@ -39,6 +42,7 @@ public class ReviewService {
 	private final SellerClientAdapter sellerClientAdapter;
 	private final NotificationEventPublisher notificationEventPublisher;
 	private final ReturnedRentalCache returnedRentalCache;
+	private final ReviewPolicyProperties reviewPolicyProperties;
 
 	
 	// 판매자 리뷰 작성
@@ -135,7 +139,7 @@ public class ReviewService {
 	private void validateReviewEligibility(CreateReviewCommand command) {
 		ReturnedRentalItem cached = returnedRentalCache.find(command.rentalItemid()).orElse(null);
 		if (cached != null) {
-			validateReturnedRental(command, cached.memberId(), cached.sellerId(), cached.status());
+			validateReturnedRental(command, cached.memberId(), cached.sellerId(), cached.status(), cached.returnedAt());
 		} else {
 			RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
 
@@ -143,7 +147,7 @@ public class ReviewService {
 				throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 상품 정보를 찾을 수 없습니다.");
 			}
 
-			validateReturnedRental(command, rentalItem.memberId(), rentalItem.sellerId(), rentalItem.status());
+			validateReturnedRental(command, rentalItem.memberId(), rentalItem.sellerId(), rentalItem.status(), rentalItem.returnedAt());
 
 			if ("RETURNED".equals(rentalItem.status())) {
 				returnedRentalCache.save(new ReturnedRentalItem(
@@ -151,7 +155,8 @@ public class ReviewService {
 						rentalItem.memberId(),
 						rentalItem.sellerId(),
 						rentalItem.productId(),
-						rentalItem.status()
+						rentalItem.status(),
+						rentalItem.returnedAt()
 				));
 			}
 		}
@@ -161,7 +166,11 @@ public class ReviewService {
 		}
 	}
 
-	private void validateReturnedRental(CreateReviewCommand command, Long memberId, Long sellerId, String status) {
+	private void validateReturnedRental(CreateReviewCommand command,
+										Long memberId,
+										Long sellerId,
+										String status,
+										LocalDateTime returnedAt) {
 		if (!command.memberId().equals(memberId)) {
 			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
 		}
@@ -173,6 +182,19 @@ public class ReviewService {
 		if (!"RETURNED".equals(status)) {
 			throw new ReviewException(ErrorCode.CONFLICT, "반납 완료된 상품만 리뷰를 작성할 수 있습니다.");
 		}
+
+		if (!isWithinReviewWindow(returnedAt)) {
+			throw new ReviewException(ErrorCode.CONFLICT, "리뷰 작성 가능 기간이 지났습니다.");
+		}
+	}
+
+	private boolean isWithinReviewWindow(LocalDateTime returnedAt) {
+		if (returnedAt == null) {
+			return false;
+		}
+		Duration reviewableWindow = reviewPolicyProperties.reviewableWindow();
+		LocalDateTime deadline = returnedAt.plus(reviewableWindow);
+		return !LocalDateTime.now().isAfter(deadline);
 	}
 	private void updateTotalReviewCount(Long sellerId, long delta) {
 		if (delta == 0) {

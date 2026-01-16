@@ -99,7 +99,8 @@ public class RentalLifecycleService {
 				rental.getMemberId(),
 				rentalItem.getSellerId(),
 				rentalItem.getProductId(),
-				rentalItem.getStatus().name()
+				rentalItem.getStatus().name(),
+				rentalItem.getReturnedAt()
 		);
 		rentalOutboxService.enqueueRentalReturnedEvent(rentalItem.getId(), event);
 		

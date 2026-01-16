@@ -160,7 +160,8 @@ public class RentalQueryService {
 				rentalItem.calculateRentalAmount(),
 				rentalItem.getStartDate(),
 				rentalItem.getEndDate(),
-				rental != null ? rental.getPaidAt() : null
+				rental != null ? rental.getPaidAt() : null,
+				rentalItem.getReturnedAt()
 		);
 	}
 	

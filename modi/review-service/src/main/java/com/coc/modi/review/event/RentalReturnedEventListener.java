@@ -29,7 +29,8 @@ public class RentalReturnedEventListener {
 				event.memberId(),
 				event.sellerId(),
 				event.productId(),
-				event.status()
+				event.status(),
+				event.returnedAt()
 		);
 		returnedRentalCache.save(cached);
 		log.info("Cached returned rental item. rentalItemId={}, memberId={}, sellerId={}",

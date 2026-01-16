@@ -3,9 +3,10 @@ package com.coc.modi.review.cache;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import com.coc.modi.review.config.ReviewPolicyProperties;
 
 @Component
 public class ReturnedRentalCache {
@@ -17,10 +18,10 @@ public class ReturnedRentalCache {
 
 	public ReturnedRentalCache(
 			RedisTemplate<String, ReturnedRentalItem> returnedRentalRedisTemplate,
-			@Value("${review.returned-cache-ttl:PT168H}") Duration ttl
+			ReviewPolicyProperties reviewPolicyProperties
 	) {
 		this.returnedRentalRedisTemplate = returnedRentalRedisTemplate;
-		this.ttl = ttl;
+		this.ttl = reviewPolicyProperties.reviewableWindow();
 	}
 
 	public Optional<ReturnedRentalItem> find(Long rentalItemId) {

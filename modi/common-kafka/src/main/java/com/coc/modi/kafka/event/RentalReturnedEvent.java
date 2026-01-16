@@ -1,6 +1,7 @@
 package com.coc.modi.kafka.event;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record RentalReturnedEvent(
@@ -10,7 +11,8 @@ public record RentalReturnedEvent(
 		Long memberId,
 		Long sellerId,
 		Long productId,
-		String status
+		String status,
+		LocalDateTime returnedAt
 ) {
 
 	public static RentalReturnedEvent of(
@@ -18,7 +20,8 @@ public record RentalReturnedEvent(
 			Long memberId,
 			Long sellerId,
 			Long productId,
-			String status
+			String status,
+			LocalDateTime returnedAt
 	) {
 		return new RentalReturnedEvent(
 				UUID.randomUUID().toString(),
@@ -27,7 +30,8 @@ public record RentalReturnedEvent(
 				memberId,
 				sellerId,
 				productId,
-				status
+				status,
+				returnedAt
 		);
 	}
 }
