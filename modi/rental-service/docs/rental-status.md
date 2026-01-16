@@ -8,9 +8,9 @@
 - REJECTED: 판매자 거절(REQUESTED → REJECTED). `canceledAt` 설정.
 - CANCELED: 회원 취소(REQUESTED 또는 ACCEPTED → CANCELED). `canceledAt` 설정.
 - PAID: 모든 아이템이 ACCEPTED 상태일 때 결제 성공 시 PaymentService가 설정.
-- RENTING: 판매자가 인도 처리. 코드상 PAID 상태이면서 `LocalDate.now()`가 `startDate` 이후이면 예외를 던짐.
+- RENTING: 판매자가 인도 처리. 코드상 PAID 상태이면서 `LocalDate.now()`가 `startDate` 이전이면 예외를 던짐.
 - RETURNED: RENTING → RETURNED. `returnedAt` 설정. 반납 후 환불 시 상태는 그대로 두고 `canceledAt`만 추가로 설정.
-- 기타 제약: 연장은 PAID 또는 RENTING에서만 가능. 환불은 서비스에서 PAID/RETURNED 모두 시도 가능하지만 구현상 RETURNED가 아니면 예외가 발생한다.
+- 기타 제약: 연장은 PAID 또는 RENTING에서만 가능. 환불은 PAID/RETURNED에서 가능하며 PAID 환불은 CANCELED로 전환된다. RETURNED 환불은 상태는 유지하고 `canceledAt`만 기록된다.
 
 ### 상태 전환 흐름 (코드 기준)
 ```
@@ -19,7 +19,7 @@ REQUESTED --(seller accept)--> ACCEPTED --(payment)--> PAID --(startRenting)--> 
     |   \--(seller reject)--> REJECTED
     \--(member cancel)--> CANCELED
 ```
-*환불은 RETURNED 상태에서 `canceledAt`만 찍는 형태로 처리되며 상태 이름은 그대로 RETURNED.*
+*환불은 PAID 상태에서 CANCELED로 전환되며, RETURNED 상태에서는 `canceledAt`만 찍고 상태는 유지한다.*
 
 ## 2. RentalStatus (대여 전체)
 - REQUESTED: 기본값.

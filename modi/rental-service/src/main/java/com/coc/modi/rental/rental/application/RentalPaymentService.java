@@ -99,6 +99,10 @@ public class RentalPaymentService {
 		Rental rental = rentalAppSupport.requireRental(rentalItem);
 		
 		rentalAppSupport.requireMember(rental, memberId);
+
+		if (isAlreadyRefunded(rental, rentalItem)) {
+			return;
+		}
 		
 		BigDecimal refundAmount = rentalItem.processRefund();
 		
@@ -115,6 +119,16 @@ public class RentalPaymentService {
 						"rentalStatus", rental.getStatus().name(),
 						"itemStatus", rentalItem.getStatus().name(),
 						"refundAmount", refundAmount));
+	}
+
+	private boolean isAlreadyRefunded(Rental rental, RentalItem rentalItem) {
+		if (rentalItem.getCanceledAt() == null) {
+			return false;
+		}
+		if (rentalItem.getStatus() == RentalItemStatus.RETURNED) {
+			return true;
+		}
+		return rentalItem.getStatus() == RentalItemStatus.CANCELED && rental.getPaidAt() != null;
 	}
 
 	private void registerPaymentCompensationOnRollback(Rental rental, Long memberId) {
