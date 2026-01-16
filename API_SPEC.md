@@ -130,6 +130,9 @@
   - Res: `SellerDetailResponse { sellerId, memberId, storeName, bizRegNo, storePhone, status:SellerStatus, createdAt, updatedAt }`
 - **GET /api/sellers/self** — 내 판매자 (Auth)
   - Res: `SellerDetailResponse`
+- **GET /api/sellers/{sellerId}** — 판매자 조회 (Auth)
+  - Path: `sellerId:long`
+  - Res: `SellerDetailResponse`
 - **GET /api/sellers/self/rentals** — 내 대여 목록 (Auth)
   - Query: `productId?:long`, `status:string`, `startDate:yyyy-MM-dd`, `endDate:yyyy-MM-dd`, `page?:int`, `size?:int`
   - Res: `SellerRentalResponse[] { rentalItemId, productId, memberId, sellerId, status, totalAmount:decimal, startDate, endDate, paidAt }`

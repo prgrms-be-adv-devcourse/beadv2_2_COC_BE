@@ -62,6 +62,7 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('D
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/sellers', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/{sellerId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/products/{productId}', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/self', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PUT', '/seller-service/api/sellers/self', 'SELLER');
