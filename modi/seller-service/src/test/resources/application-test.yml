@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sellertest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS seller
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+    discovery:
+      enabled: false
+  task:
+    scheduling:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  health:
+    redis:
+      enabled: false
+
+rental-service:
+  url: http://localhost
+member-service:
+  url: http://localhost
+product-service:
+  url: http://localhost
+account-service:
+  url: http://localhost
+
+app:
+  gateway-prefix: test

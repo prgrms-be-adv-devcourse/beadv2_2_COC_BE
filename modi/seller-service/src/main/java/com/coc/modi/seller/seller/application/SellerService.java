@@ -1,9 +1,8 @@
 package com.coc.modi.seller.seller.application;
 
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
-import com.coc.modi.seller.exception.SellerDuplicateException;
-import com.coc.modi.seller.exception.SellerNotFoundException;
-import com.coc.modi.seller.seller.infrastructure.client.member.MemberFeignClient;
+import com.coc.modi.seller.seller.exception.SellerDuplicateException;
+import com.coc.modi.seller.seller.exception.SellerNotFoundException;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
@@ -20,7 +19,6 @@ public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final SellerRentalService sellerRentalService;
-	private final MemberFeignClient memberFeignClient;
 	
 	@Transactional(readOnly = true)
     public SellerDetailResponse getSeller(Long sellerId) {
@@ -52,8 +50,8 @@ public class SellerService {
         );
 
         sellerRepository.save(seller);
-		
-		return memberFeignClient.changeMemberRole(seller.getMemberId());
+
+		return seller.getStatus().name();
     }
 
 
@@ -67,7 +65,6 @@ public class SellerService {
                 command.bizRegNo(),
                 command.storePhone()
         );
-        seller.changeStatus(command.status());
 
         return SellerDetailResponse.from(seller);
     }

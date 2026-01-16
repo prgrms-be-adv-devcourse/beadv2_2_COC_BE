@@ -1,0 +1,317 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: pgvector
+    ports:
+      - "5432:5432"   # 로컬 postgres(5432)와 충돌 방지
+    restart: always
+    networks:
+      - msa-net
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin1234
+      POSTGRES_DB: modi
+    volumes:
+      - pgvector18-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d modi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-discovery:
+    build:
+      context: .
+      dockerfile: modi-discovery/Dockerfile
+    image: modi/modi-discovery:local
+    container_name: modi-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-config:
+    build:
+      context: .
+      dockerfile: modi-config/Dockerfile
+    image: modi/modi-config:local
+    container_name: modi-config
+    env_file:
+      - .env
+    ports:
+      - "8888:8888"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  modi-gateway:
+    build:
+      context: .
+      dockerfile: modi-gateway/Dockerfile
+    image: modi/modi-gateway:local
+    container_name: modi-gateway
+    depends_on:
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - msa-net
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks:
+      - msa-net
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    networks:
+      - msa-net
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: unless-stopped
+    networks:
+      - msa-net
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    expose:
+      - "9092"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: unless-stopped
+    networks:
+      - msa-net
+    expose:
+      - "2181"
+
+  account-service:
+    build:
+      context: .
+      dockerfile: account-service/Dockerfile
+    image: modi/account-service:local
+    container_name: account-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  product-service:
+    build:
+      context: .
+      dockerfile: product-service/Dockerfile
+    image: modi/product-service:local
+    container_name: product-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  rental-service:
+    build:
+      context: .
+      dockerfile: rental-service/Dockerfile
+    image: modi/rental-service:local
+    container_name: rental-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  seller-service:
+    build:
+      context: .
+      dockerfile: seller-service/Dockerfile
+    image: modi/seller-service:local
+    container_name: seller-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  member-service:
+    build:
+      context: .
+      dockerfile: member-service/Dockerfile
+    image: modi/member-service:local
+    container_name: member-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+#  review-service:
+#    build:
+#      context: .
+#      dockerfile: review-service/Dockerfile
+#    image: modi/review-service:local
+#    container_name: review-service
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      modi-config:
+#        condition: service_healthy
+#    expose:
+#      - "8080"
+#    env_file:
+#      - .env
+#    restart: always
+#    networks:
+#      - msa-net
+#
+#  notification-service:
+#    build:
+#      context: .
+#      dockerfile: notification-service/Dockerfile
+#    image: modi/notification-service:local
+#    container_name: notification-service
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      modi-config:
+#        condition: service_healthy
+#    expose:
+#      - "8080"
+#    env_file:
+#      - .env
+#    restart: always
+#    networks:
+#      - msa-net
+
+  delivery-service:
+    build:
+      context: .
+      dockerfile: delivery-service/Dockerfile
+    image: modi/delivery-service:local
+    container_name: delivery-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  ai-service:
+    build:
+      context: .
+      dockerfile: ai-service/Dockerfile
+    image: modi/ai-service:local
+    container_name: ai-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+networks:
+  msa-net:
+    driver: bridge
+
+volumes:
+  pgvector18-data:
+  es-data:

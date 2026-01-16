@@ -13,7 +13,13 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "pg_deposit", schema = "public")
+@Table(
+        name = "pg_deposit",
+        schema = "account",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key")
+        }
+)
 public class PgDeposit extends BaseEntity {
 
     @Id
@@ -25,6 +31,12 @@ public class PgDeposit extends BaseEntity {
 
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal amount;
+
+    @Column(name = "fee_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal feeAmount;
+
+    @Column(name = "total_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -52,6 +64,8 @@ public class PgDeposit extends BaseEntity {
     public static PgDeposit createRequest(
             Long memberId,
             BigDecimal amount,
+            BigDecimal feeAmount,
+            BigDecimal totalAmount,
             String pgProvider,
             String orderId
     ) {
@@ -60,6 +74,8 @@ public class PgDeposit extends BaseEntity {
 
         pgDeposit.memberId = memberId;
         pgDeposit.amount = amount;
+        pgDeposit.feeAmount = feeAmount;
+        pgDeposit.totalAmount = totalAmount;
         pgDeposit.pgProvider = pgProvider;
         pgDeposit.pgTid = orderId;
         pgDeposit.status = PgDepositStatus.REQUESTED;

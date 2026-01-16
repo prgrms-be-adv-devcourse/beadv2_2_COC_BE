@@ -28,7 +28,7 @@ import com.coc.modi.seller.settlement.domain.SellerSettlement;
 @ToString(of = {"id", "periodYm", "status", "startedAt", "completedAt"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "settlement_batch")
+@Table(name = "settlement_batch", schema = "seller")
 public class SettlementBatch extends BaseEntity {
 	
 	@Id

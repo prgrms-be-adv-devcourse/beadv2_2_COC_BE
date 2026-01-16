@@ -7,11 +7,9 @@ public interface DeliveryRepository {
 	
 	Delivery save(Delivery delivery);
 	
-	boolean existsByRentalItemIdAndCarrierCodeAndTrackingNumber(Long rentalItemId,
-																String carrierCode,
-																String trackingNumber);
-	
 	Optional<Delivery> findById(Long id);
+
+	Optional<Delivery> findByRentalItemId(Long rentalItemId);
 	
 	List<Delivery> findTargetsForTrackingWithSkipLocked(int intervalMinutes, int limit);
 	

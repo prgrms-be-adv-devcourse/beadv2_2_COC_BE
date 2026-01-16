@@ -7,6 +7,7 @@ import com.coc.modi.account.deposit.application.dto.DepositFailCommand;
 import com.coc.modi.account.deposit.application.dto.DepositResponse;
 import com.coc.modi.account.deposit.domain.PgDeposit;
 import com.coc.modi.account.deposit.domain.PgDepositRepository;
+import com.coc.modi.account.deposit.domain.PgDepositStatus;
 import com.coc.modi.account.deposit.infrastructure.client.TossPaymentsClient;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentApprovalResponse;
 import com.coc.modi.account.deposit.infrastructure.client.dto.TossPaymentCancelResponse;
@@ -20,8 +21,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
@@ -33,15 +36,26 @@ public class DepositService {
     private final WalletCommandService  walletCommandService;
     private static final String PG_PROVIDER = "TOSS_PAYMENTS";
 
+    @Value("${account.deposit.card-fee-rate:0.03}")
+    private BigDecimal cardFeeRate;
+
+    private static final int MONEY_SCALE = 0;
+
     // 예치금 충전 요청
     @Transactional
     public DepositResponse requestDeposit(DepositCommand command) {
 
         String orderId = generateOrderId();
 
+        BigDecimal amount = command.amount();
+        BigDecimal feeAmount = calculateFee(amount);
+        BigDecimal totalAmount = amount.add(feeAmount);
+
         PgDeposit pgDeposit = PgDeposit.createRequest(
                 command.memberId(),
-                command.amount(),
+                amount,
+                feeAmount,
+                totalAmount,
                 PG_PROVIDER,
                 orderId
         );
@@ -56,11 +70,34 @@ public class DepositService {
     public DepositResponse approveDeposit(DepositApprovalCommand command) {
 
         // 1. orderId로 충전 요청 조회
-        PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
+        PgDeposit deposit = pgDepositRepository.findByPgTidForUpdate(command.orderId())
                 .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
 
+        if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
+
+            BigDecimal requestedAmount = deposit.getTotalAmount();
+            BigDecimal approvedAmount = command.amount();
+
+            if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
+
+                throw new AccountException(ErrorCode.CONFLICT, "이미 승인된 결제 금액과 일치하지 않습니다.");
+            }
+
+            if (deposit.getPaymentKey() != null && !deposit.getPaymentKey().equals(command.paymentKey())) {
+
+                throw new AccountException(ErrorCode.CONFLICT, "이미 승인된 결제와 paymentKey가 일치하지 않습니다.");
+            }
+
+            return DepositResponse.from(deposit);
+        }
+
+        if (deposit.getStatus() != PgDepositStatus.REQUESTED) {
+
+            throw new AccountException(ErrorCode.CONFLICT, "승인할 수 없는 상태입니다. : " + deposit.getStatus());
+        }
+
         // 2. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal approvedAmount = command.amount();
 
         if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
@@ -89,7 +126,12 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(
+                deposit.getMemberId(),
+                deposit,
+                deposit.getAmount(),
+                deposit.getPaymentKey()
+        );
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -122,7 +164,7 @@ public class DepositService {
         }
 
         // 3. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
@@ -151,8 +193,8 @@ public class DepositService {
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
                         deposit,
-                        cancelAmount,
-						deposit.getPaymentKey()
+                        deposit.getAmount(),
+                        deposit.getPaymentKey()
                 )
         );
 
@@ -161,13 +203,21 @@ public class DepositService {
 	
 	// 결제 실패
 	@Transactional
-	public DepositResponse failDeposit(DepositFailCommand command) {
+    public DepositResponse failDeposit(DepositFailCommand command) {
 		
 		PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
 				.orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
 		
 		deposit.fail(command.failureMessage());
 		
-		return DepositResponse.from(deposit);
-	}
+        return DepositResponse.from(deposit);
+    }
+
+    private BigDecimal calculateFee(BigDecimal amount) {
+
+        if (amount == null) {
+            return BigDecimal.ZERO;
+        }
+        return amount.multiply(cardFeeRate).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    }
 }

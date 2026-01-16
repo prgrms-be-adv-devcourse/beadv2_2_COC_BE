@@ -1,7 +1,7 @@
 package com.coc.modi.seller.settlement.application;
 
-import com.coc.modi.seller.exception.SettlementBatchRunException;
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.exception.SettlementBatchRunException;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.application.dto.SettlementBatchRunCommand;
 
 import lombok.RequiredArgsConstructor;

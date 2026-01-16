@@ -4,7 +4,10 @@ import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.EmailVerificationService;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
+import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
+import com.coc.modi.kafka.event.MemberCreatedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
+import com.coc.modi.member.member.application.dto.MemberEmailResponse;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.member.application.dto.UpdateMemberCommand;
@@ -19,8 +22,11 @@ import com.coc.modi.member.member.exception.MemberException;
 import com.coc.modi.member.member.exception.MemberNameMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
-import com.coc.modi.member.member.exception.WalletCreationFailedException;
-import com.coc.modi.member.member.infrastructure.client.AccountFeignClient;
+import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
+import com.coc.modi.member.member.exception.WalletBalanceRemainingException;
+import com.coc.modi.member.outbox.MemberOutboxService;
+import com.coc.modi.member.member.infrastructure.client.AccountClientAdapter;
+import com.coc.modi.member.member.infrastructure.client.dto.MemberWalletResponse;
 import com.coc.modi.member.security.JwtTokenProvider;
 
 import feign.FeignException;
@@ -30,10 +36,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class MemberService {
 	
@@ -41,15 +48,19 @@ public class MemberService {
 	
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final AccountFeignClient accountFeignClient;
+	private final AccountClientAdapter accountClientAdapter;
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final EmailVerificationService emailVerificationService;
+	private final MemberOutboxService memberOutboxService;
 	private final JwtTokenProvider jwtTokenProvider;
 	
 	// 회원가입
 	@Transactional
 	public MemberSignupResponse signup(CreateMemberCommand command) {
 		
+		validateVerificationToken(command.email(), command.verificationToken());
+
 		// 중복 이메일인지 확인
 		if (memberRepository.existsByEmail(command.email())) {
 			
@@ -74,16 +85,11 @@ public class MemberService {
 		
 		Member saved = memberRepository.save(member);
 		
-		// 회원 지갑 생성 요청
-		try {
-			
-			accountFeignClient.createWallet(saved.getId());
-		} catch (FeignException ex) {
-			
-			log.error("Failed to create wallet for memberId={}", saved.getId(), ex);
-			
-			throw new WalletCreationFailedException();
-		}
+		memberOutboxService.enqueueMemberCreated(
+				MemberCreatedEvent.of(saved.getId(), saved.getEmail())
+		);
+
+		emailVerificationTokenStore.deleteToken(command.verificationToken());
 		
 		return MemberSignupResponse.from(saved);
 	}
@@ -96,6 +102,7 @@ public class MemberService {
 		
 		return MemberProfileResponse.from(member);
 	}
+	
 	
 	// 회원 정보 수정
 	@Transactional
@@ -153,6 +160,27 @@ public class MemberService {
 		
 		Member member = getMemberOrThrow(memberId);
 		
+		MemberWalletResponse wallet;
+		
+		try {
+			
+			// 지갑에 잔액 남아있는지 내부API 확인
+			wallet = accountClientAdapter.getWalletBalance(memberId);
+		} catch (FeignException ex) {
+			
+			log.error("Failed to fetch wallet balance for memberId={}", memberId, ex);
+			
+			throw new WalletBalanceCheckFailedException();
+		}
+		
+		// 지갑에 잔액 남아있으면 예외처리
+		if (wallet != null && wallet.balance() != null && wallet.balance().compareTo(BigDecimal.ZERO) > 0) {
+			
+			log.error("Wallet balance is not null. memberId={}, wallet={}", memberId, wallet);
+			
+			throw new WalletBalanceRemainingException();
+		}
+		
 		member.withdraw();
 	}
 	
@@ -188,6 +216,36 @@ public class MemberService {
 		
 		emailVerificationCodeStore.deleteCode(email);
 	}
+
+	private void validateVerificationToken(String email, String verificationToken) {
+
+		if (verificationToken == null || verificationToken.isBlank()) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 필요합니다.");
+		}
+
+		String storedEmail = emailVerificationTokenStore.getEmail(verificationToken);
+
+		if (storedEmail == null) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 만료되었거나 유효하지 않습니다.");
+		}
+
+		if (!storedEmail.equals(email)) {
+
+			throw new AuthCodeInvalidException("이메일 인증 토큰이 이메일과 일치하지 않습니다.");
+		}
+	}
+	
+	
+	@Transactional(readOnly = true)
+	public MemberEmailResponse getMemberEmail(Long memberId) {
+		
+		Member member = getMemberOrThrow(memberId);
+		
+		return MemberEmailResponse.from(member);
+	}
+	
 	
 	@Transactional
 	public String updateRoleToSeller(Long memberId) {

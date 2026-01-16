@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "address", schema = "public")
+@Table(name = "address", schema = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Address extends BaseEntity {
 

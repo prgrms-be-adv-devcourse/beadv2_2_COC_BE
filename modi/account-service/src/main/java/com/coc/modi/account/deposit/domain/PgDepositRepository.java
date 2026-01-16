@@ -11,6 +11,8 @@ public interface PgDepositRepository {
 
     Optional<PgDeposit> findByPgTid(String pgTid);
 
+    Optional<PgDeposit> findByPgTidForUpdate(String pgTid);
+
     List<PgDeposit> findByMemberId(Long memberId);
 
     List<PgDeposit> findByMemberIdAndStatus(Long memberId, PgDepositStatus status);

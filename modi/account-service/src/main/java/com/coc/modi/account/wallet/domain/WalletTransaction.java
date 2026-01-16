@@ -12,7 +12,11 @@ import java.math.BigDecimal;
 @Table(
 		name = "wallet_transaction",
 		schema = "public",
-		uniqueConstraints = @UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"})
+		uniqueConstraints = {
+				@UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"}),
+				@UniqueConstraint(name = "uk_wallet_transaction_settlement_tx_type",
+						columnNames = {"related_settlement_id", "tx_type"})
+		}
 )
 public class WalletTransaction extends BaseEntity {
 

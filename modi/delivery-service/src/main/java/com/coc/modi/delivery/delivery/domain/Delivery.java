@@ -10,7 +10,11 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "delivery", schema = "public")
+@Table(
+		name = "delivery",
+		schema = "delivery",
+		uniqueConstraints = @UniqueConstraint(name = "uk_delivery_rental_item_id", columnNames = "rental_item_id")
+)
 public class Delivery extends BaseEntity {
 	
 	@Id
@@ -59,6 +63,15 @@ public class Delivery extends BaseEntity {
 								  String trackingNumber) {
 		
 		return new Delivery(rentalItemId, carrierCode, trackingNumber, null, null);
+	}
+
+	public void updateTrackingInfo(String carrierCode, String trackingNumber) {
+		
+		this.carrierCode = carrierCode;
+		this.trackingNumber = trackingNumber;
+		this.status = DeliveryStatus.REGISTERED;
+		this.statusRaw = null;
+		this.lastTrackedAt = null;
 	}
 	
 	public void applyTrackingResult(DeliveryStatus status, TrackingResult result) {
