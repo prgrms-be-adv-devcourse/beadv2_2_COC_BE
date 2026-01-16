@@ -1,5 +1,6 @@
 package com.coc.gateway.security.authz;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -8,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -23,15 +27,20 @@ public class MemberAuthzService {
 	private final MemberAuthzClient client;
 	private final AuthzCacheProperties properties;
 	private final EndpointPermissionMatcher matcher;
-	private final ConcurrentHashMap<Long, CacheEntry> cache = new ConcurrentHashMap<>();
+	private final ReactiveStringRedisTemplate redisTemplate;
+	private final ObjectMapper objectMapper;
 	private final ConcurrentHashMap<Long, AtomicBoolean> refreshInProgress = new ConcurrentHashMap<>();
 
 	public MemberAuthzService(MemberAuthzClient client,
 			AuthzCacheProperties properties,
-			EndpointPermissionMatcher matcher) {
+			EndpointPermissionMatcher matcher,
+			ReactiveStringRedisTemplate redisTemplate,
+			ObjectMapper objectMapper) {
 		this.client = client;
 		this.properties = properties;
 		this.matcher = matcher;
+		this.redisTemplate = redisTemplate;
+		this.objectMapper = objectMapper;
 	}
 
 	public Mono<Set<String>> resolveRoles(Long memberId, String method, String path) {
@@ -40,28 +49,18 @@ public class MemberAuthzService {
 	}
 
 	private Mono<Set<String>> resolveRoles(Long memberId, boolean allowStale) {
-		CacheEntry entry = cache.get(memberId);
-		Instant now = Instant.now();
-
-		if (entry != null && now.isBefore(entry.freshUntil())) {
-			return Mono.just(entry.roles());
-		}
-
-		if (entry != null && now.isBefore(entry.staleUntil())) {
-			if (allowStale) {
-				refreshAsync(memberId);
-				return Mono.just(entry.roles());
-			}
-		}
-
-		return fetchAndCache(memberId);
+		String key = cacheKey(memberId);
+		return redisTemplate.opsForValue()
+				.get(key)
+				.flatMap(value -> readEntry(value, memberId, allowStale))
+				.switchIfEmpty(fetchAndCache(memberId));
 	}
 
 	private Mono<Set<String>> fetchAndCache(Long memberId) {
 		return client.fetchMemberAuthz(memberId)
 				.map(response -> normalizeRoles(response.roles()))
 				.filter(roles -> !roles.isEmpty())
-				.doOnNext(roles -> cache.put(memberId, buildEntry(roles)))
+				.flatMap(roles -> writeEntry(memberId, roles).thenReturn(roles))
 				.onErrorResume(ex -> {
 					log.warn("member authz fetch failed: memberId={}", memberId, ex);
 					return Mono.empty();
@@ -79,11 +78,53 @@ public class MemberAuthzService {
 				.subscribe();
 	}
 
-	private CacheEntry buildEntry(Set<String> roles) {
+	private Mono<Void> writeEntry(Long memberId, Set<String> roles) {
 		Instant now = Instant.now();
 		Instant freshUntil = now.plus(properties.getCacheTtl());
+		Duration ttl = properties.getCacheTtl().plus(properties.getStaleWindow());
+		AuthzCacheEntry entry = new AuthzCacheEntry(List.copyOf(roles), freshUntil.toEpochMilli());
+
+		try {
+			String payload = objectMapper.writeValueAsString(entry);
+			return redisTemplate.opsForValue().set(cacheKey(memberId), payload, ttl).then();
+		} catch (JsonProcessingException ex) {
+			log.warn("failed to serialize authz cache entry: memberId={}", memberId, ex);
+			return Mono.empty();
+		}
+	}
+
+	private Mono<Set<String>> readEntry(String payload, Long memberId, boolean allowStale) {
+		if (!StringUtils.hasText(payload)) {
+			return Mono.empty();
+		}
+
+		AuthzCacheEntry entry;
+		try {
+			entry = objectMapper.readValue(payload, AuthzCacheEntry.class);
+		} catch (Exception ex) {
+			log.warn("failed to parse authz cache entry: memberId={}", memberId, ex);
+			return redisTemplate.delete(cacheKey(memberId)).then(Mono.empty());
+		}
+
+		Set<String> roles = normalizeRoles(entry.roles());
+		if (roles.isEmpty()) {
+			return Mono.empty();
+		}
+
+		Instant now = Instant.now();
+		Instant freshUntil = Instant.ofEpochMilli(entry.freshUntilEpochMs());
 		Instant staleUntil = freshUntil.plus(properties.getStaleWindow());
-		return new CacheEntry(Set.copyOf(roles), freshUntil, staleUntil);
+
+		if (now.isBefore(freshUntil)) {
+			return Mono.just(roles);
+		}
+
+		if (allowStale && now.isBefore(staleUntil)) {
+			refreshAsync(memberId);
+			return Mono.just(roles);
+		}
+
+		return Mono.empty();
 	}
 
 	private Set<String> normalizeRoles(List<String> roles) {
@@ -128,14 +169,18 @@ public class MemberAuthzService {
 		return true;
 	}
 
-	private record CacheEntry(Set<String> roles, Instant freshUntil, Instant staleUntil) {
+	private String cacheKey(Long memberId) {
+		return "authz:user:" + memberId;
 	}
 
-	public void evictMember(Long memberId) {
+	private record AuthzCacheEntry(List<String> roles, long freshUntilEpochMs) {
+	}
+
+	public Mono<Void> evictMember(Long memberId) {
 		if (memberId == null) {
-			return;
+			return Mono.empty();
 		}
-		cache.remove(memberId);
 		refreshInProgress.remove(memberId);
+		return redisTemplate.delete(cacheKey(memberId)).then();
 	}
 }

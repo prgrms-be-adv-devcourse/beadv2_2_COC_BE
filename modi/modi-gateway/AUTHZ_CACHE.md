@@ -26,6 +26,7 @@
 - stale window: 3분
 - stale 허용: 기본적으로 `GET`만 허용
 - fresh-only 경로: 특정 민감 경로는 stale 허용하지 않음
+  - 캐시는 Redis에 저장되며, TTL은 `cache-ttl + stale-window`로 설정된다.
   - 예: `/seller-service/api/sellers/self`, `/seller-service/api/settlements/sellers/self/**` 등
 
 ## 장애/실패 정책
@@ -33,7 +34,7 @@
 - 캐시가 없고 조회 실패 시: **권한 필요한 요청은 거부 (fail-closed)**
 
 ## Kafka 기반 무효화
-- member-service에서 역할 변경 시 `member-role-changed` 이벤트 발행
+- member-service는 역할 변경 시 Outbox에 이벤트를 저장하고, Publisher가 `member-role-changed` 토픽으로 발행
 - 게이트웨이는 해당 이벤트를 소비하여 사용자 캐시를 즉시 제거
 - 다음 요청 시 fresh 권한을 다시 조회함
 

@@ -26,7 +26,7 @@ public class MemberRoleChangedListener {
 			return;
 		}
 
-		memberAuthzService.evictMember(event.memberId());
+		memberAuthzService.evictMember(event.memberId()).subscribe();
 		log.info("authz cache evicted for memberId={}, role={}", event.memberId(), event.role());
 	}
 }
