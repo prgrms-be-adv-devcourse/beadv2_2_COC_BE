@@ -6,8 +6,10 @@ import com.coc.modi.member.auth.infrastructure.PasswordResetCodeStore;
 import com.coc.modi.member.auth.infrastructure.mail.EmailSender;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.domain.MemberStatus;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
+import com.coc.modi.member.member.exception.MemberWithdrawnException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -57,6 +59,15 @@ public class PasswordResetService {
 		
 		Member member = memberRepository.findByEmail(command.email())
 				.orElseThrow(() -> new MemberNotFoundException(command.email()));
+		
+		// 탈퇴한 회원인지 확인
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			
+			// 인증코드 삭제
+			passwordResetCodeStore.deleteCode(command.email());
+			
+			throw new MemberWithdrawnException(member.getEmail());
+		}
 		
 		member.changePassword(passwordEncoder.encode(command.newPassword()));
 		

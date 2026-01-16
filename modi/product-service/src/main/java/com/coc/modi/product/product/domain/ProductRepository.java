@@ -10,6 +10,8 @@ public interface ProductRepository {
 	
 	Optional<Product> findByIdAndStatusNot(Long id, ProductStatus status);
 	
+	Optional<Product> findById(Long id);
+	
 	Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable);
 	
 	Product saveAndFlush(Product product);
@@ -17,4 +19,6 @@ public interface ProductRepository {
 	void flush();
 	
 	List<Product> findByIdIn(List<Long> productIds);
+
+	List<Product> findByStatusNot(ProductStatus status);
 }

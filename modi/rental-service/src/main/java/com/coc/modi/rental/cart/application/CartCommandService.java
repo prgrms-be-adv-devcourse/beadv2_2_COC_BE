@@ -8,10 +8,9 @@ import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
 import com.coc.modi.common.ErrorCode;
 import com.coc.modi.rental.rental.exception.RentalException;
-import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
+import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,7 @@ public class CartCommandService {
     private static final String ACTIVE_STATUS = "ACTIVE";
 
     private final CartRepository cartRepository;
-    private final ProductFeignClient productFeignClient;
+    private final ProductClientAdapter productClientAdapter;
 
     @Transactional
     public void addItem(AddCartItemCommand command) {
@@ -86,10 +85,6 @@ public class CartCommandService {
 
     private ProductResponseDto fetchProduct(Long productId) {
 
-        try {
-            return productFeignClient.getProducts(productId);
-        } catch (FeignException ex) {
-            throw new RentalException(ErrorCode.PRODUCT_INTERNAL_ERROR, "상품 서비스 호출에 실패했습니다.");
-        }
+        return productClientAdapter.getProduct(productId);
     }
 }

@@ -13,7 +13,14 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "pg_deposit", schema = "public")
+@Table(
+        name = "pg_deposit",
+        schema = "account",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key"),
+                @UniqueConstraint(name = "uk_pg_deposit_pg_tid", columnNames = "pg_tid")
+        }
+)
 public class PgDeposit extends BaseEntity {
 
     @Id

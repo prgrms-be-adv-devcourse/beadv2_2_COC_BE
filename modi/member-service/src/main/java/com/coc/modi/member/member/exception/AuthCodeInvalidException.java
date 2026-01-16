@@ -4,11 +4,6 @@ import com.coc.modi.common.ErrorCode;
 
 public class AuthCodeInvalidException extends MemberException {
 	
-	public AuthCodeInvalidException() {
-		
-		super(ErrorCode.AUTH_CODE_INVALID);
-	}
-	
 	public AuthCodeInvalidException(String message) {
 		
 		super(ErrorCode.AUTH_CODE_INVALID, message);

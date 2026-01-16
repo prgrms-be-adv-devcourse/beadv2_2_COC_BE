@@ -26,6 +26,12 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 	
 	@Override
+	public Optional<Product> findById(Long id) {
+		
+		return productJpaRepository.findById(id);
+	}
+	
+	@Override
 	public Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable) {
 		
 		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, status, pageable);
@@ -47,5 +53,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	public List<Product> findByIdIn(List<Long> productIds) {
 		
 		return productJpaRepository.findByIdIn(productIds);
+	}
+
+	@Override
+	public List<Product> findByStatusNot(ProductStatus status) {
+		
+		return productJpaRepository.findByStatusNot(status);
 	}
 }

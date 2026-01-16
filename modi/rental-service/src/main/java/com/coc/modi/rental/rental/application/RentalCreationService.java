@@ -12,14 +12,18 @@ import com.coc.modi.rental.rental.domain.RentalItem;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.exception.RentalException;
-import com.coc.modi.rental.rental.infrastructure.client.ProductFeignClient;
+import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
+import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,9 +39,10 @@ public class RentalCreationService {
 	
 	private final RentalRepository rentalRepository;
 	private final CartRepository cartRepository;
-	private final ProductFeignClient productFeignClient;
+	private final ProductClientAdapter productClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public void createRentalFromCart(CreateRentalFromCartCommand command) {
@@ -98,13 +103,19 @@ public class RentalCreationService {
 		}
 		
 		rental.updateTotalAmount(total);
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT, "해당 기간에 이미 예약된 상품이 포함되어 있습니다.", ex);
+		}
+		removeCartItemsAfterCommit(command.memberId(), command.cartItemIds());
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),
 						"status", rental.getStatus().name(),
 						"totalAmount", rental.getTotalAmount(),
 						"itemCount", rental.getItems() == null ? 0 : rental.getItems().size()));
+		enqueueRentalRequestedNotifications(rental);
 	}
 	
 	@Transactional
@@ -133,22 +144,25 @@ public class RentalCreationService {
 		
 		rental.addItem(rentalItem);
 		rental.updateTotalAmount(rentalItem.calculateRentalAmount());
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT,
+					"해당 기간에 이미 예약된 상품입니다. productId=" + command.productId()
+							+ ", startDate=" + command.startDate() + ", endDate=" + command.endDate(), ex);
+		}
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),
 						"status", rental.getStatus().name(),
 						"totalAmount", rental.getTotalAmount(),
 						"itemCount", rental.getItems() == null ? 0 : rental.getItems().size()));
+		enqueueRentalRequestedNotifications(rental);
 	}
 	
 	private List<ProductResponseDto> fetchProducts(List<Long> productIds) {
 		
-		try {
-			return productFeignClient.getProducts(productIds);
-		} catch (FeignException ex) {
-			throw new RentalException(ErrorCode.PRODUCT_INTERNAL_ERROR, "상품 서비스 호출에 실패했습니다.");
-		}
+		return productClientAdapter.getProducts(productIds);
 	}
 	
 	private void validateRentalPeriod(LocalDate startDate, LocalDate endDate, String ref) {
@@ -169,5 +183,48 @@ public class RentalCreationService {
 					"해당 기간에 이미 예약된 상품입니다. productId=" + productId + ", startDate=" + startDate + ", endDate="
 							+ endDate);
 		}
+	}
+	
+	private void enqueueRentalRequestedNotifications(Rental rental) {
+		
+		if (rental == null || rental.getItems() == null || rental.getItems().isEmpty()) {
+			return;
+		}
+		
+		for (RentalItem item : rental.getItems()) {
+			if (item == null) {
+				continue;
+			}
+			if (item.getId() == null) {
+				throw new IllegalStateException("Rental item id is required to enqueue notification.");
+			}
+			
+			NotificationEvent event = NotificationEvent.of(
+					item.getSellerId(),
+					"RENTAL_REQUESTED",
+					"새 대여 요청이 도착했습니다!",
+					"대여 요청을 확인해주세요.",
+					"RENTAL_ITEM",
+					String.valueOf(item.getId())
+			);
+			
+			rentalOutboxService.enqueueNotificationEvent(item.getId(), event);
+		}
+	}
+
+	private void removeCartItemsAfterCommit(Long memberId, List<Long> cartItemIds) {
+		if (memberId == null || cartItemIds == null || cartItemIds.isEmpty()) {
+			return;
+		}
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			cartRepository.removeItems(memberId, cartItemIds);
+			return;
+		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				cartRepository.removeItems(memberId, cartItemIds);
+			}
+		});
 	}
 }

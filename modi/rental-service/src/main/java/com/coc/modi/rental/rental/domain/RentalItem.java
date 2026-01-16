@@ -21,7 +21,7 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "rental_item", schema = "public")
+@Table(name = "rental_item", schema = "rental")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RentalItem extends BaseEntity {
 	
@@ -188,11 +188,9 @@ public class RentalItem extends BaseEntity {
 		
 		BigDecimal refundAmount = calculateRentalAmount();
 		
-		if (this.status == RentalItemStatus.ACCEPTED) {
-			
+		if (this.status == RentalItemStatus.PAID) {
 			markCanceled();
 		} else {
-			
 			markRefundedAfterReturn();
 		}
 		
@@ -289,7 +287,7 @@ public class RentalItem extends BaseEntity {
 			throw new RentalStatusInvalidException("결제된 상품만 대여 시작 할 수 있습니다. rentalItemId: " + this.id);
 		}
 		
-		if (now.isAfter(this.startDate)) {
+		if (now.isBefore(this.startDate)) {
 			
 			throw new RentalStatusInvalidException("시작일 이전에는 대여 시작 할 수 없습니다. rentalItemId: " + this.id);
 		}

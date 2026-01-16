@@ -2,7 +2,7 @@ spring:
   application:
     name: modi-gateway
   config:
-    import: "optional:configserver:http://modi-config:8888"
+    import: configserver:http://modi-config:8888
 
   cloud:
     config:
@@ -13,4 +13,4 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URI}
+      defaultZone: ${EUREKA_URI:http://modi-discovery:8761/eureka/}

@@ -1,8 +1,6 @@
 package com.coc.modi.product.search.application;
 
 import com.coc.modi.product.product.domain.Product;
-import com.coc.modi.product.product.domain.ProductImage;
-import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.search.domain.ProductDocument;
 
 import lombok.RequiredArgsConstructor;
@@ -14,27 +12,20 @@ import org.springframework.stereotype.Service;
 public class ProductIndexService {
 	
 	private final ProductSearchPort productSearchPort;
-	private final ProductImageRepository productImageRepository;
+	private final ProductDocumentMapper productDocumentMapper;
 	
 	public void index(Product product) {
-		
-		String thumbnailUrl = resolveThumbnailUrl(product);
-		ProductDocument doc = ProductDocument.from(product, thumbnailUrl);
-		
+		ProductDocument doc = productDocumentMapper.toDocument(product);
+		if (doc == null) {
+			return;
+		}
 		productSearchPort.index(doc);
 	}
-	
-	public String resolveThumbnailUrl(Product product) {
-		
-		Long thumbnailId = product.getThumbnailImageId();
-		
-		if (thumbnailId == null) {
-			
-			return null;
+
+	public void deleteById(Long productId) {
+		if (productId == null) {
+			return;
 		}
-		
-		return productImageRepository.findById(thumbnailId)
-				.map(ProductImage::getUrl)
-				.orElse(null);
+		productSearchPort.deleteById(productId);
 	}
 }

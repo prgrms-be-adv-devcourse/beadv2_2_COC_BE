@@ -1,7 +1,5 @@
 package com.coc.modi.member.member.domain;
 
-import com.coc.modi.member.member.domain.MemberRole;
-import com.coc.modi.member.member.domain.MemberStatus;
 import com.coc.modi.common.BaseEntity;
 
 import jakarta.persistence.*;
@@ -11,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "member", schema = "public")
+@Table(name = "member", schema = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 	
@@ -86,5 +84,10 @@ public class Member extends BaseEntity {
 	public void withdraw() {
 		
 		this.status = MemberStatus.WITHDRAWN;
+	}
+	
+	public void updateRole(MemberRole memberRole) {
+		
+		this.role = memberRole;
 	}
 }

@@ -1,15 +1,9 @@
 package com.coc.modi.seller.settlement.presentation;
 
-import com.coc.modi.common.ApiResponse;
-import com.coc.modi.common.auth.CustomMember;
-import com.coc.modi.seller.settlement.application.SellerSettlementService;
-import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
-import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
-import com.coc.modi.seller.seller.application.SellerService;
-import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
-
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,14 +16,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
+import com.coc.modi.common.ApiResponse;
+import com.coc.modi.common.auth.CustomMember;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.seller.application.SellerService;
+import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
+import com.coc.modi.seller.settlement.application.SellerSettlementService;
+import com.coc.modi.seller.settlement.application.dto.SellerSettlementLineResponse;
+import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping
+@RequestMapping("/api/settlements/sellers/self")
 public class SellerSettlementController {
 	
 	private final SellerSettlementService sellerSettlementService;
@@ -37,7 +37,7 @@ public class SellerSettlementController {
 	
 	private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	
-	@GetMapping("/api/settlements/sellers/self")
+	@GetMapping
 	public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(@AuthenticationPrincipal CustomMember member,
 																						@RequestParam(value = "periodYm", required = false) String periodYm,
 																						Pageable pageable) {
@@ -48,7 +48,7 @@ public class SellerSettlementController {
 		return ResponseEntity.ok(ApiResponse.ok(settlements));
 	}
 	
-	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}")
+	@GetMapping("/{sellerSettlementId}")
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> getMySettlement(@AuthenticationPrincipal CustomMember member,
 																				 @PathVariable Long sellerSettlementId) {
 		
@@ -57,7 +57,7 @@ public class SellerSettlementController {
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
-	@GetMapping("/api/settlements/sellers/self/{sellerSettlementId}/lines")
+	@GetMapping("/{sellerSettlementId}/lines")
 	public ResponseEntity<ApiResponse<List<SellerSettlementLineResponse>>> getMySettlementLines(@AuthenticationPrincipal CustomMember member,
 																								@PathVariable Long sellerSettlementId) {
 		
@@ -66,7 +66,7 @@ public class SellerSettlementController {
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
 	
-	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/pay")
+	@PostMapping("/{sellerSettlementId}/pay")
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(@AuthenticationPrincipal CustomMember member,
 																				 @PathVariable Long sellerSettlementId,
 																				 @RequestParam(value = "paidAt", required = false) String paidAt) {
@@ -78,7 +78,7 @@ public class SellerSettlementController {
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
 	}
 	
-	@PostMapping("/api/settlements/sellers/self/{sellerSettlementId}/cancel")
+	@PostMapping("/{sellerSettlementId}/cancel")
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(@AuthenticationPrincipal CustomMember member,
 																					@PathVariable Long sellerSettlementId) {
 		

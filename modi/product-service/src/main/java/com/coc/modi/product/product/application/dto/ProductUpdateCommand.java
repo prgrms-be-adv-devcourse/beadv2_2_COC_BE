@@ -2,6 +2,7 @@ package com.coc.modi.product.product.application.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import com.coc.modi.product.product.domain.ProductCategory;
 import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
@@ -13,6 +14,7 @@ public record ProductUpdateCommand(
 		String description,
 		BigDecimal pricePerDay,
 		ProductCategory category,
+		Map<String, String> specs,
 		List<ProductDetailResponse.ImageInfo> images
 ) {
 	
@@ -25,6 +27,7 @@ public record ProductUpdateCommand(
 				productUpdateRequest.description(),
 				productUpdateRequest.pricePerDay(),
 				productUpdateRequest.category(),
+				productUpdateRequest.specs(),
 				productUpdateRequest.images()
 		);
 	}

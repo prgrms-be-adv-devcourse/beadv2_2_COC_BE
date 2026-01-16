@@ -30,19 +30,18 @@ public class JwtTokenProvider {
         this.refreshTokenValidityInMs = refreshTokenValidityInMs;
     }
 	
-	public String generateAccessToken(Long memberId, String role, String name, String email){
+	public String generateAccessToken(Long memberId, String name, String email){
 
-        return generateToken(memberId, role, name, email, accessTokenValidityInMs);
+        return generateToken(memberId, name, email, accessTokenValidityInMs);
     }
 
-    public String generateRefreshToken(Long memberId, String role, String name, String email){
+    public String generateRefreshToken(Long memberId, String name, String email){
 
-        return generateToken(memberId, role, name, email, refreshTokenValidityInMs);
+        return generateToken(memberId, name, email, refreshTokenValidityInMs);
     }
 
 
     public String generateToken(Long memberId,
-                                String role,
 								String name,
 								String email,
                                 long validityInMs){
@@ -52,7 +51,6 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(memberId.toString())
-                .claim("role", role)
 				.claim("name", name)
 				.claim("email", email)
                 .setIssuedAt(now)
@@ -76,11 +74,6 @@ public class JwtTokenProvider {
     public Long getMemberId(String token){
 
         return Long.parseLong(getClaims(token).getSubject());
-    }
-
-    public String getRole(String token){
-
-        return getClaims(token).get("role").toString();
     }
 
     private Claims getClaims(String token) {

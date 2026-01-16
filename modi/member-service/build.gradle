@@ -1,6 +1,7 @@
 dependencies {
     // 공통 모듈 공유
     implementation project(':common')
+    implementation project(':common-kafka')
 
     // 메일 발송 및 Redis 캐시/세션
     implementation 'org.springframework.boot:spring-boot-starter-mail'

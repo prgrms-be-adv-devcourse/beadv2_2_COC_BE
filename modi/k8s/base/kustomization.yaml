@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: modi
+resources:
+  - namespace.yaml
+  - kafka.yaml
+  - pgvector.yaml
+  - redis.yaml
+  - elasticsearch.yaml
+  - modi-discovery.yaml
+  - modi-config.yaml
+  - modi-gateway.yaml
+  - account-service.yaml
+  - product-service.yaml
+  - rental-service.yaml
+  - seller-service.yaml
+  - member-service.yaml
+  - notification-service.yaml
+  - review-service.yaml
+  - delivery-service.yaml

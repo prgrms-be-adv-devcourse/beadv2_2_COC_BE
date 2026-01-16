@@ -4,6 +4,7 @@ import com.coc.modi.common.ErrorCode;
 import com.coc.modi.member.auth.application.dto.ConfirmEmailVerificationCommand;
 import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
+import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
 import com.coc.modi.member.auth.infrastructure.mail.EmailSender;
 import com.coc.modi.member.auth.application.dto.EmailVerificationSendResponse;
 import com.coc.modi.member.auth.application.dto.EmailVerificationConfirmResponse;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -27,8 +29,10 @@ public class EmailVerificationService {
 	private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{6}$");
 	private static final int CODE_BOUND = 1_000_000;
 	private static final long EXPIRATION_MINUTES = 5L;
+	private static final long TOKEN_EXPIRATION_MINUTES = 10L;
 	
 	private final EmailVerificationCodeStore emailVerificationCodeStore;
+	private final EmailVerificationTokenStore emailVerificationTokenStore;
 	private final SecureRandom secureRandom = new SecureRandom();
 	private final EmailSender emailSender;
 	
@@ -67,14 +71,26 @@ public class EmailVerificationService {
 		}
 		
 		emailVerificationCodeStore.deleteCode(command.email());
+
+		String verificationToken = generateVerificationToken();
+		emailVerificationTokenStore.saveToken(
+				command.email(),
+				verificationToken,
+				Duration.ofMinutes(TOKEN_EXPIRATION_MINUTES)
+		);
 		
-		return EmailVerificationConfirmResponse.success();
+		return EmailVerificationConfirmResponse.success(verificationToken);
 	}
 	
 	// 이메일 인증 코드 생성
 	private String generateCode() {
 		
 		return String.format("%06d", secureRandom.nextInt(CODE_BOUND));
+	}
+
+	private String generateVerificationToken() {
+		
+		return UUID.randomUUID().toString().replace("-", "");
 	}
 	
 	// 이메일 유효성 검사
