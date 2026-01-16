@@ -1,6 +1,7 @@
 package com.coc.modi.delivery.delivery.infrastructure;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,10 +10,8 @@ import org.springframework.data.repository.query.Param;
 import com.coc.modi.delivery.delivery.domain.Delivery;
 
 public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
-	
-	boolean existsByRentalItemIdAndCarrierCodeAndTrackingNumber(Long rentalItemId,
-																String carrierCode,
-																String trackingNumber);
+
+	Optional<Delivery> findByRentalItemId(Long rentalItemId);
 	
 	@Query(value = """
 			SELECT *

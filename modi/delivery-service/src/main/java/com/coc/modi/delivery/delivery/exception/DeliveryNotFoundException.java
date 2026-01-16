@@ -8,4 +8,9 @@ public class DeliveryNotFoundException extends DeliveryException {
 		
 		super(ErrorCode.DELIVERY_NOT_FOUND, "배송 정보를 찾을 수 없습니다. deliveryId: " + deliveryId);
 	}
+
+	public DeliveryNotFoundException(String key, Long value) {
+		
+		super(ErrorCode.DELIVERY_NOT_FOUND, "배송 정보를 찾을 수 없습니다. " + key + ": " + value);
+	}
 }
