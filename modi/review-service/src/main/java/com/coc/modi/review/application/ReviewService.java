@@ -38,7 +38,7 @@ public class ReviewService {
 	private final NotificationEventPublisher notificationEventPublisher;
 
 	
-	// ?먮ℓ??由щ럭 ?앹꽦
+	// 판매자 리뷰 작성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
 
@@ -62,8 +62,8 @@ public class ReviewService {
 				NotificationEvent.of(
 						sellerMemberId,
 						"REVIEW_CREATED",
-						"??由щ럭媛 ?깅줉 ?섏뿀?듬땲??",
-						"?곹뭹???덈줈??由щ럭媛 ?깅줉?섏뿀?듬땲??",
+						"리뷰가 등록되었습니다",
+						"상품에 새로운 리뷰가 등록되었습니다",
 						"REVIEW",
 						String.valueOf(saved.getId())
 				)
@@ -72,7 +72,7 @@ public class ReviewService {
 		return ReviewResponse.from(saved);
 	}
 	
-	// ?묒꽦?먭? 蹂몄씤 由щ럭瑜??섏젙
+	// 작성자가 본인 리뷰를 수정
 	@Transactional
 	public ReviewResponse updateReview(UpdateReviewCommand command) {
 		
@@ -86,7 +86,7 @@ public class ReviewService {
 		return ReviewResponse.from(review);
 	}
 	
-	// ?묒꽦?먭? 蹂몄씤 由щ럭瑜??뚰봽????젣
+	// 작성자가 본인 리뷰를 소프트 삭제
 	@Transactional
 	public void deleteReview(Long reviewId, Long memberId) {
 		
@@ -99,7 +99,7 @@ public class ReviewService {
 		updateTotalReviewCount(review.getSellerId(), -1L);
 	}
 	
-	// ?뱀젙 ?먮ℓ??由щ럭 紐⑸줉 議고쉶 (??젣??由щ럭 ?쒖쇅)
+	// 특정 판매자 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
 	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Pageable pageable) {
 		
@@ -110,7 +110,7 @@ public class ReviewService {
 				.toList();
 	}
 	
-	// ?닿? ?묒꽦??由щ럭 紐⑸줉 議고쉶 (??젣??由щ럭 ?쒖쇅)
+	// 내가 작성한 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
 	public List<ReviewListResponse> getReviewsByMember(Long memberId, Pageable pageable) {
 		
@@ -133,23 +133,23 @@ public class ReviewService {
 		RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
 
 		if (rentalItem == null) {
-			throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "????꾩씠???뺣낫瑜?李얠쓣 ???놁뒿?덈떎.");
+			throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 상품 정보를 찾을 수 없습니다.");
 		}
 
 		if (!command.memberId().equals(rentalItem.memberId())) {
-			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "??ъ옄留?由щ럭瑜??묒꽦?????덉뒿?덈떎.");
+			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
 		}
 
 		if (!command.sellerId().equals(rentalItem.sellerId())) {
-			throw new ReviewException(ErrorCode.INVALID_INPUT, "?먮ℓ???뺣낫媛 ?쇱튂?섏? ?딆뒿?덈떎.");
+			throw new ReviewException(ErrorCode.INVALID_INPUT, "판매자 정보가 일치하지 않습니다.");
 		}
 
 		if (!"RETURNED".equals(rentalItem.status())) {
-			throw new ReviewException(ErrorCode.CONFLICT, "諛섎궔 ?꾨즺???곹뭹留?由щ럭瑜??묒꽦?????덉뒿?덈떎.");
+			throw new ReviewException(ErrorCode.CONFLICT, "반납 완료된 상품만 리뷰를 작성할 수 있습니다.");
 		}
 
 		if (reviewRepository.existsByRentalItemIdAndStatus(command.rentalItemid(), ReviewStatus.ACTIVE)) {
-			throw new ReviewException(ErrorCode.CONFLICT, "?대? 由щ럭媛 ?묒꽦??????곹뭹?낅땲??");
+			throw new ReviewException(ErrorCode.CONFLICT, "이미 리뷰가 작성된 상품입니다.");
 		}
 	}
 	private void updateTotalReviewCount(Long sellerId, long delta) {
