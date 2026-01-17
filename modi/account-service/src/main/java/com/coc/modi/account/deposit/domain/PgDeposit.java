@@ -32,11 +32,8 @@ public class PgDeposit extends BaseEntity {
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "fee_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal feeAmount;
-
-    @Column(name = "total_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "remaining_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal remainingAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -64,8 +61,6 @@ public class PgDeposit extends BaseEntity {
     public static PgDeposit createRequest(
             Long memberId,
             BigDecimal amount,
-            BigDecimal feeAmount,
-            BigDecimal totalAmount,
             String pgProvider,
             String orderId
     ) {
@@ -74,8 +69,7 @@ public class PgDeposit extends BaseEntity {
 
         pgDeposit.memberId = memberId;
         pgDeposit.amount = amount;
-        pgDeposit.feeAmount = feeAmount;
-        pgDeposit.totalAmount = totalAmount;
+        pgDeposit.remainingAmount = amount;
         pgDeposit.pgProvider = pgProvider;
         pgDeposit.pgTid = orderId;
         pgDeposit.status = PgDepositStatus.REQUESTED;
@@ -125,6 +119,25 @@ public class PgDeposit extends BaseEntity {
 
         this.status = PgDepositStatus.CANCELED;
         this.failedReason = reason;
+        this.remainingAmount = BigDecimal.ZERO;
     }
 
+    public boolean isUnused() {
+
+        if (amount == null || remainingAmount == null) {
+            return true;
+        }
+        return remainingAmount.compareTo(amount) == 0;
+    }
+
+    public void allocate(BigDecimal amount) {
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new AccountException(ErrorCode.INVALID_INPUT, "할당 금액은 0보다 커야 합니다.");
+        }
+        if (remainingAmount == null || remainingAmount.compareTo(amount) < 0) {
+            throw new AccountException(ErrorCode.CONFLICT, "충전 잔액이 부족합니다.");
+        }
+        this.remainingAmount = this.remainingAmount.subtract(amount);
+    }
 }
