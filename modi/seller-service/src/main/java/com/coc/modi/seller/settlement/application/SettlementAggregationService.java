@@ -21,7 +21,7 @@ import java.math.RoundingMode;
 @Transactional
 public class SettlementAggregationService {
 	
-	private static final BigDecimal FEE_RATE = new BigDecimal("0.10");
+	private static final BigDecimal FEE_RATE = BigDecimal.ZERO;
 	
 	private final SellerSettlementRepository sellerSettlementRepository;
 	private final SettlementBatchRepository settlementBatchRepository;

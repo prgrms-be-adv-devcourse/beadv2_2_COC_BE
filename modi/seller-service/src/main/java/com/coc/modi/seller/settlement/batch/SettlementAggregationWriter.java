@@ -17,7 +17,7 @@ import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.TO
 
 public class SettlementAggregationWriter implements ItemWriter<SettlementAggregationItem> {
 	
-	private static final BigDecimal FEE_RATE = new BigDecimal("0.10");
+	private static final BigDecimal FEE_RATE = BigDecimal.ZERO;
 	private final SettlementAggregationService settlementAggregationService;
 	private final Long batchId;
 	
