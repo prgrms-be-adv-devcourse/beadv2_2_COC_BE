@@ -18,6 +18,10 @@ import java.time.LocalDateTime;
         schema = "account",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_pg_deposit_payment_key", columnNames = "payment_key")
+        },
+        indexes = {
+                @Index(name = "idx_pg_deposit_member_status_remaining_approved",
+                        columnList = "member_id,status,remaining_amount,approved_at")
         }
 )
 public class PgDeposit extends BaseEntity {

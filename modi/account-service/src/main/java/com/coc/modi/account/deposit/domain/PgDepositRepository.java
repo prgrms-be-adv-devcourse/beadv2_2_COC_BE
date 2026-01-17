@@ -16,4 +16,6 @@ public interface PgDepositRepository {
     List<PgDeposit> findByMemberId(Long memberId);
 
     List<PgDeposit> findByMemberIdAndStatus(Long memberId, PgDepositStatus status);
+
+    List<PgDeposit> findAllocatableByMemberId(Long memberId);
 }

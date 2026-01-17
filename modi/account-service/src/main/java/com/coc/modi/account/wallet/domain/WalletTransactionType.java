@@ -6,5 +6,7 @@ public enum WalletTransactionType {
     RENTAL_REFUND,
     DEPOSIT_CANCEL,
     SETTLEMENT_PAYOUT,
+    WITHDRAWAL_REQUEST,
+    WITHDRAWAL_REFUND,
     ADJUST
 }
