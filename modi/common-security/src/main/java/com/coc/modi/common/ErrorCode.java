@@ -62,6 +62,7 @@ public enum ErrorCode {
 	
 	SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-404", "판매자를 찾을 수 없습니다."),
 	SELLER_DUPLICATE(HttpStatus.CONFLICT, "SELLER-409", "이미 등록된 판매자입니다."),
+	SELLER_STATUS_CONFLICT(HttpStatus.CONFLICT, "SELLER-STATUS-409", "판매자 상태가 요청과 충돌합니다."),
 	SETTLEMENT_BATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-404", "정산 배치를 찾을 수 없습니다."),
 	SETTLEMENT_BATCH_DUPLICATE(HttpStatus.CONFLICT, "SETTLEMENT-BATCH-409", "이미 생성된 정산 배치입니다."),
 	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),

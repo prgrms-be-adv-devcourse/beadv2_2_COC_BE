@@ -2,6 +2,7 @@ package com.coc.modi.account.wallet.infrastructure;
 
 import com.coc.modi.account.wallet.domain.WalletTransaction;
 import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
+import com.coc.modi.account.wallet.domain.WalletTransactionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -24,4 +25,10 @@ public class WalletTransactionRepositoryAdapter implements WalletTransactionRepo
 
         return jpaRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
     }
+
+	@Override
+	public boolean existsByRelatedSettlementIdAndTxType(Long relatedSettlementId, WalletTransactionType txType) {
+
+		return jpaRepository.existsByRelatedSettlementIdAndTxType(relatedSettlementId, txType);
+	}
 }

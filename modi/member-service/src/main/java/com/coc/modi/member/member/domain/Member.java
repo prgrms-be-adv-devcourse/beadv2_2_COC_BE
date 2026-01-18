@@ -90,4 +90,10 @@ public class Member extends BaseEntity {
 		
 		this.role = memberRole;
 	}
+
+	public void connectProvider(String provider, String providerId) {
+
+		this.provider = provider;
+		this.providerId = providerId;
+	}
 }

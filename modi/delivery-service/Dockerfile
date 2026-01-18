@@ -20,7 +20,7 @@
 #COPY . .
 #
 ## 4) 메모리/병렬 제한으로 OOM 방지
-#ARG MODULE=member-service
+#ARG MODULE=delivery-service
 #ENV GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx512m -XX:MaxMetaspaceSize=256m -Dfile.encoding=UTF-8"
 #
 #RUN --mount=type=cache,target=/root/.gradle \
@@ -29,10 +29,11 @@
 ## ===== run stage =====
 #FROM eclipse-temurin:17-jre
 #WORKDIR /app
-#ARG MODULE=member-service
+#ARG MODULE=delivery-service
 #COPY --from=builder /app/${MODULE}/build/libs/*.jar app.jar
 #EXPOSE 8080
 #ENTRYPOINT ["java","-jar","/app/app.jar"]
+
 FROM amazoncorretto:17
 
 WORKDIR /app
