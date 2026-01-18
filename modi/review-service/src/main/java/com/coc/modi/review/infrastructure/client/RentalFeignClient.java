@@ -13,6 +13,6 @@ import com.coc.modi.review.infrastructure.client.dto.RentalItemInfo;
 )
 public interface RentalFeignClient {
 	
-	@GetMapping("/items/{rentalItemId}")
+	@GetMapping("/items/{rentalItemId}/info")
 	RentalItemInfo getRentalItem(@PathVariable("rentalItemId") Long rentalItemId);
 }

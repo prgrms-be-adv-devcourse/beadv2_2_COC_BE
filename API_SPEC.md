@@ -355,7 +355,7 @@
 
 ### 내부
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **GET /internal/rentals/items/{rentalItemId}** (rental-service)
+- **GET /internal/rentals/items/{rentalItemId}/info** (rental-service)
   - Res: `RentalItemReviewInfo { rentalItemId, memberId, sellerId, status }`
 
 ---

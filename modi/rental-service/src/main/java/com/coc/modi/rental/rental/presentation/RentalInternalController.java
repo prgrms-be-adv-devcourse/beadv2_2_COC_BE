@@ -37,7 +37,7 @@ public class RentalInternalController {
 		return queryService.getRentalItemList(condition, pageable);
 	}
 
-	@GetMapping("/items/{rentalItemId}")
+	@GetMapping("/items/{rentalItemId}/info")
 	public RentalItemInfo getRentalItem(@PathVariable Long rentalItemId) {
 		return queryService.getRentalItemInfo(rentalItemId);
 	}
