@@ -12,6 +12,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import com.coc.modi.kafka.event.RentalReturnedEvent;
+import com.coc.modi.kafka.event.ReviewSummaryResultEvent;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -33,6 +34,29 @@ public class KafkaConsumerConfig {
 			ConsumerFactory<String, RentalReturnedEvent> consumerFactory) {
 
 		ConcurrentKafkaListenerContainerFactory<String, RentalReturnedEvent> factory =
+				new ConcurrentKafkaListenerContainerFactory<>();
+		factory.setConsumerFactory(consumerFactory);
+
+		return factory;
+	}
+
+	@Bean
+	public ConsumerFactory<String, ReviewSummaryResultEvent> reviewSummaryResultConsumerFactory(KafkaProperties kafkaProperties) {
+		Map<String, Object> props = kafkaProperties.buildConsumerProperties();
+		props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, ReviewSummaryResultEvent.class);
+		props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.coc.modi.kafka.event");
+
+		return new DefaultKafkaConsumerFactory<>(
+				props,
+				new StringDeserializer(),
+				new JsonDeserializer<>(ReviewSummaryResultEvent.class), false);
+	}
+
+	@Bean
+	public ConcurrentKafkaListenerContainerFactory<String, ReviewSummaryResultEvent> reviewSummaryResultKafkaListenerContainerFactory(
+			ConsumerFactory<String, ReviewSummaryResultEvent> consumerFactory) {
+
+		ConcurrentKafkaListenerContainerFactory<String, ReviewSummaryResultEvent> factory =
 				new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory);
 

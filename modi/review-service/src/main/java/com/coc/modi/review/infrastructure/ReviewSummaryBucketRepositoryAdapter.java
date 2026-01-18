@@ -30,4 +30,9 @@ public class ReviewSummaryBucketRepositoryAdapter implements ReviewSummaryBucket
 		return reviewSummaryBucketJpaRepository.findBySellerIdOrderByLastReviewIdDesc(sellerId, pageable)
 				.getContent();
 	}
+
+	@Override
+	public Optional<ReviewSummaryBucket> findBySellerIdAndLastReviewId(Long sellerId, Long lastReviewId) {
+		return reviewSummaryBucketJpaRepository.findBySellerIdAndLastReviewId(sellerId, lastReviewId);
+	}
 }

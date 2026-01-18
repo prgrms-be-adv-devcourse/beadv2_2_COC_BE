@@ -12,4 +12,6 @@ public interface ReviewSummaryBucketRepository {
 	Optional<ReviewSummaryBucket> findLatestBySellerId(Long sellerId);
 
 	List<ReviewSummaryBucket> findLatestBySellerId(Long sellerId, Pageable pageable);
+
+	Optional<ReviewSummaryBucket> findBySellerIdAndLastReviewId(Long sellerId, Long lastReviewId);
 }

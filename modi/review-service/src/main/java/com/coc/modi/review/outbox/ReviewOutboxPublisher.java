@@ -3,6 +3,7 @@ package com.coc.modi.review.outbox;
 import java.util.List;
 
 import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.ReviewSummaryRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,6 +22,7 @@ public class ReviewOutboxPublisher {
 	
 	private final ReviewOutboxEventRepository outboxEventRepository;
 	private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
+	private final KafkaTemplate<String, Object> kafkaTemplateObject;
 	private final ObjectMapper objectMapper;
 	
 	@Value("${outbox.publisher.batch-size:50}")
@@ -53,6 +55,13 @@ public class ReviewOutboxPublisher {
 			NotificationEvent payload = readPayload(event.getPayload(), NotificationEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.receiverId().toString(), payload)
+					.get();
+			return;
+		}
+		if (event.getEventType() == ReviewOutboxEventType.REVIEW_SUMMARY_REQUEST) {
+			ReviewSummaryRequestEvent payload = readPayload(event.getPayload(), ReviewSummaryRequestEvent.class);
+			kafkaTemplateObject
+					.send(event.getEventType().getTopic(), payload.sellerId().toString(), payload)
 					.get();
 			return;
 		}

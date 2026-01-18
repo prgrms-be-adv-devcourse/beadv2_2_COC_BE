@@ -12,4 +12,6 @@ public interface ReviewSummaryBucketJpaRepository extends JpaRepository<ReviewSu
 	Optional<ReviewSummaryBucket> findTopBySellerIdOrderByLastReviewIdDesc(Long sellerId);
 
 	Page<ReviewSummaryBucket> findBySellerIdOrderByLastReviewIdDesc(Long sellerId, Pageable pageable);
+
+	Optional<ReviewSummaryBucket> findBySellerIdAndLastReviewId(Long sellerId, Long lastReviewId);
 }

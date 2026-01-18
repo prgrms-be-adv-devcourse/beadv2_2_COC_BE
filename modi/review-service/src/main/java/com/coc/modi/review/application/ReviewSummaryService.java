@@ -8,11 +8,10 @@ import com.coc.modi.review.domain.ReviewSummaryBucketRepository;
 import com.coc.modi.review.domain.ReviewStatus;
 import com.coc.modi.review.domain.ReviewSummary;
 import com.coc.modi.review.domain.ReviewSummaryRepository;
-import com.coc.modi.ai.chat.application.ChatService;
-import com.coc.modi.ai.chat.domain.ChatResult;
+import com.coc.modi.kafka.event.ReviewSummaryRequestEvent;
+import com.coc.modi.kafka.event.ReviewSummaryResultEvent;
+import com.coc.modi.review.outbox.ReviewOutboxService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,11 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewSummaryService {
 
-	private static final Logger log = LoggerFactory.getLogger(ReviewSummaryService.class);
 	private final ReviewRepository reviewRepository;
 	private final ReviewSummaryRepository reviewSummaryRepository;
 	private final ReviewSummaryBucketRepository reviewSummaryBucketRepository;
-	private final ChatService chatService;
+	private final ReviewOutboxService reviewOutboxService;
 	private final ReviewSummaryPolicyProperties policyProperties;
 
 	@Transactional(readOnly = true)
@@ -71,7 +69,7 @@ public class ReviewSummaryService {
 		}
 
 		long totalCount = resolveTotalCount(summaryOptional, sellerId);
-		updateFinalSummary(sellerId, totalCount);
+		requestFinalSummary(sellerId, totalCount);
 	}
 
 	@Transactional
@@ -94,14 +92,7 @@ public class ReviewSummaryService {
 				return;
 			}
 
-			ReviewSummaryBucket bucket = buildBucketFromReviews(sellerId, seedReviews, minTotal);
-			reviewSummaryBucketRepository.save(bucket);
-
-			if (summaryOptional.isEmpty()
-					|| summaryOptional.get().getSummary() == null
-					|| summaryOptional.get().getSummary().isBlank()) {
-				updateFinalSummary(sellerId, totalCount);
-			}
+			requestBucketSummary(sellerId, seedReviews, minTotal);
 			return;
 		}
 
@@ -112,9 +103,11 @@ public class ReviewSummaryService {
 			if (newReviews.size() < minNew) {
 				break;
 			}
-			ReviewSummaryBucket bucket = buildBucketFromReviews(sellerId, newReviews, minNew);
-			reviewSummaryBucketRepository.save(bucket);
-			lastReviewId = bucket.getLastReviewId();
+			Long newLastReviewId = requestBucketSummary(sellerId, newReviews, minNew);
+			if (newLastReviewId == null) {
+				break;
+			}
+			lastReviewId = newLastReviewId;
 			created = true;
 		}
 
@@ -122,7 +115,67 @@ public class ReviewSummaryService {
 				&& (summaryOptional.isEmpty()
 				|| summaryOptional.get().getSummary() == null
 				|| summaryOptional.get().getSummary().isBlank())) {
-			updateFinalSummary(sellerId, totalCount);
+			requestFinalSummary(sellerId, totalCount);
+		}
+	}
+
+	@Transactional
+	public void handleSummaryResult(ReviewSummaryResultEvent event) {
+		if (event == null || event.summary() == null || event.summary().isBlank()) {
+			return;
+		}
+
+		if ("BUCKET".equals(event.targetType())) {
+			if (event.lastReviewId() == null) {
+				return;
+			}
+
+			if (reviewSummaryBucketRepository.findBySellerIdAndLastReviewId(event.sellerId(), event.lastReviewId()).isPresent()) {
+				return;
+			}
+
+			ReviewSummaryBucket bucket = ReviewSummaryBucket.create(
+					event.sellerId(),
+					event.reviewCount(),
+					event.lastReviewId(),
+					event.summary()
+			);
+			reviewSummaryBucketRepository.save(bucket);
+
+			Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(event.sellerId());
+			if (summaryOptional.isEmpty()
+					|| summaryOptional.get().getSummary() == null
+					|| summaryOptional.get().getSummary().isBlank()) {
+				long totalCount = resolveTotalCount(summaryOptional, event.sellerId());
+				requestFinalSummary(event.sellerId(), totalCount);
+			}
+			return;
+		}
+
+		if ("FINAL".equals(event.targetType())) {
+			if (event.lastBucketId() == null) {
+				return;
+			}
+
+			Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(event.sellerId());
+			if (summaryOptional.isPresent()
+					&& event.lastBucketId().equals(summaryOptional.get().getLastBucketId())
+					&& summaryOptional.get().getSummary() != null
+					&& !summaryOptional.get().getSummary().isBlank()) {
+				return;
+			}
+
+			long ratingSum = resolveRatingSum(summaryOptional, event.sellerId());
+			long totalCount = event.totalCount() > 0 ? event.totalCount()
+					: resolveTotalCount(summaryOptional, event.sellerId());
+
+			summaryOptional
+					.ifPresentOrElse(
+							existing -> existing.updateSummary(event.summary(), totalCount, totalCount, ratingSum, event.lastBucketId()),
+							() -> reviewSummaryRepository.save(
+									ReviewSummary.create(event.sellerId(), totalCount, totalCount, ratingSum, event.lastBucketId(), event.summary())
+							)
+					);
 		}
 	}
 
@@ -133,23 +186,24 @@ public class ReviewSummaryService {
 				.orElseGet(() -> reviewRepository.countBySellerIdAndStatus(sellerId, ReviewStatus.ACTIVE));
 	}
 
-	private void updateFinalSummary(Long sellerId, long totalCount) {
+	private void requestFinalSummary(Long sellerId, long totalCount) {
 
 		SummaryPayload payload = generateSummaryPayload(sellerId);
-		if (payload == null || payload.summary() == null || payload.summary().isBlank()) {
+		if (payload == null || payload.payload() == null || payload.payload().isBlank()) {
 			return;
 		}
 
-		Optional<ReviewSummary> summaryOptional = reviewSummaryRepository.findBySellerId(sellerId);
-		long ratingSum = resolveRatingSum(summaryOptional, sellerId);
+		ReviewSummaryRequestEvent event = ReviewSummaryRequestEvent.forFinal(
+				sellerId,
+				payload.lastBucketId(),
+				payload.reviewCount(),
+				totalCount,
+				policyProperties.getMaxLength(),
+				buildPrompt(payload.payload()),
+				payload.payload()
+		);
 
-		summaryOptional
-				.ifPresentOrElse(
-						existing -> existing.updateSummary(payload.summary(), totalCount, totalCount, ratingSum, payload.lastBucketId()),
-						() -> reviewSummaryRepository.save(
-								ReviewSummary.create(sellerId, totalCount, totalCount, ratingSum, payload.lastBucketId(), payload.summary())
-						)
-				);
+		reviewOutboxService.enqueueReviewSummaryRequest(sellerId, event);
 	}
 
 	private SummaryPayload generateSummaryPayload(Long sellerId) {
@@ -160,20 +214,20 @@ public class ReviewSummaryService {
 		}
 
 		Long lastBucketId = buckets.get(buckets.size() - 1).getId();
-		if (buckets.size() == 1) {
-			return new SummaryPayload(buckets.get(0).getSummary(), lastBucketId);
-		}
-
 		List<String> summaries = buckets.stream()
 				.map(ReviewSummaryBucket::getSummary)
+				.filter(summary -> summary != null && !summary.isBlank())
 				.toList();
-
-		String summary = summarizeSellerReviews(summaries);
-		if (summary == null || summary.isBlank()) {
+		if (summaries.isEmpty()) {
 			return null;
 		}
 
-		return new SummaryPayload(summary, lastBucketId);
+		String payload = buildPayload(summaries);
+		if (payload.isBlank()) {
+			return null;
+		}
+
+		return new SummaryPayload(payload, lastBucketId, summaries.size());
 	}
 
 	private List<ReviewSummaryBucket> fetchLatestBucketsForRecentLimit(Long sellerId) {
@@ -240,7 +294,7 @@ public class ReviewSummaryService {
 				.getContent();
 	}
 
-	private ReviewSummaryBucket buildBucketFromReviews(Long sellerId, List<Review> reviews, int expectedCount) {
+	private Long requestBucketSummary(Long sellerId, List<Review> reviews, int expectedCount) {
 
 		List<Review> ordered = reviews.stream()
 				.sorted(Comparator.comparing(Review::getId))
@@ -250,45 +304,29 @@ public class ReviewSummaryService {
 				.map(Review::getContent)
 				.toList();
 
-		String summary = summarizeSellerReviews(contents);
-		if (summary == null || summary.isBlank()) {
-			throw new IllegalStateException("Failed to summarize review bucket");
-		}
-
-		Long lastReviewId = ordered.get(ordered.size() - 1).getId();
-		int reviewCount = Math.min(expectedCount, ordered.size());
-
-		return ReviewSummaryBucket.create(sellerId, reviewCount, lastReviewId, summary);
-	}
-
-	private record SummaryPayload(String summary, Long lastBucketId) {
-	}
-
-	private String summarizeSellerReviews(List<String> contents) {
-
-		if (contents == null || contents.isEmpty()) {
-			return null;
-		}
-
 		String payload = buildPayload(contents);
 		if (payload.isBlank()) {
 			return null;
 		}
 
-		try {
-			ChatResult result = chatService.chat(buildPrompt(payload));
-			if (result == null || isFallback(result) || result.content() == null || result.content().isBlank()) {
-				return fallback(payload);
-			}
+		Long lastReviewId = ordered.get(ordered.size() - 1).getId();
+		int reviewCount = Math.min(expectedCount, ordered.size());
 
-			return normalize(result.content());
+		ReviewSummaryRequestEvent event = ReviewSummaryRequestEvent.forBucket(
+				sellerId,
+				lastReviewId,
+				reviewCount,
+				policyProperties.getMaxLength(),
+				buildPrompt(payload),
+				payload
+		);
 
-		} catch (Exception ex) {
+		reviewOutboxService.enqueueReviewSummaryRequest(sellerId, event);
 
-			log.warn("Failed to summarize seller reviews with OpenAI", ex);
+		return lastReviewId;
+	}
 
-			return fallback(payload);
-		}
+	private record SummaryPayload(String payload, Long lastBucketId, int reviewCount) {
 	}
 
 	private String buildPayload(List<String> contents) {
@@ -309,30 +347,6 @@ public class ReviewSummaryService {
 				.collect(Collectors.joining("\n"));
 	}
 
-	private String normalize(String summary) {
-
-		String trimmed = summary.replace("\n", " ").trim();
-		int maxLength = policyProperties.getMaxLength();
-		if (trimmed.length() <= maxLength) {
-
-			return trimmed;
-		}
-
-		return trimmed.substring(0, maxLength).trim();
-	}
-
-	private String fallback(String content) {
-
-		String trimmed = content.replace("\n", " ").trim();
-		int maxLength = policyProperties.getMaxLength();
-		if (trimmed.length() <= maxLength) {
-
-			return trimmed;
-		}
-
-		return trimmed.substring(0, maxLength).trim();
-	}
-
 	private String buildPrompt(String payload) {
 		return """
 				Summarize overall feedback about a seller based on multiple customer reviews.
@@ -342,13 +356,5 @@ public class ReviewSummaryService {
 				Reviews:
 				%s
 				""".formatted(policyProperties.getMaxLength(), payload);
-	}
-
-	private boolean isFallback(ChatResult result) {
-		if (result.metadata() == null) {
-			return false;
-		}
-		Object source = result.metadata().get("source");
-		return "fallback".equals(source);
 	}
 }
