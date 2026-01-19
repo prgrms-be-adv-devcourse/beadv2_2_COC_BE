@@ -30,6 +30,7 @@ jobs:
         id: changes
         run: |
           services=(
+            "ai-service"
             "account-service"
             "product-service"
             "rental-service"
