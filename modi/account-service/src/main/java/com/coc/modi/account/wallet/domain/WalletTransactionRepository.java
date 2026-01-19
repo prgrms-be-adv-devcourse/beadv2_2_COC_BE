@@ -10,4 +10,6 @@ public interface WalletTransactionRepository {
     List<WalletTransaction> findByMemberId(Long memberId);
 
 	Optional<WalletTransaction> findByTxTypeAndRequestId(WalletTransactionType txType, String requestId);
+
+	boolean existsByRelatedSettlementIdAndTxType(Long relatedSettlementId, WalletTransactionType txType);
 }

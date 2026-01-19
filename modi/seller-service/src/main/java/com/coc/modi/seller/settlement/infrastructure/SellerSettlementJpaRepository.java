@@ -15,6 +15,8 @@ public interface SellerSettlementJpaRepository extends JpaRepository<SellerSettl
 
     Page<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm, Pageable pageable);
 
+    Page<SellerSettlement> findByPeriodYm(String periodYm, Pageable pageable);
+
     Optional<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm);
 
     List<SellerSettlement> findByBatchIdAndStatusOrderByIdAsc(Long batchId, SellerSettlementStatus status);

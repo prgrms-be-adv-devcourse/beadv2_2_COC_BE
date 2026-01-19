@@ -103,4 +103,23 @@ public record WalletTransactionCommand(
 				null
         );
     }
+
+	public static WalletTransactionCommand forSettlementPayout(
+			Long memberId,
+			Long settlementId,
+			BigDecimal amount
+	) {
+
+		return new WalletTransactionCommand(
+				memberId,
+				WalletTransactionType.SETTLEMENT_PAYOUT,
+				amount,
+				null,
+				null,
+				null,
+				settlementId,
+				"정산금 지급",
+				null
+		);
+	}
 }

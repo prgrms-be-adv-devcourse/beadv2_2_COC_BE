@@ -5,16 +5,19 @@ import com.coc.modi.rental.rental.application.dto.RentalItemResponse;
 import com.coc.modi.rental.rental.application.dto.RentalResponse;
 import com.coc.modi.rental.rental.domain.Rental;
 import com.coc.modi.rental.rental.domain.RentalItem;
+import com.coc.modi.rental.rental.domain.RentalItemRepository;
 import com.coc.modi.rental.rental.domain.RentalItemStatus;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.domain.RentalRepository;
 import com.coc.modi.rental.rental.domain.RentalStatus;
 import com.coc.modi.rental.rental.exception.RentalAccessDeniedException;
 import com.coc.modi.rental.rental.exception.RentalException;
+import com.coc.modi.rental.rental.exception.RentalItemNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfo;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfoListResponse;
+import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemSellerResponse;
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsRequest;
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
 
@@ -23,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -36,7 +40,8 @@ public class RentalQueryService {
 	
 	private final RentalRepository rentalRepository;
 	private final RentalQueryRepository rentalQueryRepository;
-	
+	private final RentalItemRepository rentalItemRepository;
+
 	public RentalResponse getRentalDetails(Long rentalId, Long memberId) {
 		
 		Rental rental = rentalRepository.findByIdWithItems(rentalId)
@@ -108,7 +113,29 @@ public class RentalQueryService {
 		
 		return new RentalItemInfoListResponse(rentalItemInfoList, rentalItems.getTotalElements(), rentalItems.getTotalPages());
 	}
-	
+
+	@Transactional(readOnly = true)
+	public RentalItemSellerResponse getRentalItemSellerInfo(Long rentalItemId) {
+
+		if (rentalItemId == null) {
+			throw new RentalException(ErrorCode.INVALID_INPUT, "rentalItemId는 필수입니다.");
+		}
+
+		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
+				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
+
+		Long memberId = rentalItem.getRental() != null ? rentalItem.getRental().getMemberId() : null;
+
+		return new RentalItemSellerResponse(rentalItem.getId(), rentalItem.getSellerId(), memberId);
+	}
+
+	public RentalItemInfo getRentalItemInfo(Long rentalItemId) {
+		RentalItem rentalItem = rentalItemRepository.findById(rentalItemId)
+				.orElseThrow(() -> new RentalItemNotFoundException(rentalItemId));
+
+		return toRentalItemInfo(rentalItem);
+	}
+
 	private void validateCondition(RentalInternalSearchCondition condition) {
 		
 		if (condition == null) {
@@ -150,7 +177,8 @@ public class RentalQueryService {
 				rentalItem.calculateRentalAmount(),
 				rentalItem.getStartDate(),
 				rentalItem.getEndDate(),
-				rental != null ? rental.getPaidAt() : null
+				rental != null ? rental.getPaidAt() : null,
+				rentalItem.getReturnedAt()
 		);
 	}
 	

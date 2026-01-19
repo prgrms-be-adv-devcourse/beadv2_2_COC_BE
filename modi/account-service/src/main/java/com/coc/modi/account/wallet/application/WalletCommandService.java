@@ -12,6 +12,8 @@ import com.coc.modi.account.wallet.domain.MemberWalletRepository;
 import com.coc.modi.account.wallet.domain.WalletTransaction;
 import com.coc.modi.account.wallet.domain.WalletTransactionRepository;
 import com.coc.modi.account.wallet.domain.WalletTransactionType;
+import com.coc.modi.account.wallet.exception.AccountException;
+import com.coc.modi.common.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -57,7 +59,7 @@ public class WalletCommandService {
         // 2. txType에 따라 예치금 입금, 차감 결정
         BigDecimal signedAmount = switch (command.txType()) {
 
-            case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST -> command.amount();
+            case DEPOSIT_CHARGE, RENTAL_REFUND, ADJUST, SETTLEMENT_PAYOUT -> command.amount();
             case DEPOSIT_CANCEL, RENTAL_PAYMENT -> command.amount().negate();
         };
 
@@ -166,6 +168,34 @@ public class WalletCommandService {
 
         return RentalPaymentResponse.from(wallet);
     }
+
+	@Transactional
+	public boolean payoutSettlement(Long memberId, Long settlementId, BigDecimal amount) {
+
+		if (memberId == null || settlementId == null || amount == null) {
+			throw new AccountException(ErrorCode.INVALID_INPUT, "정산 지급 요청 정보가 올바르지 않습니다.");
+		}
+		if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new AccountException(ErrorCode.INVALID_INPUT, "정산 지급 금액은 0보다 커야 합니다.");
+		}
+
+		boolean alreadyProcessed = walletTransactionRepository.existsByRelatedSettlementIdAndTxType(
+				settlementId,
+				WalletTransactionType.SETTLEMENT_PAYOUT
+		);
+		if (alreadyProcessed) {
+			return false;
+		}
+
+		try {
+			createTransactionAndUpdateBalance(
+					WalletTransactionCommand.forSettlementPayout(memberId, settlementId, amount)
+			);
+			return true;
+		} catch (DataIntegrityViolationException ex) {
+			return false;
+		}
+	}
 
 	private WalletTransaction findByRequestId(WalletTransactionType type, String requestId) {
 

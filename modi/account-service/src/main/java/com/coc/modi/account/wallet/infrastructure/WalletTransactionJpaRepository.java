@@ -12,4 +12,6 @@ public interface WalletTransactionJpaRepository extends JpaRepository<WalletTran
     List<WalletTransaction> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 
 	Optional<WalletTransaction> findByTxTypeAndRequestId(WalletTransactionType txType, String requestId);
+
+	boolean existsByRelatedSettlementIdAndTxType(Long relatedSettlementId, WalletTransactionType txType);
 }

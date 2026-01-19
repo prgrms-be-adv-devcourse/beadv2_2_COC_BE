@@ -8,6 +8,7 @@ import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
 import com.coc.modi.kafka.event.MemberCreatedEvent;
 import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
+import com.coc.modi.member.member.application.dto.MemberEmailResponse;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
 import com.coc.modi.member.member.application.dto.UpdateMemberCommand;
@@ -103,6 +104,7 @@ public class MemberService {
 		
 		return MemberProfileResponse.from(member);
 	}
+	
 	
 	// 회원 정보 수정
 	@Transactional
@@ -236,6 +238,16 @@ public class MemberService {
 			throw new AuthCodeInvalidException("이메일 인증 토큰이 이메일과 일치하지 않습니다.");
 		}
 	}
+	
+	
+	@Transactional(readOnly = true)
+	public MemberEmailResponse getMemberEmail(Long memberId) {
+		
+		Member member = getMemberOrThrow(memberId);
+		
+		return MemberEmailResponse.from(member);
+	}
+	
 	
 	@Transactional
 	public String updateRoleToSeller(Long memberId) {

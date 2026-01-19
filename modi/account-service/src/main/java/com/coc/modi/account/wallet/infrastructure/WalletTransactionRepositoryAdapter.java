@@ -32,4 +32,10 @@ public class WalletTransactionRepositoryAdapter implements WalletTransactionRepo
 
 		return jpaRepository.findByTxTypeAndRequestId(txType, requestId);
 	}
+
+	@Override
+	public boolean existsByRelatedSettlementIdAndTxType(Long relatedSettlementId, WalletTransactionType txType) {
+
+		return jpaRepository.existsByRelatedSettlementIdAndTxType(relatedSettlementId, txType);
+	}
 }

@@ -14,7 +14,9 @@ import java.math.BigDecimal;
 		schema = "account",
 		uniqueConstraints = {
 				@UniqueConstraint(columnNames = {"pg_deposit_id", "tx_type"}),
-				@UniqueConstraint(columnNames = {"tx_type", "request_id"})
+				@UniqueConstraint(columnNames = {"tx_type", "request_id"}),
+				@UniqueConstraint(name = "uk_wallet_transaction_settlement_tx_type",
+						columnNames = {"related_settlement_id", "tx_type"})
 		}
 )
 public class WalletTransaction extends BaseEntity {

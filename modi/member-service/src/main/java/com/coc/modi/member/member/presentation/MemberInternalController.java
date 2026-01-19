@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.coc.modi.member.member.application.MemberService;
 import com.coc.modi.member.member.presentation.dto.MemberAuthzResponse;
+import com.coc.modi.member.member.application.dto.MemberEmailResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,5 +32,11 @@ public class MemberInternalController {
 
 		List<String> roles = memberService.getMemberRoles(memberId);
 		return new MemberAuthzResponse(memberId, roles);
+	}
+	
+	@GetMapping("/{memberId}/email")
+	public MemberEmailResponse getMemberEmail(@PathVariable("memberId") Long memberId) {
+		
+		return memberService.getMemberEmail(memberId);
 	}
 }

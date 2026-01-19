@@ -21,8 +21,10 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
@@ -34,15 +36,26 @@ public class DepositService {
     private final WalletCommandService  walletCommandService;
     private static final String PG_PROVIDER = "TOSS_PAYMENTS";
 
+    @Value("${account.deposit.card-fee-rate:0.03}")
+    private BigDecimal cardFeeRate;
+
+    private static final int MONEY_SCALE = 0;
+
     // 예치금 충전 요청
     @Transactional
     public DepositResponse requestDeposit(DepositCommand command) {
 
         String orderId = generateOrderId();
 
+        BigDecimal amount = command.amount();
+        BigDecimal feeAmount = calculateFee(amount);
+        BigDecimal totalAmount = amount.add(feeAmount);
+
         PgDeposit pgDeposit = PgDeposit.createRequest(
                 command.memberId(),
-                command.amount(),
+                amount,
+                feeAmount,
+                totalAmount,
                 PG_PROVIDER,
                 orderId
         );
@@ -66,7 +79,7 @@ public class DepositService {
 
         if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
 
-            BigDecimal requestedAmount = deposit.getAmount();
+            BigDecimal requestedAmount = deposit.getTotalAmount();
             BigDecimal approvedAmount = command.amount();
 
             if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
@@ -88,7 +101,7 @@ public class DepositService {
         }
 
         // 2. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal approvedAmount = command.amount();
 
         if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
@@ -140,7 +153,12 @@ public class DepositService {
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(
+                deposit.getMemberId(),
+                deposit,
+                deposit.getAmount(),
+                deposit.getPaymentKey()
+        );
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -173,7 +191,7 @@ public class DepositService {
         }
 
         // 3. 금액 검증
-        BigDecimal requestedAmount = deposit.getAmount();
+        BigDecimal requestedAmount = deposit.getTotalAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
@@ -207,8 +225,8 @@ public class DepositService {
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
                         deposit,
-                        cancelAmount,
-						deposit.getPaymentKey()
+                        deposit.getAmount(),
+                        deposit.getPaymentKey()
                 )
         );
 
@@ -228,6 +246,14 @@ public class DepositService {
 		
 		deposit.fail(command.failureMessage());
 		
-		return DepositResponse.from(deposit);
-	}
+        return DepositResponse.from(deposit);
+    }
+
+    private BigDecimal calculateFee(BigDecimal amount) {
+
+        if (amount == null) {
+            return BigDecimal.ZERO;
+        }
+        return amount.multiply(cardFeeRate).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    }
 }
