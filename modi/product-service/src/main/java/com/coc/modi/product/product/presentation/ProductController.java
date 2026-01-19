@@ -35,7 +35,7 @@ public class ProductController {
 	private final ProductStatusService productStatusService;
 	
 	// 상품 목록 조회
-	@GetMapping
+	@GetMapping("/search")
 	public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
 			@AuthenticationPrincipal CustomMember member,
 			@ModelAttribute ProductSearchCondition condition,
@@ -66,7 +66,9 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
 																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
+		Long memberId = member != null ? member.memberId() : null;
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(memberId, productId)));
 	}
 	
 	// 상품 등록

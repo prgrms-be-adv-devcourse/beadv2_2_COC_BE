@@ -1,17 +1,17 @@
 package com.coc.modi.rental.cart.application;
 
 import com.coc.modi.rental.cart.application.dto.AddCartItemCommand;
-import com.coc.modi.rental.cart.application.dto.RemoveCartItemsCommand;
 import com.coc.modi.rental.cart.application.dto.UpdateCartItemCommand;
 import com.coc.modi.rental.cart.domain.Cart;
 import com.coc.modi.rental.cart.domain.CartItem;
 import com.coc.modi.rental.cart.domain.CartRepository;
-import com.coc.modi.common.ErrorCode;
-import com.coc.modi.rental.rental.exception.RentalException;
+import com.coc.modi.rental.cart.exception.CartOutboxException;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 import com.coc.modi.rental.rental.infrastructure.client.ProductClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ProductResponseDto;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +26,7 @@ public class CartCommandService {
 
     private final CartRepository cartRepository;
     private final ProductClientAdapter productClientAdapter;
+    private final RentalOutboxService rentalOutboxService;
 
     @Transactional
     public void addItem(AddCartItemCommand command) {
@@ -39,6 +40,13 @@ public class CartCommandService {
         CartItem newItem = CartItem.create(itemId, command.productId(), command.startDate(), command.endDate());
 
         cartRepository.upsertItem(command.memberId(), newItem);
+
+        try {
+            rentalOutboxService.enqueueCartItemAdded(command.memberId(), command.productId(), itemId);
+        } catch (RuntimeException ex) {
+            cartRepository.removeItems(command.memberId(), List.of(itemId));
+            throw new CartOutboxException("장바구니 담기 이벤트 처리에 실패했습니다.");
+        }
     }
 
     @Transactional
@@ -62,7 +70,27 @@ public class CartCommandService {
     @Transactional
     public void deleteItem(Long memberId, Long cartItemId) {
 
+        Cart cart = cartRepository.findByMemberId(memberId).orElse(null);
+        if (cart == null) {
+            return;
+        }
+
+        CartItem target = cart.getItems().stream()
+                .filter(item -> item.getId().equals(cartItemId))
+                .findFirst()
+                .orElse(null);
+        if (target == null) {
+            return;
+        }
+
         cartRepository.removeItems(memberId, List.of(cartItemId));
+
+        try {
+            rentalOutboxService.enqueueCartItemRemoved(memberId, target.getProductId(), cartItemId);
+        } catch (RuntimeException ex) {
+            cartRepository.upsertItem(memberId, target);
+            throw new CartOutboxException("장바구니 제거 이벤트 처리에 실패했습니다.");
+        }
     }
 	
 

@@ -17,4 +17,6 @@ public final class KafkaTopics {
 	public static final String MEMBER_CREATED = "member-created";
 	public static final String SELLER_APPROVED = "seller-approved";
 	public static final String SELLER_REJECTED = "seller-rejected";
+
+	public static final String CART_ITEM_EVENTS = "cart-item-events";
 }
