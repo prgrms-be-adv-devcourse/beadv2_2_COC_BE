@@ -6,6 +6,7 @@ public final class KafkaTopics {
 	
 	public static final String PRODUCT_EMBEDDING_EVENTS = "product-embedding-events";
 	public static final String PRODUCT_MODERATION_REQUESTED = "product-moderation-requested";
+	public static final String PRODUCT_MODERATION_RESULT = "product-moderation-result";
 	
 	public static final String NOTIFICATION_EVENTS = "notification-events";
 
