@@ -59,7 +59,6 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('G
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/review-service/api/reviews', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/review-service/api/reviews/me', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('DELETE', '/review-service/api/reviews/{reviewId}', 'MEMBER');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/sellers', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/products/{productId}', 'SELLER');
@@ -76,4 +75,3 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('G
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/member-service/login/oauth2/**', '');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/member-service/api/auth/oauth2/signup', '');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/member-service/api/auth/oauth2/connect', 'MEMBER');
-

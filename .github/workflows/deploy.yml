@@ -1,69 +1,170 @@
-name: Deploy dev (Docker to EC2)
+name: Build, Push & Deploy (dev)
 
 on:
   push:
     branches:
-      - dev
+      - dev-cicd
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: prgrms-be-adv-devcourse
+  TAG: latest
 
 jobs:
-  deploy:
+  detect:
     runs-on: ubuntu-latest
+    outputs:
+      changed_services: ${{ steps.changes.outputs.changed_services }}
+      changed_services_json: ${{ steps.changes.outputs.changed_services_json }}
 
     steps:
-      # 1. Checkout
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 2. JDK 17
+      - name: Detect changed services
+        id: changes
+        run: |
+          services=(
+            "ai-service"
+            "account-service"
+            "product-service"
+            "rental-service"
+            "seller-service"
+            "member-service"
+            "review-service"
+            "notification-service"
+            "delivery-service"
+            "modi-config"
+            "modi-gateway"
+            "modi-discovery"
+          )
+
+          before="${{ github.event.before }}"
+          if [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            changed_files="$(git ls-files)"
+          else
+            changed_files="$(git diff --name-only "$before" "${{ github.sha }}")"
+          fi
+
+          common_regex="^modi/(common|common-[^/]+)/|^modi/(build.gradle|settings.gradle|gradle.properties|gradlew|gradlew.bat|gradle/)|^\\.github/workflows/"
+          build_all=false
+          if echo "$changed_files" | grep -qE "$common_regex"; then
+            build_all=true
+          fi
+
+          if [ "$build_all" = true ]; then
+            changed="${services[*]}"
+          else
+            changed=""
+            for service in "${services[@]}"; do
+              if echo "$changed_files" | grep -qE "^modi/${service}/"; then
+                changed="$changed $service"
+              fi
+            done
+          fi
+
+          changed="$(echo "$changed" | xargs || true)"
+          echo "changed_services=$changed" >> "$GITHUB_OUTPUT"
+          CHANGED="$changed" python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+          items = os.environ.get("CHANGED", "").split()
+          print("changed_services_json=" + json.dumps(items))
+          PY
+
+          if [ -z "$changed" ]; then
+            echo "No service changes detected."
+          else
+            echo "Changed services: $changed"
+          fi
+
+  build-push:
+    needs: detect
+    if: needs.detect.outputs.changed_services_json != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect.outputs.changed_services_json) }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-java@v4
         with:
           distribution: corretto
           java-version: 17
+          cache: gradle
 
-      # 3. build services jar
-      - name: Build all services JAR
+      - name: Build service JAR
         working-directory: modi
         run: |
           chmod +x gradlew
-          ./gradlew build -x test
+          ./gradlew -x test :${{ matrix.service }}:build
 
-#          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "review-service" "notification-service" "modi-config" "modi-gateway" "modi-discovery")
-      # 3. Docker build & save (서비스별)
-      - name: Build & save docker images
-        run: |
-          services=("account-service" "product-service" "rental-service" "seller-service" "member-service" "modi-config" "modi-gateway" "modi-discovery")
+      - uses: docker/setup-buildx-action@v3
 
-          for service in "${services[@]}"; do
-            echo "Building $service ..."
-            docker build -t $service:latest ./modi/$service
-            docker save -o $service.tar $service:latest
-            ls -al
-          done
-
-      # 4. Copy tar & compose to EC2
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@master
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "*.tar,docker-compose.yml"
-          target: /home/ec2-user/app/modi
-          use_insecure_cipher: true
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      #5. Run on EC2
-      - name: Run containers on EC2
+      - name: Build & Push Docker Images
+        uses: docker/build-push-action@v6
+        with:
+          context: ./modi/${{ matrix.service }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.service }}:${{ env.TAG }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    needs: [detect, build-push]
+    if: needs.detect.outputs.changed_services != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 (k3s)
         uses: appleboy/ssh-action@v1
+        env:
+          CHANGED_SERVICES: ${{ needs.detect.outputs.changed_services }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: CHANGED_SERVICES
           script: |
-            cd /home/ec2-user/app/modi
-            
-            docker compose down
+            set -euo pipefail
+            echo "▶ CHANGED_SERVICES=$CHANGED_SERVICES"
+            echo "▶ Restarting deployments on k3s (sequential)"
 
-            for tar in *.tar; do
-              docker load -i $tar
+            priority=(modi-config modi-discovery modi-gateway)
+
+            for service in "${priority[@]}"; do
+              if echo "$CHANGED_SERVICES" | grep -qw "$service"; then
+                echo "▶ rollout restart $service"
+                kubectl rollout restart deploy "$service"
+                echo "▶ rollout status $service"
+                kubectl rollout status deploy "$service"
+              fi
             done
 
-            docker compose up -d
+            for service in $CHANGED_SERVICES; do
+              if [[ ! " ${priority[*]} " =~ " ${service} " ]]; then
+                echo "▶ rollout restart $service"
+                kubectl rollout restart deploy "$service"
+                echo "▶ rollout status $service"
+                kubectl rollout status deploy "$service"
+              fi
+            done
+
+            echo "▶ Deploy finished"

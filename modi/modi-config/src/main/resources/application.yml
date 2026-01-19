@@ -52,7 +52,6 @@ spring:
           force-pull: true # discard local changes and pull from remote when refreshing
         default-label: main
 
-
 eureka:
   client:
     service-url:
