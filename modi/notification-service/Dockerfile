@@ -3,7 +3,7 @@ FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
 
 # 0) Gradle이 쓸 캐시 경로(지금 이미지에서 HOME=/root 인 경우가 많음)
-ARG MODULE=seller-service
+ARG MODULE=notification-service
 ENV GRADLE_USER_HOME=/root/.gradle-${MODULE}
 
 # 1) 캐시가 잘 먹게 빌드 스크립트/래퍼 먼저 복사
