@@ -1,62 +1,62 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: delivery-service
+  name: support-service
   labels:
-    app: delivery-service
+    app: support-service
 spec:
   ports:
     - name: http
-      port: 8088
-      targetPort: 8088
+      port: 8080
+      targetPort: 8080
   selector:
-    app: delivery-service
+    app: support-service
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: delivery-service
+  name: support-service
   labels:
-    app: delivery-service
+    app: support-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: delivery-service
+      app: support-service
   template:
     metadata:
       labels:
-        app: delivery-service
+        app: support-service
     spec:
       containers:
-        - name: delivery-service
-          image: modi/delivery-service:local
+        - name: support-service
+          image: modi/support-service:local
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 8088
+              containerPort: 8080
           env:
             - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
               value: "false"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
               value: "true"
             - name: SERVER_PORT
-              value: "8088"
+              value: "8080"
             - name: SPRING_DATASOURCE_URL
               valueFrom:
                 secretKeyRef:
                   name: modi-env
-                  key: DELIVERY_DB_URL
+                  key: SUPPORT_DB_URL
           envFrom:
             - secretRef:
                 name: modi-env
           startupProbe:
             tcpSocket:
-              port: 8088
+              port: 8080
             periodSeconds: 10
             failureThreshold: 30
           readinessProbe:
             tcpSocket:
-              port: 8088
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10

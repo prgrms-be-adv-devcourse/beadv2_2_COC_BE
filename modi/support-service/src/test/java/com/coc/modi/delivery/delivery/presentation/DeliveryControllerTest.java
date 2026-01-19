@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,9 +26,10 @@ import com.coc.modi.delivery.delivery.application.dto.DeliveryCreateResponse;
 import com.coc.modi.delivery.delivery.application.dto.DeliveryDetailResponse;
 import com.coc.modi.delivery.delivery.domain.DeliveryStatus;
 import com.coc.modi.delivery.delivery.exception.DeliveryNotFoundException;
+import com.coc.modi.delivery.exception.GlobalExceptionHandler;
 
 @WebMvcTest(controllers = DeliveryController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, DeliveryController.class, GlobalExceptionHandler.class})
 @ActiveProfiles("test")
 class DeliveryControllerTest {
 
@@ -169,5 +172,10 @@ class DeliveryControllerTest {
 		verify(deliveryService).getDeliveryByRentalItemId(
 				org.mockito.ArgumentMatchers.eq(999L),
 				org.mockito.ArgumentMatchers.anyLong());
+	}
+
+	@SpringBootConfiguration
+	@EnableAutoConfiguration
+	static class TestApplication {
 	}
 }
