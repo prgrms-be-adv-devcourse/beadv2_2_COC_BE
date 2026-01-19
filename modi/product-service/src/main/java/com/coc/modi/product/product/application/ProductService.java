@@ -19,7 +19,7 @@ import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
-import com.coc.modi.product.event.KafkaProductEmbeddingEventPublisher;
+import com.coc.modi.product.embedding.outbox.ProductEmbeddingOutboxService;
 import com.coc.modi.product.product.search.application.ProductSearchPort;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
@@ -48,7 +48,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final KafkaProductEmbeddingEventPublisher productEmbeddingEventPublisher;
+	private final ProductEmbeddingOutboxService productEmbeddingOutboxService;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -130,7 +130,7 @@ public class ProductService {
 		saved.refreshThumbnailImage();
 		
 		// ES 인덱싱/임베딩 이벤트 발행
-		productEmbeddingEventPublisher.publishUpdate(saved.getId());
+		productEmbeddingOutboxService.enqueueUpdate(saved.getId());
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -166,7 +166,7 @@ public class ProductService {
 		
 		product.refreshThumbnailImage();
 		
-		productEmbeddingEventPublisher.publishUpdate(product.getId());
+		productEmbeddingOutboxService.enqueueUpdate(product.getId());
 	
 		return ProductDetailResponse.from(product);
 	}
