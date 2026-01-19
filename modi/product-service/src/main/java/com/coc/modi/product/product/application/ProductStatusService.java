@@ -45,7 +45,7 @@ public class ProductStatusService {
 	// 상품 상태 변경
 	private void changeStatus(Long memberId, Long productId, ProductStatus status) {
 		
-		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
 		Long sellerId = sellerIdResolver.getSellerId(memberId);

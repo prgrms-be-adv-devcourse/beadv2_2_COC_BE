@@ -15,10 +15,14 @@ import java.util.Optional;
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 	
 	Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable);
-	
+
 	Optional<Product> findByIdAndStatusNot(Long id, ProductStatus status);
-	
+
 	List<Product> findByIdIn(Collection<Long> ids);
+
+	Page<Product> findByStatusNotAndModerationStatus(ProductStatus status,
+													 ProductModerationStatus moderationStatus,
+													 Pageable pageable);
 
 	List<Product> findByStatusNotAndModerationStatus(ProductStatus status, ProductModerationStatus moderationStatus);
 }

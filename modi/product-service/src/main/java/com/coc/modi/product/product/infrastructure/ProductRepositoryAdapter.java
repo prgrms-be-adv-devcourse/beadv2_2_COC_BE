@@ -21,9 +21,9 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	private final ProductJpaRepository productJpaRepository;
 	
 	@Override
-	public Optional<Product> findByIdAndStatusNot(Long id,  ProductStatus status) {
-		
-		return productJpaRepository.findByIdAndStatusNot(id, status);
+	public Optional<Product> findNonDeletedById(Long id) {
+
+		return productJpaRepository.findByIdAndStatusNot(id, ProductStatus.DELETE);
 	}
 	
 	@Override
@@ -33,9 +33,20 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 	
 	@Override
-	public Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable) {
-		
-		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, status, pageable);
+	public Page<Product> findNonDeletedBySellerId(Long sellerId, Pageable pageable) {
+
+		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+	}
+
+	@Override
+	public Page<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus,
+														  Pageable pageable) {
+
+		return productJpaRepository.findByStatusNotAndModerationStatus(
+				ProductStatus.DELETE,
+				moderationStatus,
+				pageable
+		);
 	}
 	
 	@Override
@@ -57,8 +68,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findByStatusNotAndModerationStatus(ProductStatus status, ProductModerationStatus moderationStatus) {
-		
-		return productJpaRepository.findByStatusNotAndModerationStatus(status, moderationStatus);
+	public List<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus) {
+
+		return productJpaRepository.findByStatusNotAndModerationStatus(
+				ProductStatus.DELETE,
+				moderationStatus
+		);
 	}
 }

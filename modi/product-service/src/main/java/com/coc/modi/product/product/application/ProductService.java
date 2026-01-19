@@ -76,7 +76,7 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(memberId);
 		
-		Page<Product> products = productRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+		Page<Product> products = productRepository.findNonDeletedBySellerId(sellerId, pageable);
 		
 		List<Long> thumbnailIds = products.getContent().stream().map(Product::getThumbnailImageId).toList();
 		
@@ -90,7 +90,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public ProductDetailResponse getProductDetail(Long memberId, Long productId) {
 		
-		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
 		if (product.getModerationStatus() != ProductModerationStatus.CLEAR) {
@@ -140,8 +140,10 @@ public class ProductService {
 		Product saved = productRepository.saveAndFlush(product);
 		saved.refreshThumbnailImage();
 		
-		// ES 인덱싱/임베딩 이벤트 발행
-		productEmbeddingEventPublisher.publishUpdate(saved.getId());
+		// 모더레이션 통과 후에만 인덱싱/임베딩 이벤트 발행
+		if (saved.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productEmbeddingEventPublisher.publishUpdate(saved.getId());
+		}
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -152,8 +154,10 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(command.memberId());
 		
-		Product product = productRepository.findByIdAndStatusNot(command.productId(), ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(command.productId())
 				.orElseThrow(() -> new ProductNotFoundException(command.productId()));
+
+		boolean moderationChanged = shouldModerate(product, command);
 		
 		if (!sellerId.equals(product.getSellerId())) {
 			throw new ProductAccessDeniedException("수정");
@@ -174,10 +178,16 @@ public class ProductService {
 		}
 		
 		productRepository.flush();
+
+		if (moderationChanged) {
+			product.updateModerationStatus(ProductModerationStatus.PENDING);
+		}
 		
 		product.refreshThumbnailImage();
 		
-		productEmbeddingEventPublisher.publishUpdate(product.getId());
+		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productEmbeddingEventPublisher.publishUpdate(product.getId());
+		}
 	
 		return ProductDetailResponse.from(product);
 	}
@@ -222,9 +232,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public List<Long> getEmbeddingTargetIds() {
 		
-		return productRepository.findByStatusNotAndModerationStatus(
-						ProductStatus.DELETE,
-						ProductModerationStatus.CLEAR).stream()
+		return productRepository.findNonDeletedByModerationStatus(ProductModerationStatus.CLEAR).stream()
 				.map(Product::getId)
 				.toList();
 	}
@@ -257,5 +265,19 @@ public class ProductService {
 				});
 		
 		return products;
+	}
+
+	private boolean shouldModerate(Product product, ProductUpdateCommand command) {
+
+		if (!Objects.equals(product.getName(), command.name())) {
+			return true;
+		}
+		if (!Objects.equals(product.getDescription(), command.description())) {
+			return true;
+		}
+		if (!Objects.equals(product.getSpecs(), command.specs())) {
+			return true;
+		}
+		return command.images() != null;
 	}
 }
