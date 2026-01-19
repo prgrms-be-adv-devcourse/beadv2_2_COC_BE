@@ -1,6 +1,7 @@
 package com.coc.modi.product.product.infrastructure;
 
 import com.coc.modi.product.product.domain.Product;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 
 import org.springframework.data.domain.Page;
@@ -19,5 +20,5 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
 	
 	List<Product> findByIdIn(Collection<Long> ids);
 
-	List<Product> findByStatusNot(ProductStatus status);
+	List<Product> findByStatusNotAndModerationStatus(ProductStatus status, ProductModerationStatus moderationStatus);
 }

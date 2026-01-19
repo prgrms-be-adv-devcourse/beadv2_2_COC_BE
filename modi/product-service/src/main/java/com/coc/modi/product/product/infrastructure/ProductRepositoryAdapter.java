@@ -2,6 +2,7 @@ package com.coc.modi.product.product.infrastructure;
 
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 
 import org.springframework.data.domain.Page;
@@ -56,8 +57,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findByStatusNot(ProductStatus status) {
+	public List<Product> findByStatusNotAndModerationStatus(ProductStatus status, ProductModerationStatus moderationStatus) {
 		
-		return productJpaRepository.findByStatusNot(status);
+		return productJpaRepository.findByStatusNotAndModerationStatus(status, moderationStatus);
 	}
 }

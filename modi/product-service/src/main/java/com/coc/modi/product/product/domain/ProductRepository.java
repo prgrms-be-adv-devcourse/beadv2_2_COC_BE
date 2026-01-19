@@ -20,5 +20,5 @@ public interface ProductRepository {
 	
 	List<Product> findByIdIn(List<Long> productIds);
 
-	List<Product> findByStatusNot(ProductStatus status);
+	List<Product> findByStatusNotAndModerationStatus(ProductStatus status, ProductModerationStatus moderationStatus);
 }

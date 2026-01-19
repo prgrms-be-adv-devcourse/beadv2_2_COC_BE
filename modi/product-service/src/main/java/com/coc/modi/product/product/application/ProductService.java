@@ -14,6 +14,7 @@ import com.coc.modi.product.product.domain.ProductImage;
 import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
@@ -91,6 +92,16 @@ public class ProductService {
 		
 		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
+		
+		if (product.getModerationStatus() != ProductModerationStatus.CLEAR) {
+			
+			Long sellerId = sellerIdResolver.getSellerId(memberId);
+			
+			if (!Objects.equals(product.getSellerId(), sellerId)) {
+				
+				throw new ProductAccessDeniedException("접근");
+			}
+		}
 		
 		if (product.getStatus() == ProductStatus.INACTIVE) {
 			
@@ -211,7 +222,9 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public List<Long> getEmbeddingTargetIds() {
 		
-		return productRepository.findByStatusNot(ProductStatus.DELETE).stream()
+		return productRepository.findByStatusNotAndModerationStatus(
+						ProductStatus.DELETE,
+						ProductModerationStatus.CLEAR).stream()
 				.map(Product::getId)
 				.toList();
 	}
