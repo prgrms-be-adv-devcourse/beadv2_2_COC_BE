@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "notice", schema = "member")
+@Table(name = "notice", schema = "admin")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notice extends BaseEntity {
 
