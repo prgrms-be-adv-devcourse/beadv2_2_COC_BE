@@ -48,6 +48,14 @@ public class SellerController {
   
 		return ResponseEntity.ok(ApiResponse.ok(seller));
 	}
+
+	@GetMapping("/{sellerId}")
+	public ResponseEntity<ApiResponse<SellerDetailResponse>> getSeller(@PathVariable Long sellerId) {
+		
+		SellerDetailResponse seller = sellerService.getSeller(sellerId);
+		
+		return ResponseEntity.ok(ApiResponse.ok(seller));
+	}
 	
 	//추후 Query로 변경 고려
 	@GetMapping("/self/rentals")
