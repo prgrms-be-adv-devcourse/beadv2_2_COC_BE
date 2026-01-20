@@ -6,7 +6,7 @@ import com.coc.modi.member.admin.notice.application.NoticeService;
 import com.coc.modi.member.admin.notice.application.dto.NoticeResponse;
 import com.coc.modi.member.admin.notice.presentation.dto.NoticeCreateRequest;
 import com.coc.modi.member.admin.notice.presentation.dto.NoticeUpdateRequest;
-import com.coc.modi.member.member.exception.MemberAccessDeniedException;
+import com.coc.modi.member.admin.exception.AdminAccessDeniedException;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -86,7 +86,7 @@ public class AdminNoticeController {
 	private void requireAdmin(CustomMember member) {
 
 		if (member == null || !"ADMIN".equals(member.role())) {
-			throw new MemberAccessDeniedException("관리자 권한이 필요합니다.");
+			throw new AdminAccessDeniedException("관리자 권한이 필요합니다.");
 		}
 	}
 }

@@ -15,7 +15,7 @@ import com.coc.modi.member.admin.notice.application.dto.NoticeUpdateCommand;
 import com.coc.modi.member.admin.notice.domain.NoticeStatus;
 import com.coc.modi.member.admin.notice.presentation.dto.NoticeCreateRequest;
 import com.coc.modi.member.admin.notice.presentation.dto.NoticeUpdateRequest;
-import com.coc.modi.member.member.exception.MemberAccessDeniedException;
+import com.coc.modi.member.admin.exception.AdminAccessDeniedException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class AdminNoticeControllerTest {
 		NoticeCreateRequest request = new NoticeCreateRequest("제목", "내용", null, null, null, null);
 
 		assertThatThrownBy(() -> adminNoticeController.createNotice(sellerMember(), request))
-				.isInstanceOf(MemberAccessDeniedException.class);
+				.isInstanceOf(AdminAccessDeniedException.class);
 	}
 
 	@Test
@@ -66,7 +66,7 @@ class AdminNoticeControllerTest {
 		NoticeUpdateRequest request = new NoticeUpdateRequest("제목", null, null, null, null);
 
 		assertThatThrownBy(() -> adminNoticeController.updateNotice(sellerMember(), 5L, request))
-				.isInstanceOf(MemberAccessDeniedException.class);
+				.isInstanceOf(AdminAccessDeniedException.class);
 	}
 
 	@Test
@@ -89,7 +89,7 @@ class AdminNoticeControllerTest {
 	@Test
 	void deleteNotice_requiresAdmin() {
 		assertThatThrownBy(() -> adminNoticeController.deleteNotice(sellerMember(), 3L))
-				.isInstanceOf(MemberAccessDeniedException.class);
+				.isInstanceOf(AdminAccessDeniedException.class);
 	}
 
 	@Test
@@ -103,13 +103,13 @@ class AdminNoticeControllerTest {
 	@Test
 	void publishNotice_requiresAdmin() {
 		assertThatThrownBy(() -> adminNoticeController.publishNotice(sellerMember(), 4L))
-				.isInstanceOf(MemberAccessDeniedException.class);
+				.isInstanceOf(AdminAccessDeniedException.class);
 	}
 
 	@Test
 	void draftNotice_requiresAdmin() {
 		assertThatThrownBy(() -> adminNoticeController.draftNotice(sellerMember(), 4L))
-				.isInstanceOf(MemberAccessDeniedException.class);
+				.isInstanceOf(AdminAccessDeniedException.class);
 	}
 
 	@Test
