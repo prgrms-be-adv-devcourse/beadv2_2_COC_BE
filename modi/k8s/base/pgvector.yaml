@@ -12,6 +12,7 @@ data:
     CREATE SCHEMA IF NOT EXISTS review;
     CREATE SCHEMA IF NOT EXISTS notification;
     CREATE SCHEMA IF NOT EXISTS delivery;
+    CREATE SCHEMA IF NOT EXISTS ai;
 ---
 apiVersion: v1
 kind: Service

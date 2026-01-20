@@ -66,6 +66,23 @@ project(':common') {
         annotationProcessor "jakarta.persistence:jakarta.persistence-api"
     }
 }
+project(':common-logging') {
+    apply plugin: 'java-library'
+
+    bootJar {
+        // 실행 가능한 Spring Boot JAR 비활성화 (라이브러리 모듈)
+        enabled = false
+    }
+
+    jar {
+        // 일반 JAR 생성만 활성화
+        enabled = true
+    }
+
+    dependencies {
+        api 'net.logstash.logback:logstash-logback-encoder:7.4'
+    }
+}
 project(':common-security') {
 
     dependencies {
@@ -101,20 +118,6 @@ project(':common-openapi') {
     }
 }
 
-project(':common-ai') {
-
-    dependencies {
-
-        implementation 'org.springframework:spring-web'
-        implementation 'io.projectreactor:reactor-core'
-        implementation 'com.fasterxml.jackson.core:jackson-databind'
-        implementation 'org.slf4j:slf4j-api'
-        implementation 'org.springframework.boot:spring-boot-autoconfigure'
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    }
-}
-
-
 configure([
         project(':account-service'),
         project(':product-service'),
@@ -123,11 +126,13 @@ configure([
         project(':member-service'),
         project(':review-service'),
         project(':notification-service'),
-        project(':delivery-service')
+        project(':delivery-service'),
+        project(':ai-service')
 ]) {
     dependencies {
 
         implementation project(':common')
+        implementation project(':common-logging')
         implementation project(':common-security')
         implementation project(':common-notification')
         implementation project(':common-openapi')
@@ -162,5 +167,15 @@ configure([
 
         implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
         implementation "io.github.resilience4j:resilience4j-micrometer"
+    }
+}
+
+configure([
+        project(':modi-gateway'),
+        project(':modi-discovery'),
+        project(':modi-config')
+]) {
+    dependencies {
+        implementation project(':common-logging')
     }
 }

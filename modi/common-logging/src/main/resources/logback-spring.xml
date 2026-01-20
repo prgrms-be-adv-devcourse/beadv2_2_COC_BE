@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+  <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="unknown-service"/>
+  <springProperty scope="context" name="APP_ENV" source="APP_ENV" defaultValue="unknown"/>
+
+  <appender name="APP_JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"service":"${APP_NAME}","env":"${APP_ENV}","log_type":"service"}</customFields>
+    </encoder>
+  </appender>
+
+  <appender name="SYS_JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"service":"${APP_NAME}","env":"${APP_ENV}","log_type":"system"}</customFields>
+    </encoder>
+  </appender>
+
+  <logger name="com.coc" level="INFO" additivity="false">
+    <appender-ref ref="APP_JSON"/>
+  </logger>
+
+  <root level="WARN">
+    <appender-ref ref="SYS_JSON"/>
+  </root>
+</configuration>

@@ -1,5 +1,4 @@
 dependencies {
-    implementation project(':common-ai')
     implementation project(':common-kafka')
     implementation 'org.springframework.kafka:spring-kafka'
 
@@ -7,9 +6,6 @@ dependencies {
     implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.18.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // 배치 처리
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
 
     // AWS SDK BOM 및 S3 연동
     implementation platform("software.amazon.awssdk:bom:2.28.0")

@@ -34,7 +34,10 @@ public class ProductSearchStatsService {
 
 		Map<String, Long> counts = new HashMap<>();
 		for (ProductSearchLog logEntry : logs) {
-			String keyword = logEntry.getKeyword();
+			String keyword = logEntry.getKeywordNorm();
+			if (keyword == null || keyword.isBlank()) {
+				keyword = logEntry.getKeyword();
+			}
 			if (keyword == null || keyword.isBlank()) {
 				continue;
 			}
