@@ -43,7 +43,11 @@ public class WalletCommandService {
 
         MemberWallet wallet = MemberWallet.create(memberId);
 
-        memberWalletRepository.save(wallet);
+        try {
+			memberWalletRepository.save(wallet);
+		} catch (DataIntegrityViolationException ex) {
+			throw new AccountAlreadyExistsException(String.valueOf(memberId));
+		}
     }
 
 
@@ -53,7 +57,7 @@ public class WalletCommandService {
     public void createTransactionAndUpdateBalance(WalletTransactionCommand command) {
 
         // 1. 예치금 조회
-        MemberWallet wallet = memberWalletRepository.findByMemberId(command.memberId())
+        MemberWallet wallet = memberWalletRepository.findByMemberIdForUpdate(command.memberId())
                 .orElseThrow(() -> new AccountNotFoundException(command.memberId()));
 
         // 2. txType에 따라 예치금 입금, 차감 결정
