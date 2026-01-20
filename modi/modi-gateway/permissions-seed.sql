@@ -22,6 +22,7 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/notification-service/api/notifications/stream', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/images/upload', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/products', 'SELLER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/products/bulk', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/seller', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('DELETE', '/product-service/api/products/{productId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PUT', '/product-service/api/products/{productId}', 'MEMBER');
