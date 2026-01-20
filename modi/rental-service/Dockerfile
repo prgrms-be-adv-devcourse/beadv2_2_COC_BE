@@ -13,7 +13,7 @@ COPY settings.gradle* build.gradle* gradle.properties* ./
 RUN chmod +x gradlew
 
 # 2) (옵션) 의존성 캐시 워밍업 - 처음 1회만 느리고 이후 엄청 빨라짐
-RUN --mount=type=cache,target=/root/.gradle \
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     ./gradlew --no-daemon --console=plain help
 
 # 3) 이제 소스 복사
@@ -23,7 +23,7 @@ COPY . .
 ARG MODULE=rental-service
 ENV GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx512m -XX:MaxMetaspaceSize=256m -Dfile.encoding=UTF-8"
 
-RUN --mount=type=cache,target=/root/.gradle \
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     ./gradlew :${MODULE}:bootJar -x test --no-daemon --console=plain --no-parallel --max-workers=1
 
 # ===== run stage =====

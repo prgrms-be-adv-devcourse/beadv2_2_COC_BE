@@ -91,11 +91,15 @@ public class WebFluxSecurityConfig {
 				.httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
 				.authorizeExchange(ex -> ex
 						.pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.pathMatchers(HttpMethod.GET, "/product-service/api/products/{id:\\d+}").permitAll()
+						.pathMatchers(HttpMethod.GET, "/seller-service/api/sellers/{id:\\d+}").permitAll()
 						.pathMatchers(
 								"/swagger-ui/**",
 								"/v3/api-docs/**",
 								"/*/v3/api-docs/**",
 								"/member-service/api/auth/**",
+								"/member-service/oauth2/**",
+								"/member-service/login/oauth2/**",
 								"/member-service/api/members/signup",
 								"/favicon.ico"
 						).permitAll()

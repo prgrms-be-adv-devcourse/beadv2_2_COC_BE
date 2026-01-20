@@ -66,6 +66,22 @@ public class MemberAuthService {
 				refreshCookieManager.create(refreshToken,  ttl, secureCookie)
 		);
 	}
+
+	public MemberLoginResponse issueTokens(Member member, boolean secureCookie) {
+
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
+		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
+
+		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
+
+		refreshTokenService.save(member.getId(), refreshToken, ttl);
+
+		return new MemberLoginResponse(
+				accessToken,
+				MemberLoginResponse.MemberData.from(member),
+				refreshCookieManager.create(refreshToken, ttl, secureCookie)
+		);
+	}
 	
 	public TokenReissueResponse reissue(HttpServletRequest request, boolean secureCookie) {
 		

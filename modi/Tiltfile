@@ -25,6 +25,7 @@ shared_paths = [
   'common-notification',
   'common-openapi',
   'common-kafka',
+  'common-ai',
 ]
 
 ignore_paths = [

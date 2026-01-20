@@ -2,6 +2,9 @@ package com.coc.modi.seller.settlement.batch;
 
 import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.*;
 
+import com.coc.modi.seller.settlement.application.SettlementBatchExecutionLogService;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogEventType;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogLevel;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.batch.core.ExitStatus;
@@ -18,6 +21,7 @@ public class SettlementBatchStepListener implements StepExecutionListener {
 	
 	private static final String EXECUTION_ID_KEY = "settlementExecutionId";
 	
+	private final SettlementBatchExecutionLogService executionLogService;
 	
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
@@ -44,6 +48,19 @@ public class SettlementBatchStepListener implements StepExecutionListener {
 		if (cursor != null) {
 			stepExecution.getJobExecution().getExecutionContext().put(LAST_CURSOR, cursor);
 		}
+		
+		executionLogService.append(
+				executionId,
+				SettlementBatchExecutionLogEventType.STEP,
+				SettlementBatchExecutionLogLevel.INFO,
+				"Step completed. step=" + stepExecution.getStepName()
+						+ ", status=" + stepExecution.getStatus()
+						+ ", read=" + stepExecution.getReadCount()
+						+ ", write=" + stepExecution.getWriteCount()
+						+ ", skip=" + skipCount
+						+ ", fail=" + failTotal,
+				stepExecution.getStepName()
+		);
 		
 		return stepExecution.getExitStatus();
 	}

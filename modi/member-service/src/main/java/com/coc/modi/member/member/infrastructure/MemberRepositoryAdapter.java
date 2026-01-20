@@ -32,6 +32,12 @@ public class MemberRepositoryAdapter implements MemberRepository {
 		
 		return memberJpaRepository.findByEmail(email);
 	}
+
+	@Override
+	public Optional<Member> findByProviderAndProviderId(String provider, String providerId) {
+
+		return memberJpaRepository.findByProviderAndProviderId(provider, providerId);
+	}
 	
 	@Override
 	public Member save(Member member) {

@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -55,8 +56,20 @@ public class SecurityConfig {
 					auth.requestMatchers(SWAGGER_WHITELIST).permitAll()
 							.requestMatchers("/toss-payment.html").permitAll()
 							.requestMatchers("/payments/**").permitAll()
+							.requestMatchers(HttpMethod.GET, "/api/products/search").permitAll()
+							.requestMatchers(HttpMethod.GET, "/api/products/popular-keywords").permitAll()
+							.requestMatchers(HttpMethod.GET, "/api/products/popular-products").permitAll()
+							.requestMatchers(new RegexRequestMatcher("^/api/products/\\d+$", HttpMethod.GET.name())).permitAll()
+							.requestMatchers(new RegexRequestMatcher("^/api/sellers/\\d+$", HttpMethod.GET.name())).permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
+							.requestMatchers(HttpMethod.POST, "/api/auth/oauth2/connect").authenticated()
 							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+							.requestMatchers(
+									"/oauth2/**",
+									"/login/oauth2/**",
+									"/member-service/oauth2/**",
+									"/member-service/login/oauth2/**"
+							).permitAll()
 							.requestMatchers("/internal/**").hasRole("INTERNAL")
 							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/actuator/**").permitAll()
