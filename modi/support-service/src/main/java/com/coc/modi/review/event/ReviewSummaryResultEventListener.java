@@ -19,7 +19,7 @@ public class ReviewSummaryResultEventListener {
 
 	@KafkaListener(
 			topics = KafkaTopics.REVIEW_SUMMARY_RESULT_EVENTS,
-			groupId = "review-service",
+			groupId = "support-service",
 			containerFactory = "reviewSummaryResultKafkaListenerContainerFactory"
 	)
 	public void onReviewSummaryResult(ReviewSummaryResultEvent event) {

@@ -3,7 +3,7 @@ name: Build, Push & Deploy (dev)
 on:
   push:
     branches:
-      - dev
+      - dev-cicd
 
 permissions:
   contents: read
@@ -146,22 +146,30 @@ jobs:
             echo "▶ Restarting deployments on k3s (sequential)"
 
             priority=(modi-config modi-discovery modi-gateway)
+            k8s_base_dir="/home/ec2-user/app/modi/k8s/base"
+
+            ensure_deploy() {
+              local service="$1"
+              if kubectl get deploy "$service" >/dev/null 2>&1; then
+                echo "▶ rollout restart $service"
+                kubectl rollout restart deploy "$service"
+              else
+                echo "▶ apply $service"
+                kubectl apply -f "${k8s_base_dir}/${service}.yaml"
+              fi
+              echo "▶ rollout status $service"
+              kubectl rollout status deploy "$service"
+            }
 
             for service in "${priority[@]}"; do
               if echo "$CHANGED_SERVICES" | grep -qw "$service"; then
-                echo "▶ rollout restart $service"
-                kubectl rollout restart deploy "$service"
-                echo "▶ rollout status $service"
-                kubectl rollout status deploy "$service"
+                ensure_deploy "$service"
               fi
             done
 
             for service in $CHANGED_SERVICES; do
               if [[ ! " ${priority[*]} " =~ " ${service} " ]]; then
-                echo "▶ rollout restart $service"
-                kubectl rollout restart deploy "$service"
-                echo "▶ rollout status $service"
-                kubectl rollout status deploy "$service"
+                ensure_deploy "$service"
               fi
             done
 

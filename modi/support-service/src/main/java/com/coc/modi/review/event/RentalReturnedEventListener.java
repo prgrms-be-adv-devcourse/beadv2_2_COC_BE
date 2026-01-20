@@ -20,7 +20,7 @@ public class RentalReturnedEventListener {
 
 	@KafkaListener(
 			topics = KafkaTopics.RENTAL_RETURNED_EVENTS,
-			groupId = "review-service",
+			groupId = "support-service",
 			containerFactory = "rentalReturnedKafkaListenerContainerFactory"
 	)
 	public void onRentalReturned(RentalReturnedEvent event) {

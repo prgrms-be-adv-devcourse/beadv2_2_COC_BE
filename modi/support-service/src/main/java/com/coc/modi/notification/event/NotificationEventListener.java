@@ -17,7 +17,7 @@ public class NotificationEventListener {
 	
 	@KafkaListener(
 			topics = KafkaTopics.NOTIFICATION_EVENTS,
-			groupId = "notification-service",
+			groupId = "support-service",
 			containerFactory = "notificationKafkaListenerContainerFactory"
 	)
 	public void onNotificationEvent(NotificationEvent event) {
