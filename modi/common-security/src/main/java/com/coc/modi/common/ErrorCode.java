@@ -68,7 +68,9 @@ public enum ErrorCode {
 	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-SETTLEMENT-404", "정산서를 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_CONFLICT(HttpStatus.CONFLICT, "SELLER-SETTLEMENT-409", "정산서가 이미 다른 배치로 처리되었습니다."),
-	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다.");
+	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다."),
+	
+	NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE-404", "공지사항을 찾을 수 없습니다.");
 	
 	private final HttpStatus status;
 	private final String code;
