@@ -59,6 +59,7 @@ if [ "${K3D_IMPORT_IMAGES}" = "true" ]; then
   docker build -f "${ROOT_DIR}/delivery-service/Dockerfile" -t modi/delivery-service:local "${ROOT_DIR}"
   docker build -f "${ROOT_DIR}/notification-service/Dockerfile" -t modi/notification-service:local "${ROOT_DIR}"
   docker build -f "${ROOT_DIR}/review-service/Dockerfile" -t modi/review-service:local "${ROOT_DIR}"
+  docker build -f "${ROOT_DIR}/ai-service/Dockerfile" -t modi/ai-service:local "${ROOT_DIR}"
 
   IMAGES=(
     modi/modi-discovery:local
@@ -72,6 +73,7 @@ if [ "${K3D_IMPORT_IMAGES}" = "true" ]; then
     modi/delivery-service:local
     modi/notification-service:local
     modi/review-service:local
+    modi/ai-service:local
   )
 
   echo "Importing images into k3d cluster '${K3D_CLUSTER_NAME}'..." >&2

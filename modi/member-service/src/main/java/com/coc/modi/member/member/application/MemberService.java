@@ -265,7 +265,7 @@ public class MemberService {
 				MemberRoleChangedEvent.of(memberId, member.getRole().name())
 		);
 		
-		return jwtTokenProvider.generateAccessToken(memberId, member.getName(), member.getEmail());
+		return jwtTokenProvider.generateAccessToken(memberId);
 	}
 
 	@Transactional(readOnly = true)

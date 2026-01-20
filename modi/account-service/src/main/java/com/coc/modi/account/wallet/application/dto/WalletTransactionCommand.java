@@ -119,6 +119,7 @@ public record WalletTransactionCommand(
 				null,
 				settlementId,
 				"정산금 지급",
+				null,
 				null
 		);
 	}

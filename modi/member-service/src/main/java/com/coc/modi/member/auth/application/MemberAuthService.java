@@ -53,8 +53,8 @@ public class MemberAuthService {
 			throw new MemberAccessDeniedException("정지된 회원입니다.");
 		}
 		
-		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getName(), member.getEmail());
-		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getName(), member.getEmail());
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
+		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 		
 		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
 		
@@ -69,8 +69,8 @@ public class MemberAuthService {
 
 	public MemberLoginResponse issueTokens(Member member, boolean secureCookie) {
 
-		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
-		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
+		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 
 		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
 
@@ -104,11 +104,8 @@ public class MemberAuthService {
 			throw new MemberException(ErrorCode.UNAUTHORIZED);
 		}
 		
-		String name = jwtTokenProvider.getName(refreshToken);
-		String email = jwtTokenProvider.getEmail(refreshToken);
-		
-		String newAccessToken = jwtTokenProvider.generateAccessToken(memberId, name, email);
-		String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId, name, email);
+		String newAccessToken = jwtTokenProvider.generateAccessToken(memberId);
+		String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId);
 		
 		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
 		

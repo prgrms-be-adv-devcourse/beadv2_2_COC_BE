@@ -17,7 +17,7 @@ public class MemberRoleChangedListener {
 	private final MemberAuthzService memberAuthzService;
 
 	@KafkaListener(
-			topics = KafkaTopics.MEMBER_ROLE_CHANGED,
+			topics = KafkaTopics.MEMBER_ROLE_CHANGED_EVENTS,
 			groupId = "${gateway.authz.kafka-group-id:modi-gateway-authz}",
 			containerFactory = "memberRoleChangedKafkaListenerContainerFactory"
 	)

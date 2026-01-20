@@ -12,7 +12,6 @@ include(
         'seller-service',
         'member-service',
         'review-service',
-        'delivery-service',
         'ai-service',
         'notification-service',
         'delivery-service',
