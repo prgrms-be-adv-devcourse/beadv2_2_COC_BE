@@ -16,17 +16,10 @@ public record PasswordResetConfirmRequest(
 				regexp = "^\\d{6}$",
 				message = "인증코드는 6자리 숫자입니다"
 		)
-		String code,
-		
-		@NotBlank
-		@Pattern(
-				regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,20}$",
-				message = "비밀번호는 8~20자이며 영문, 숫자, 특수문자를 포함해야 합니다"
-		)
-		String newPassword
+		String code
 ) {
 	public PasswordResetConfirmCommand toCommand() {
 		
-		return new PasswordResetConfirmCommand(email, code, newPassword);
+		return new PasswordResetConfirmCommand(email, code);
 	}
 }

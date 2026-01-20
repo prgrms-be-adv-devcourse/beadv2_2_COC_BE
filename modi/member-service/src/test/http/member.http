@@ -41,7 +41,7 @@ Content-Type: application/json
   "password": "!@#asdf11223"
 }
 
-### 비밀번호 찾기 - 코드 발송
+### 비밀번호 재설정 - 코드 발송
 
 POST {{host}}/member-service/api/auth/password/reset/send
 Content-Type: application/json
@@ -50,14 +50,23 @@ Content-Type: application/json
   "email": "bbb@gmail.com"
 }
 
-### 비밀번호 찾기 - 재설정
+### 비밀번호 재설정 - 코드 확인
 
 POST {{host}}/member-service/api/auth/password/reset/confirm
 Content-Type: application/json
 
 {
   "email": "bbb@gmail.com",
-  "code": "123456",
+  "code": "123456"
+}
+
+### 비밀번호 재설정 - 재설정
+
+POST {{host}}/member-service/api/auth/password/reset
+Content-Type: application/json
+
+{
+  "resetToken": "RESET_TOKEN",
   "newPassword": "NewPass!23"
 }
 

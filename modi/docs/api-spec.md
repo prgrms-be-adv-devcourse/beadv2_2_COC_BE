@@ -28,7 +28,8 @@
 | POST | `/api/auth/email/verify/send` | 이메일 인증 코드 발송 |
 | POST | `/api/auth/email/verify/confirm` | 이메일 인증 확인 |
 | POST | `/api/auth/password/reset/send` | 비밀번호 재설정 코드 발송 |
-| POST | `/api/auth/password/reset/confirm` | 비밀번호 재설정 |
+| POST | `/api/auth/password/reset/confirm` | 비밀번호 재설정 코드 확인 |
+| POST | `/api/auth/password/reset` | 비밀번호 재설정 |
 
 ### 내부 API
 | Method | Path | 설명 |
