@@ -28,19 +28,18 @@ public class JwtTokenProvider {
         this.refreshTokenValidityInMs = refreshTokenValidityInMs;
     }
 
-    public String generateAccessToken(Long memberId, String role){
+    public String generateAccessToken(Long memberId){
 
-        return generateToken(memberId, role, accessTokenValidityInMs);
+        return generateToken(memberId, accessTokenValidityInMs);
     }
 
-    public String generateRefreshToken(Long memberId, String role){
+    public String generateRefreshToken(Long memberId){
 
-        return generateToken(memberId, role, refreshTokenValidityInMs);
+        return generateToken(memberId, refreshTokenValidityInMs);
     }
 
 
     public String generateToken(Long memberId,
-                                String role,
                                 long validityInMs){
 
         Date now = new Date();
@@ -48,7 +47,6 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(memberId.toString())
-                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -70,11 +68,6 @@ public class JwtTokenProvider {
     public Long getMemberId(String token){
 
         return Long.parseLong(getClaims(token).getSubject());
-    }
-
-    public String getRole(String token){
-
-        return getClaims(token).get("role").toString();
     }
 
     private Claims getClaims(String token) {

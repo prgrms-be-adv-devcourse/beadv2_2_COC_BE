@@ -3,6 +3,7 @@ package com.coc.modi.member.outbox;
 import java.util.List;
 
 import com.coc.modi.kafka.event.MemberCreatedEvent;
+import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,6 +52,13 @@ public class MemberOutboxPublisher {
 		
 		if (event.getEventType() == MemberOutboxEventType.MEMBER_CREATED) {
 			MemberCreatedEvent payload = readPayload(event.getPayload(), MemberCreatedEvent.class);
+			kafkaTemplate
+					.send(event.getEventType().getTopic(), payload.memberId().toString(), payload)
+					.get();
+			return;
+		}
+		if (event.getEventType() == MemberOutboxEventType.MEMBER_ROLE_CHANGED) {
+			MemberRoleChangedEvent payload = readPayload(event.getPayload(), MemberRoleChangedEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.memberId().toString(), payload)
 					.get();

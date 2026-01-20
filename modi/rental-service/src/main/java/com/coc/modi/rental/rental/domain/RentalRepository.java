@@ -6,6 +6,8 @@ import java.util.Optional;
 public interface RentalRepository {
 	
 	void save(Rental rental);
+
+	void saveAndFlush(Rental rental);
 	
 	Optional<Rental> findById(Long rentalId);
 	

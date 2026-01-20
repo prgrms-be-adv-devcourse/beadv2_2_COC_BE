@@ -46,7 +46,8 @@ import static org.mockito.Mockito.when;
                 "spring.datasource.driverClassName=org.h2.Driver",
                 "spring.datasource.username=sa",
                 "spring.datasource.password=",
-                "spring.jpa.hibernate.ddl-auto=create-drop"
+                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.properties.hibernate.hbm2ddl.create_namespaces=true"
         }
 )
 class DepositServiceConcurrencyTest {
@@ -81,16 +82,21 @@ class DepositServiceConcurrencyTest {
 
         String paymentKey = "payment-key-" + UUID.randomUUID();
         when(tossPaymentsClient.approvePayment(anyString(), anyString(), any()))
-                .thenReturn(new TossPaymentApprovalResponse(
-                        paymentKey,
-                        "order-id",
-                        "DONE",
-                        1030L,
-                        null,
-                        null,
-                        null,
-                        null
-                ));
+                .thenAnswer(invocation -> {
+                    String paymentKey = invocation.getArgument(0);
+                    String orderId = invocation.getArgument(1);
+                    BigDecimal amount = invocation.getArgument(2);
+                    return new TossPaymentApprovalResponse(
+                            paymentKey,
+                            orderId,
+                            "DONE",
+                            amount.longValue(),
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                });
 
         Long memberId = 1L;
         BigDecimal amount = new BigDecimal("1000.00");
@@ -114,7 +120,7 @@ class DepositServiceConcurrencyTest {
                 futures.add(executor.submit(() -> {
                     readyLatch.countDown();
                     startLatch.await();
-                    return depositService.approveDeposit(approveCommand);
+                    return depositService.approveDeposit(memberId, approveCommand);
                 }));
             }
 

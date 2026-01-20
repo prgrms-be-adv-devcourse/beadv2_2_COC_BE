@@ -1,6 +1,7 @@
 package com.coc.modi.member.outbox;
 
 import com.coc.modi.kafka.event.MemberCreatedEvent;
+import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,19 @@ public class MemberOutboxService {
 		
 		outboxEventRepository.save(outboxEvent);
 	}
+
+	public void enqueueMemberRoleChanged(MemberRoleChangedEvent event) {
+
+		String payload = writePayload(event);
+		MemberOutboxEvent outboxEvent = MemberOutboxEvent.create(
+				"MEMBER",
+				event.memberId(),
+				MemberOutboxEventType.MEMBER_ROLE_CHANGED,
+				payload
+		);
+
+		outboxEventRepository.save(outboxEvent);
+	}
 	
 	private String writePayload(MemberCreatedEvent event) {
 		
@@ -33,6 +47,15 @@ public class MemberOutboxService {
 			return objectMapper.writeValueAsString(event);
 		} catch (JsonProcessingException ex) {
 			throw new IllegalStateException("Failed to serialize member created event", ex);
+		}
+	}
+
+	private String writePayload(MemberRoleChangedEvent event) {
+
+		try {
+			return objectMapper.writeValueAsString(event);
+		} catch (JsonProcessingException ex) {
+			throw new IllegalStateException("Failed to serialize member role changed event", ex);
 		}
 	}
 }

@@ -62,6 +62,11 @@ fi
 kubectl wait --for=condition=Ready nodes --all --timeout=120s >/dev/null
 
 docker compose -f "${ROOT_DIR}/docker-compose.yml" build
+echo "Building additional local images..." >&2
+docker build -f "${ROOT_DIR}/delivery-service/Dockerfile" -t modi/delivery-service:local "${ROOT_DIR}"
+docker build -f "${ROOT_DIR}/notification-service/Dockerfile" -t modi/notification-service:local "${ROOT_DIR}"
+docker build -f "${ROOT_DIR}/review-service/Dockerfile" -t modi/review-service:local "${ROOT_DIR}"
+docker build -f "${ROOT_DIR}/ai-service/Dockerfile" -t modi/ai-service:local "${ROOT_DIR}"
 
 IMAGES=(
   modi/modi-discovery:local
@@ -73,6 +78,8 @@ IMAGES=(
   modi/seller-service:local
   modi/member-service:local
   modi/delivery-service:local
+  modi/notification-service:local
+  modi/review-service:local
   modi/ai-service:local
 )
 
@@ -127,6 +134,8 @@ DEPLOYMENTS=(
   deployment/member-service
   deployment/delivery-service
   deployment/ai-service
+  deployment/notification-service
+  deployment/review-service
 )
 
 echo "Scaling down services before infra readiness..." >&2
