@@ -100,7 +100,7 @@ public class SpringAiModerationModel implements ProductModerationModel {
 		if (reasons.isEmpty() && scores != null) {
 			scores.entrySet().stream()
 					.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-					limit(1)
+					.limit(1)
 					.map(Map.Entry::getKey)
 					.forEach(reasons::add);
 		}

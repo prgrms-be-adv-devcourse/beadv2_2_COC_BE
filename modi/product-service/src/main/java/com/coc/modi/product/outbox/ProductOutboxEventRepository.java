@@ -12,7 +12,7 @@ public interface ProductOutboxEventRepository extends JpaRepository<ProductOutbo
 	@Query(
 			value = """
 					select *
-					from product_outbox
+					from product.product_outbox
 					where status = 'PENDING'
 					order by created_at
 					limit :limit
