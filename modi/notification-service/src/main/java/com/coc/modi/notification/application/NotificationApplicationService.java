@@ -1,12 +1,16 @@
 package com.coc.modi.notification.application;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.coc.modi.common.NotificationType;
 import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.notification.domain.Notification;
 import com.coc.modi.notification.domain.NotificationRepository;
+import com.coc.modi.notification.domain.NotificationEventDedup;
+import com.coc.modi.notification.domain.NotificationEventDedupRepository;
 import com.coc.modi.notification.infrastructure.client.member.MemberClientAdapter;
 
 import lombok.RequiredArgsConstructor;
@@ -16,15 +20,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationApplicationService {
+
+	private static final String CONSUMER_NAME = "notification-service";
 	
 	private final NotificationRepository notificationRepository;
 	private final NotificationSseService notificationSseService;
 	private final MemberClientAdapter memberClientAdapter;
 	private final ProductModerationMailService productModerationMailService;
+	private final NotificationEventDedupRepository notificationEventDedupRepository;
 	
 	@Transactional
 	public void handle(NotificationEvent event) {
-		
+		if (!tryMarkProcessed(event)) {
+			return;
+		}
+
 		Notification notification = Notification.fromEvent(event);
 		Notification saved = notificationRepository.save(notification);
 		notificationSseService.sendNotification(event.receiverId(), saved);
@@ -63,6 +73,25 @@ public class NotificationApplicationService {
 			productModerationMailService.sendReviewMail(email, detail);
 		} else {
 			productModerationMailService.sendBlockedMail(email, detail);
+		}
+	}
+
+	private boolean tryMarkProcessed(NotificationEvent event) {
+
+		if (event == null) {
+			return false;
+		}
+		if (!StringUtils.hasText(event.eventId())) {
+			log.warn("알림 이벤트 ID가 비어 있어 중복 처리 방지를 건너뜁니다. receiverId={}", event.receiverId());
+			return true;
+		}
+
+		try {
+			notificationEventDedupRepository.save(NotificationEventDedup.create(event.eventId(), CONSUMER_NAME));
+			return true;
+		} catch (DataIntegrityViolationException ex) {
+			log.info("중복 알림 이벤트 처리 건너뜀 eventId={} consumer={}", event.eventId(), CONSUMER_NAME);
+			return false;
 		}
 	}
 }
