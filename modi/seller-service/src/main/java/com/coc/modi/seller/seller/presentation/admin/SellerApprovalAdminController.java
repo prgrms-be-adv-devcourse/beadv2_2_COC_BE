@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.coc.modi.common.ErrorCode;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.seller.application.SellerApprovalService;
-import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
 import com.coc.modi.seller.seller.exception.SellerException;
 
 import lombok.RequiredArgsConstructor;
@@ -21,20 +21,20 @@ public class SellerApprovalAdminController {
 
 	private final SellerApprovalService sellerApprovalService;
 
-	@PatchMapping("/{sellerId}/approve")
-	public SellerDetailResponse approveSeller(@AuthenticationPrincipal CustomMember member,
-											  @PathVariable Long sellerId) {
+	@PatchMapping("/{memberId}/approve")
+	public SellerRegistrationResponse approveSeller(@AuthenticationPrincipal CustomMember member,
+											  @PathVariable Long memberId) {
 		
 		requireAdmin(member);
-		return sellerApprovalService.approveSeller(sellerId);
+		return sellerApprovalService.approveSeller(memberId, member.memberId());
 	}
 
-	@PatchMapping("/{sellerId}/reject")
-	public SellerDetailResponse rejectSeller(@AuthenticationPrincipal CustomMember member,
-											 @PathVariable Long sellerId) {
+	@PatchMapping("/{memberId}/reject")
+	public SellerRegistrationResponse rejectSeller(@AuthenticationPrincipal CustomMember member,
+											 @PathVariable Long memberId) {
 
 		requireAdmin(member);
-		return sellerApprovalService.rejectSeller(sellerId);
+		return sellerApprovalService.rejectSeller(memberId);
 	}
 
 	private void requireAdmin(CustomMember member) {
