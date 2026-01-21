@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "member", schema = "public")
+@Table(name = "member", schema = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 	
@@ -89,5 +89,11 @@ public class Member extends BaseEntity {
 	public void updateRole(MemberRole memberRole) {
 		
 		this.role = memberRole;
+	}
+
+	public void connectProvider(String provider, String providerId) {
+
+		this.provider = provider;
+		this.providerId = providerId;
 	}
 }

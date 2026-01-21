@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: modi-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: modi.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: modi-gateway
+                port:
+                  number: 8080

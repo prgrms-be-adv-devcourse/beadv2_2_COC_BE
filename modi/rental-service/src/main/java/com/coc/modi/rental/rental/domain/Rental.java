@@ -1,6 +1,5 @@
 package com.coc.modi.rental.rental.domain;
 
-import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.BaseEntity;
 
 import jakarta.persistence.*;
@@ -13,12 +12,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "rental", schema = "public")
+@Table(name = "rental", schema = "rental")
 public class Rental extends BaseEntity {
 	
 	@Id

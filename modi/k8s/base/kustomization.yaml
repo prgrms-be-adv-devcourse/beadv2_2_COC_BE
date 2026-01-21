@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: modi
 resources:
   - namespace.yaml
+  - kafka.yaml
   - pgvector.yaml
   - redis.yaml
   - elasticsearch.yaml
@@ -14,3 +15,8 @@ resources:
   - rental-service.yaml
   - seller-service.yaml
   - member-service.yaml
+  - notification-service.yaml
+  - review-service.yaml
+  - delivery-service.yaml
+  - seller-settlement-cronjob.yaml
+  - ai-service.yaml

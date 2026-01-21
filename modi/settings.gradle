@@ -12,6 +12,7 @@ include(
         'seller-service',
         'member-service',
         'review-service',
+        'ai-service',
         'notification-service',
         'delivery-service',
         'modi-gateway',

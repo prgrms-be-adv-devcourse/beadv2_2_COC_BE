@@ -4,7 +4,9 @@ import com.coc.modi.seller.seller.infrastructure.client.rental.RentalFeignClient
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.domain.SellerRepository;
 import com.coc.modi.seller.settlement.application.SettlementAggregationService;
-import com.coc.modi.seller.exception.SettlementInputInvalidException;
+import com.coc.modi.seller.settlement.application.SettlementNotificationService;
+import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublisher;
+import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
@@ -150,9 +152,11 @@ public class SettlementBatchJobConfig {
 	}
 
 	@Bean
-	public SettlementPayoutWriter settlementPayoutWriter() {
+	public SettlementPayoutWriter settlementPayoutWriter(SellerSettlementJpaRepository settlementRepository,
+														 SettlementPayoutRequestPublisher settlementPayoutRequestPublisher,
+														 SettlementNotificationService settlementNotificationService) {
 
-		return new SettlementPayoutWriter();
+		return new SettlementPayoutWriter(settlementRepository, settlementPayoutRequestPublisher, settlementNotificationService);
 	}
 	
 	@Bean

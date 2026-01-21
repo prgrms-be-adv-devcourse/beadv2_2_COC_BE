@@ -2,6 +2,7 @@ package com.coc.gateway.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,9 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import com.coc.gateway.security.GlobalAuthHeaderFilter;
 import com.coc.gateway.security.JwtTokenProvider;
+import com.coc.gateway.security.authz.AuthzRequestContext;
+import com.coc.gateway.security.authz.MemberAuthzService;
+import com.coc.gateway.security.permission.EndpointPermissionAuthorizationManager;
 
 import lombok.Setter;
 import reactor.core.publisher.Mono;
@@ -80,7 +84,8 @@ public class WebFluxSecurityConfig {
 			
 			ServerHttpSecurity http,
 			AuthenticationWebFilter jwtAuthWebFilter,
-			GlobalAuthHeaderFilter globalAuthHeaderFilter) {
+			GlobalAuthHeaderFilter globalAuthHeaderFilter,
+			EndpointPermissionAuthorizationManager endpointPermissionAuthorizationManager) {
 		
 		return http
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -94,15 +99,14 @@ public class WebFluxSecurityConfig {
 								"/v3/api-docs/**",
 								"/*/v3/api-docs/**",
 								"/member-service/api/auth/**",
+								"/member-service/oauth2/**",
+								"/member-service/login/oauth2/**",
 								"/member-service/api/members/signup",
 								"/favicon.ico"
 						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()
-						.pathMatchers(HttpMethod.POST, "/seller-service/api/sellers").hasRole("MEMBER")
-						.pathMatchers("/seller-service/api/sellers/**").hasRole("SELLER")
-						.pathMatchers("/*/api/**").hasRole("MEMBER")
 						.pathMatchers("/*/actuator/**").permitAll()
-						.anyExchange().denyAll()
+						.anyExchange().access(endpointPermissionAuthorizationManager)
 				)
 				.addFilterAt(jwtAuthWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.addFilterAfter(globalAuthHeaderFilter, SecurityWebFiltersOrder.AUTHENTICATION)
@@ -123,8 +127,13 @@ public class WebFluxSecurityConfig {
 			}
 			
 			String token = auth.substring(7);
+			String method = exchange.getRequest().getMethod().toString();
+			String path = exchange.getRequest().getPath().pathWithinApplication().value();
 			
-			return Mono.just(new UsernamePasswordAuthenticationToken(token, token));
+			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(token, token);
+			authToken.setDetails(new AuthzRequestContext(method, path));
+			
+			return Mono.just(authToken);
 		});
 		
 		filter.setAuthenticationFailureHandler((webFilterExchange, exception) ->
@@ -134,7 +143,9 @@ public class WebFluxSecurityConfig {
 	}
 	
 	@Bean
-	public ReactiveAuthenticationManager jwtAuthenticationManager(JwtTokenProvider jwtTokenProvider) {
+	public ReactiveAuthenticationManager jwtAuthenticationManager(
+			JwtTokenProvider jwtTokenProvider,
+			MemberAuthzService memberAuthzService) {
 		
 		return authentication -> {
 			
@@ -146,18 +157,19 @@ public class WebFluxSecurityConfig {
 			}
 			
 			Long memberId = jwtTokenProvider.getMemberId(token);
-			String role = jwtTokenProvider.getRole(token);
+			AuthzRequestContext context = authentication.getDetails() instanceof AuthzRequestContext details
+					? details
+					: new AuthzRequestContext("", "");
 			
-			List<GrantedAuthority> authorities = new ArrayList<>();
-			
-			authorities.add(new SimpleGrantedAuthority("ROLE_MEMBER"));
-			
-			if ("SELLER".equalsIgnoreCase(role)) {
-				
-				authorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
-			}
-			
-			return Mono.just(new UsernamePasswordAuthenticationToken(memberId, token, authorities));
+			return memberAuthzService.resolveRoles(memberId, context.method(), context.path())
+					.defaultIfEmpty(Set.of())
+					.map(roles -> {
+						List<GrantedAuthority> authorities = new ArrayList<>();
+						for (String role : roles) {
+							authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+						}
+						return new UsernamePasswordAuthenticationToken(memberId, token, authorities);
+					});
 		};
 	}
 }

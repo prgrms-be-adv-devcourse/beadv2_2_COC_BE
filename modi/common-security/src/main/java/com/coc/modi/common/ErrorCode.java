@@ -32,6 +32,11 @@ public enum ErrorCode {
 	DELIVERY_CONFLICT(HttpStatus.CONFLICT, "DELIVERY-409", "배송 요청이 현재 상태와 충돌합니다."),
 	DELIVERY_TRACKING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "DELIVERY-500", "배송 추적 처리 중 오류가 발생했습니다."),
 
+	CHAT_INVALID_INPUT(HttpStatus.BAD_REQUEST, "CHAT-400", "잘못된 채팅 요청입니다."),
+	CHAT_FORBIDDEN(HttpStatus.FORBIDDEN, "CHAT-403", "채팅 접근 권한이 없습니다."),
+	CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT-404", "채팅 정보를 찾을 수 없습니다."),
+	CHAT_CONFLICT(HttpStatus.CONFLICT, "CHAT-409", "채팅 상태가 요청과 충돌합니다."),
+
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW-404", "리뷰를 찾을 수 없습니다."),
 	REVIEW_FORBIDDEN(HttpStatus.FORBIDDEN, "REVIEW-403", "리뷰 접근 권한이 없습니다."),
 	
@@ -47,6 +52,7 @@ public enum ErrorCode {
 	MEMBER_ROLE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-ROLE-400", "요청한 역할 상태가 일치하지 않습니다."),
 	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
+	
 	ACCOUNT_BALENCE_REMAIN(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-REMAIN-400", "지갑에 잔액이 남아있습니다."),
 	ACCOUNT_BALENCE_CHECK(HttpStatus.NOT_FOUND, "ACCOUNT-BALANCE-404", "지갑 잔액 체크에 실패했습니다"),
 	ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-404", "지갑 정보를 찾을 수 없습니다."),
@@ -57,12 +63,17 @@ public enum ErrorCode {
 	
 	SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-404", "판매자를 찾을 수 없습니다."),
 	SELLER_DUPLICATE(HttpStatus.CONFLICT, "SELLER-409", "이미 등록된 판매자입니다."),
+	SELLER_STATUS_CONFLICT(HttpStatus.CONFLICT, "SELLER-STATUS-409", "판매자 상태가 요청과 충돌합니다."),
 	SETTLEMENT_BATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-404", "정산 배치를 찾을 수 없습니다."),
 	SETTLEMENT_BATCH_DUPLICATE(HttpStatus.CONFLICT, "SETTLEMENT-BATCH-409", "이미 생성된 정산 배치입니다."),
 	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-SETTLEMENT-404", "정산서를 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_CONFLICT(HttpStatus.CONFLICT, "SELLER-SETTLEMENT-409", "정산서가 이미 다른 배치로 처리되었습니다."),
-	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다.");
+	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다."),
+	
+	ADMIN_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ADMIN-403", "관리자 권한이 없습니다."),
+	ADMIN_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN-NOTICE-404", "공지사항을 찾을 수 없습니다."),
+	ADMIN_BLACKLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN-BLACKLIST-404", "블랙리스트 정보를 찾을 수 없습니다.");
 	
 	private final HttpStatus status;
 	private final String code;

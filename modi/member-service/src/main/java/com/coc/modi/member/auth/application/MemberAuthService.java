@@ -53,8 +53,8 @@ public class MemberAuthService {
 			throw new MemberAccessDeniedException("정지된 회원입니다.");
 		}
 		
-		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
-		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getRole().name(), member.getName(), member.getEmail());
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
+		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 		
 		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
 		
@@ -64,6 +64,22 @@ public class MemberAuthService {
 				accessToken,
 				MemberLoginResponse.MemberData.from(member),
 				refreshCookieManager.create(refreshToken,  ttl, secureCookie)
+		);
+	}
+
+	public MemberLoginResponse issueTokens(Member member, boolean secureCookie) {
+
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
+		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+
+		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
+
+		refreshTokenService.save(member.getId(), refreshToken, ttl);
+
+		return new MemberLoginResponse(
+				accessToken,
+				MemberLoginResponse.MemberData.from(member),
+				refreshCookieManager.create(refreshToken, ttl, secureCookie)
 		);
 	}
 	
@@ -88,12 +104,8 @@ public class MemberAuthService {
 			throw new MemberException(ErrorCode.UNAUTHORIZED);
 		}
 		
-		String role = jwtTokenProvider.getRole(refreshToken);
-		String name = jwtTokenProvider.getName(refreshToken);
-		String email = jwtTokenProvider.getEmail(refreshToken);
-		
-		String newAccessToken = jwtTokenProvider.generateAccessToken(memberId, role, name, email);
-		String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId, role, name, email);
+		String newAccessToken = jwtTokenProvider.generateAccessToken(memberId);
+		String newRefreshToken = jwtTokenProvider.generateRefreshToken(memberId);
 		
 		Duration ttl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityInMs());
 		

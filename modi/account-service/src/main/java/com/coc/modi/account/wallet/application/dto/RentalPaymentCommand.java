@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 public record RentalPaymentCommand(
         Long memberId,
         Long rentalId,
-        BigDecimal amount
+        BigDecimal amount,
+		String requestId
 ) {
 
     public static RentalPaymentCommand from(RentalPaymentRequest request) {
@@ -15,7 +16,8 @@ public record RentalPaymentCommand(
         return new RentalPaymentCommand(
                 request.memberId(),
                 request.rentalId(),
-                request.amount()
+                request.amount(),
+				request.requestId()
         );
     }
 }

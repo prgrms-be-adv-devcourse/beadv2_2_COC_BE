@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -41,11 +42,12 @@ import static org.mockito.Mockito.when;
                 "spring.cloud.discovery.enabled=false",
                 "eureka.client.enabled=false",
                 "app.gateway-prefix=test",
-                "spring.datasource.url=jdbc:h2:mem:accounttest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+                "spring.datasource.url=jdbc:h2:mem:accounttest;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS account",
                 "spring.datasource.driverClassName=org.h2.Driver",
                 "spring.datasource.username=sa",
                 "spring.datasource.password=",
-                "spring.jpa.hibernate.ddl-auto=create-drop"
+                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.properties.hibernate.hbm2ddl.create_namespaces=true"
         }
 )
 class DepositServiceConcurrencyTest {
@@ -78,28 +80,34 @@ class DepositServiceConcurrencyTest {
     @Test
     void approveDeposit_isIdempotentWithConcurrentRequests() throws Exception {
 
+        String paymentKey = "payment-key-" + UUID.randomUUID();
         when(tossPaymentsClient.approvePayment(anyString(), anyString(), any()))
-                .thenReturn(new TossPaymentApprovalResponse(
-                        "payment-key",
-                        "order-id",
-                        "DONE",
-                        1000L,
-                        null,
-                        null,
-                        null,
-                        null
-                ));
+                .thenAnswer(invocation -> {
+                    String paymentKey = invocation.getArgument(0);
+                    String orderId = invocation.getArgument(1);
+                    BigDecimal amount = invocation.getArgument(2);
+                    return new TossPaymentApprovalResponse(
+                            paymentKey,
+                            orderId,
+                            "DONE",
+                            amount.longValue(),
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                });
 
         Long memberId = 1L;
         BigDecimal amount = new BigDecimal("1000.00");
         walletCommandService.createWalletForMember(memberId);
 
         DepositResponse request = depositService.requestDeposit(new DepositCommand(memberId, amount));
-        String paymentKey = "payment-key";
+        BigDecimal approvedAmount = request.totalAmount();
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),
-                amount
+                approvedAmount
         );
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -112,7 +120,7 @@ class DepositServiceConcurrencyTest {
                 futures.add(executor.submit(() -> {
                     readyLatch.countDown();
                     startLatch.await();
-                    return depositService.approveDeposit(approveCommand);
+                    return depositService.approveDeposit(memberId, approveCommand);
                 }));
             }
 

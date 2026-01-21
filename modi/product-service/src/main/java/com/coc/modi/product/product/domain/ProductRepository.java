@@ -19,4 +19,6 @@ public interface ProductRepository {
 	void flush();
 	
 	List<Product> findByIdIn(List<Long> productIds);
+
+	List<Product> findByStatusNot(ProductStatus status);
 }

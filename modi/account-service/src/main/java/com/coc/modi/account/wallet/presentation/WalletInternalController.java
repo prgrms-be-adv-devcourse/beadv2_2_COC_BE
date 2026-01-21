@@ -21,13 +21,6 @@ public class WalletInternalController {
     private final WalletCommandService walletCommandService;
 	private final MemberWalletService memberWalletService;
 
-    // member-service 에서 회원가입 시 호출 -> 지갑 생성
-    @PostMapping("/{memberId}")
-    public void createWallet(@PathVariable Long memberId) {
-
-        walletCommandService.createWalletForMember(memberId);
-    }
-	
 	// member-service 에서 회원탈퇴 시 호출 -> 지갑 잔액 확인
 	@GetMapping("/{memberId}/balance")
 	public MemberWalletResponse getMemberWalletBalance(@PathVariable Long memberId) {

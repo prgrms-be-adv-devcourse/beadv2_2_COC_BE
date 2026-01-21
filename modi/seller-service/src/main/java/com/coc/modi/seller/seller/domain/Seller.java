@@ -1,6 +1,7 @@
 package com.coc.modi.seller.seller.domain;
 
 import com.coc.modi.common.BaseEntity;
+import com.coc.modi.seller.seller.exception.SellerStatusConflictException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "seller", schema = "public")
+@Table(name = "seller", schema = "seller")
 public class Seller extends BaseEntity {
 
     @Id
@@ -50,7 +51,7 @@ public class Seller extends BaseEntity {
         this.storeName = storeName;
         this.bizRegNo = bizRegNo;
         this.storePhone = storePhone;
-        this.status = status != null ? status : SellerStatus.ACTIVE;
+        this.status = status != null ? status : SellerStatus.PENDING;
     }
 
     public static Seller create(Long memberId,
@@ -62,8 +63,39 @@ public class Seller extends BaseEntity {
                 .storeName(storeName)
                 .bizRegNo(bizRegNo)
                 .storePhone(storePhone)
-                .status(SellerStatus.ACTIVE)
+                .status(SellerStatus.PENDING)
                 .build();
+    }
+
+    public void requestApproval() {
+        if (this.status == SellerStatus.PENDING) {
+            return;
+        }
+        if (this.status == SellerStatus.ACTIVE || this.status == SellerStatus.SUSPENDED
+                || this.status == SellerStatus.CLOSED || this.status == SellerStatus.REJECTED) {
+            throw new SellerStatusConflictException("seller approval request is not allowed. status=" + this.status);
+        }
+        this.status = SellerStatus.PENDING;
+    }
+
+    public void approve() {
+        if (this.status == SellerStatus.ACTIVE) {
+            return;
+        }
+        if (this.status != SellerStatus.PENDING) {
+            throw new SellerStatusConflictException("seller approval is only allowed from PENDING. status=" + this.status);
+        }
+        this.status = SellerStatus.ACTIVE;
+    }
+
+    public void reject() {
+        if (this.status == SellerStatus.REJECTED) {
+            return;
+        }
+        if (this.status != SellerStatus.PENDING) {
+            throw new SellerStatusConflictException("seller rejection is only allowed from PENDING. status=" + this.status);
+        }
+        this.status = SellerStatus.REJECTED;
     }
 
     public void update(String storeName,

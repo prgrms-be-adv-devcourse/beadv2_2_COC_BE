@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "review", schema = "public")
+@Table(name = "review", schema = "review")
 public class Review extends BaseEntity {
 
 	@Id
@@ -90,4 +90,5 @@ public class Review extends BaseEntity {
 		
 		this.status = ReviewStatus.DELETED;
 	}
+
 }
