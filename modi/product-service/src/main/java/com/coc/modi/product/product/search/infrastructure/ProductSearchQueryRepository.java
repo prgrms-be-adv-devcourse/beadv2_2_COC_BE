@@ -6,8 +6,13 @@ import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
+
+import org.hibernate.Session;
+import org.hibernate.query.NativeQuery;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -25,6 +30,7 @@ import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class ProductSearchQueryRepository {
 
 	private static final ZoneOffset CURSOR_ZONE = ZoneOffset.ofHours(9);
@@ -38,7 +44,8 @@ public class ProductSearchQueryRepository {
 			ProductSortType sortType) {
 
 		QuerySpec spec = buildQuery(cond, normalizedKeyword, cursor, sortType);
-		Query query = entityManager.createNativeQuery(spec.sql, Product.class);
+		Session session = entityManager.unwrap(Session.class);
+		NativeQuery<Product> query = session.createNativeQuery(spec.sql, Product.class);
 		spec.params.forEach(query::setParameter);
 		query.setMaxResults(size);
 		return query.getResultList();
@@ -113,7 +120,12 @@ public class ProductSearchQueryRepository {
 				case PRICE_LOW -> applyPriceCursorFilter(where, params, cursor, true);
 			}
 		} catch (Exception ignored) {
-			// 잘못된 cursor면 첫 페이지처럼 동작
+			log.warn("product_search_cursor_invalid",
+					kv("log_type", "service"),
+					kv("product.search.cursor", cursor),
+					kv("product.search.sort_type", sortType),
+					kv("exception.class", ignored.getClass().getName()),
+					ignored);
 		}
 	}
 
