@@ -1,8 +1,8 @@
 package com.coc.modi.seller.seller.presentation.admin;
 
 import com.coc.modi.seller.seller.application.SellerApprovalService;
-import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
-import com.coc.modi.seller.seller.domain.SellerStatus;
+import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationStatus;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +14,6 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -50,7 +48,7 @@ class SellerApprovalAdminControllerTest {
 	@Test
 	void approveSeller_deniesNonAdmin() throws Exception {
 
-		mockMvc.perform(patch("/api/admin/sellers/{sellerId}/approve", 1L)
+		mockMvc.perform(patch("/api/admin/sellers/{memberId}/approve", 1L)
 						.header("X-Member-Id", "10")
 						.header("X-Roles", "MEMBER"))
 				.andExpect(status().isForbidden());
@@ -61,21 +59,21 @@ class SellerApprovalAdminControllerTest {
 	@Test
 	void approveSeller_allowsAdmin() throws Exception {
 
-		when(sellerApprovalService.approveSeller(1L))
-				.thenReturn(stubResponse(1L, 10L, SellerStatus.ACTIVE));
+		when(sellerApprovalService.approveSeller(1L, 10L))
+				.thenReturn(stubResponse(100L, 1L, SellerRegistrationStatus.APPROVED, 10L));
 
-		mockMvc.perform(patch("/api/admin/sellers/{sellerId}/approve", 1L)
+		mockMvc.perform(patch("/api/admin/sellers/{memberId}/approve", 1L)
 						.header("X-Member-Id", "10")
 						.header("X-Roles", "ADMIN"))
 				.andExpect(status().isOk());
 
-		verify(sellerApprovalService).approveSeller(1L);
+		verify(sellerApprovalService).approveSeller(1L, 10L);
 	}
 
 	@Test
 	void rejectSeller_deniesNonAdmin() throws Exception {
 
-		mockMvc.perform(patch("/api/admin/sellers/{sellerId}/reject", 2L)
+		mockMvc.perform(patch("/api/admin/sellers/{memberId}/reject", 2L)
 						.header("X-Member-Id", "11")
 						.header("X-Roles", "SELLER"))
 				.andExpect(status().isForbidden());
@@ -87,9 +85,9 @@ class SellerApprovalAdminControllerTest {
 	void rejectSeller_allowsAdmin() throws Exception {
 
 		when(sellerApprovalService.rejectSeller(2L))
-				.thenReturn(stubResponse(2L, 11L, SellerStatus.REJECTED));
+				.thenReturn(stubResponse(200L, 2L, SellerRegistrationStatus.REJECTED, null));
 
-		mockMvc.perform(patch("/api/admin/sellers/{sellerId}/reject", 2L)
+		mockMvc.perform(patch("/api/admin/sellers/{memberId}/reject", 2L)
 						.header("X-Member-Id", "11")
 						.header("X-Roles", "ADMIN"))
 				.andExpect(status().isOk());
@@ -97,17 +95,19 @@ class SellerApprovalAdminControllerTest {
 		verify(sellerApprovalService).rejectSeller(2L);
 	}
 
-	private SellerDetailResponse stubResponse(Long sellerId, Long memberId, SellerStatus status) {
+	private SellerRegistrationResponse stubResponse(Long registrationId,
+													Long memberId,
+													SellerRegistrationStatus status,
+													Long approvedBy) {
 
-		return new SellerDetailResponse(
-				sellerId,
+		return new SellerRegistrationResponse(
+				registrationId,
 				memberId,
 				"store",
 				"biz",
 				"010-0000-0000",
 				status,
-				LocalDateTime.now(),
-				LocalDateTime.now()
+				approvedBy
 		);
 	}
 }

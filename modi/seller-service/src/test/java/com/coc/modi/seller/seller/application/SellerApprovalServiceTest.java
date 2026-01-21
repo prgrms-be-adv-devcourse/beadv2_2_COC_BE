@@ -3,14 +3,16 @@ package com.coc.modi.seller.seller.application;
 import java.util.Optional;
 
 import com.coc.modi.kafka.event.SellerApprovedEvent;
-import com.coc.modi.kafka.event.SellerRejectedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.coc.modi.seller.outbox.SellerOutboxService;
-import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
-import com.coc.modi.seller.seller.domain.SellerStatus;
 import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
 import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistration;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationRepository;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationStatus;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +34,9 @@ class SellerApprovalServiceTest {
 
 	@Mock
 	private SellerRepository sellerRepository;
+
+	@Mock
+	private SellerRegistrationRepository sellerRegistrationRepository;
 
 	@Mock
 	private SellerOutboxService sellerOutboxService;
@@ -44,70 +50,63 @@ class SellerApprovalServiceTest {
 	@Test
 	void approveSeller_enqueuesOutboxWhenPending() {
 
-		Seller seller = Seller.create(10L, "store-10", "biz-10", "010-0000-0000");
-		ReflectionTestUtils.setField(seller, "id", 1L);
+		SellerRegistration registration = SellerRegistration.create(10L, "store-10", "biz-10", "010-0000-0000");
+		ReflectionTestUtils.setField(registration, "id", 100L);
 
-		when(sellerRepository.findById(1L)).thenReturn(Optional.of(seller));
+		when(sellerRegistrationRepository.findByMemberId(10L)).thenReturn(Optional.of(registration));
+		when(sellerRepository.existsByMemberId(10L)).thenReturn(false);
 		when(memberClientAdapter.getMemberEmail(10L)).thenReturn(new MemberEmailResponse(10L, "seller10@example.com"));
+		doAnswer(invocation -> {
+			Seller seller = invocation.getArgument(0);
+			ReflectionTestUtils.setField(seller, "id", 1L);
+			return seller;
+		}).when(sellerRepository).save(any(Seller.class));
 
-		SellerDetailResponse response = sellerApprovalService.approveSeller(1L);
+		SellerRegistrationResponse response = sellerApprovalService.approveSeller(10L, 99L);
 
-		verify(sellerRepository).save(seller);
+		verify(sellerRepository).save(any(Seller.class));
+		verify(sellerRegistrationRepository).save(registration);
 		ArgumentCaptor<SellerApprovedEvent> captor = ArgumentCaptor.forClass(SellerApprovedEvent.class);
 		verify(sellerOutboxService).enqueueSellerApproved(captor.capture());
 		assertThat(captor.getValue().sellerId()).isEqualTo(1L);
 		assertThat(captor.getValue().memberId()).isEqualTo(10L);
 		assertThat(captor.getValue().email()).isEqualTo("seller10@example.com");
-		assertThat(response.status()).isEqualTo(SellerStatus.ACTIVE);
-	}
-
-	@Test
-	void approveSeller_skipsOutboxWhenAlreadyActive() {
-
-		Seller seller = Seller.create(11L, "store-11", "biz-11", "010-0000-0001");
-		seller.approve();
-		ReflectionTestUtils.setField(seller, "id", 2L);
-
-		when(sellerRepository.findById(2L)).thenReturn(Optional.of(seller));
-
-		sellerApprovalService.approveSeller(2L);
-
-		verify(sellerRepository).save(seller);
-		verify(sellerOutboxService, never()).enqueueSellerApproved(any(SellerApprovedEvent.class));
+		assertThat(response.status()).isEqualTo(SellerRegistrationStatus.APPROVED);
+		assertThat(response.approvedBy()).isEqualTo(99L);
 	}
 
 	@Test
 	void rejectSeller_enqueuesOutboxWhenPending() {
 
-		Seller seller = Seller.create(12L, "store-12", "biz-12", "010-0000-0002");
-		ReflectionTestUtils.setField(seller, "id", 3L);
+		SellerRegistration registration = SellerRegistration.create(12L, "store-12", "biz-12", "010-0000-0002");
+		ReflectionTestUtils.setField(registration, "id", 200L);
 
-		when(sellerRepository.findById(3L)).thenReturn(Optional.of(seller));
+		when(sellerRegistrationRepository.findByMemberId(12L)).thenReturn(Optional.of(registration));
 		when(memberClientAdapter.getMemberEmail(12L)).thenReturn(new MemberEmailResponse(12L, "seller12@example.com"));
 
-		SellerDetailResponse response = sellerApprovalService.rejectSeller(3L);
+		SellerRegistrationResponse response = sellerApprovalService.rejectSeller(12L);
 
-		verify(sellerRepository).save(seller);
-		ArgumentCaptor<SellerRejectedEvent> captor = ArgumentCaptor.forClass(SellerRejectedEvent.class);
+		verify(sellerRegistrationRepository).save(registration);
+		ArgumentCaptor<SellerRegistrationRejectedEvent> captor = ArgumentCaptor.forClass(SellerRegistrationRejectedEvent.class);
 		verify(sellerOutboxService).enqueueSellerRejected(captor.capture());
-		assertThat(captor.getValue().sellerId()).isEqualTo(3L);
+		assertThat(captor.getValue().registrationId()).isEqualTo(200L);
 		assertThat(captor.getValue().memberId()).isEqualTo(12L);
 		assertThat(captor.getValue().email()).isEqualTo("seller12@example.com");
-		assertThat(response.status()).isEqualTo(SellerStatus.REJECTED);
+		assertThat(response.status()).isEqualTo(SellerRegistrationStatus.REJECTED);
 	}
 
 	@Test
 	void rejectSeller_skipsOutboxWhenAlreadyRejected() {
 
-		Seller seller = Seller.create(13L, "store-13", "biz-13", "010-0000-0003");
-		seller.reject();
-		ReflectionTestUtils.setField(seller, "id", 4L);
+		SellerRegistration registration = SellerRegistration.create(13L, "store-13", "biz-13", "010-0000-0003");
+		ReflectionTestUtils.setField(registration, "id", 300L);
+		registration.reject();
 
-		when(sellerRepository.findById(4L)).thenReturn(Optional.of(seller));
+		when(sellerRegistrationRepository.findByMemberId(13L)).thenReturn(Optional.of(registration));
 
-		sellerApprovalService.rejectSeller(4L);
+		sellerApprovalService.rejectSeller(13L);
 
-		verify(sellerRepository).save(seller);
-		verify(sellerOutboxService, never()).enqueueSellerRejected(any(SellerRejectedEvent.class));
+		verify(sellerRegistrationRepository, never()).save(any(SellerRegistration.class));
+		verify(sellerOutboxService, never()).enqueueSellerRejected(any(SellerRegistrationRejectedEvent.class));
 	}
 }

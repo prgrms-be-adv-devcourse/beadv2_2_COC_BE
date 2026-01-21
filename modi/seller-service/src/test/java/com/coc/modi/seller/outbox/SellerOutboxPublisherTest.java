@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.coc.modi.kafka.event.SellerApprovedEvent;
-import com.coc.modi.kafka.event.SellerRejectedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.coc.modi.kafka.topic.KafkaTopics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -70,18 +70,18 @@ class SellerOutboxPublisherTest {
 	@Test
 	void publishPendingEvents_handlesRejectedEvent() throws Exception {
 
-		SellerRejectedEvent payload = SellerRejectedEvent.of(2L, 20L, "seller20@example.com");
+		SellerRegistrationRejectedEvent payload = SellerRegistrationRejectedEvent.of(2L, 20L, "seller20@example.com");
 		ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 		String json = mapper.writeValueAsString(payload);
 		SellerOutboxEvent event = SellerOutboxEvent.create(
-				"SELLER",
+				"SELLER_REGISTRATION",
 				2L,
-				SellerOutboxEventType.SELLER_REJECTED,
+				SellerOutboxEventType.SELLER_REGISTRATION_REJECTED,
 				json
 		);
 
 		when(outboxEventRepository.findPendingForPublish(10)).thenReturn(List.of(event));
-		when(kafkaTemplate.send(eq(KafkaTopics.SELLER_REJECTED), eq("2"), any(SellerRejectedEvent.class)))
+		when(kafkaTemplate.send(eq(KafkaTopics.SELLER_REGISTRATION_REJECTED), eq("2"), any(SellerRegistrationRejectedEvent.class)))
 				.thenReturn(CompletableFuture.<SendResult<String, Object>>completedFuture(null));
 
 		publisher.publishPendingEvents();
