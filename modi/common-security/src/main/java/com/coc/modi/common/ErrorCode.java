@@ -52,6 +52,7 @@ public enum ErrorCode {
 	MEMBER_ROLE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-ROLE-400", "요청한 역할 상태가 일치하지 않습니다."),
 	PHONE_DUPLICATED(HttpStatus.CONFLICT, "MEMBER-PHONE-409", "이미 사용 중인 휴대폰 번호입니다."),
 	
+	
 	ACCOUNT_BALENCE_REMAIN(HttpStatus.BAD_REQUEST, "ACCOUNT-BALANCE-REMAIN-400", "지갑에 잔액이 남아있습니다."),
 	ACCOUNT_BALENCE_CHECK(HttpStatus.NOT_FOUND, "ACCOUNT-BALANCE-404", "지갑 잔액 체크에 실패했습니다"),
 	ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-404", "지갑 정보를 찾을 수 없습니다."),
@@ -68,7 +69,11 @@ public enum ErrorCode {
 	SETTLEMENT_BATCH_EXECUTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-BATCH-EXEC-404", "배치 실행을 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-SETTLEMENT-404", "정산서를 찾을 수 없습니다."),
 	SELLER_SETTLEMENT_CONFLICT(HttpStatus.CONFLICT, "SELLER-SETTLEMENT-409", "정산서가 이미 다른 배치로 처리되었습니다."),
-	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다.");
+	SELLER_SETTLEMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "SELLER-SETTLEMENT-403", "정산서 소유자가 일치하지 않습니다."),
+	
+	ADMIN_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ADMIN-403", "관리자 권한이 없습니다."),
+	ADMIN_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN-NOTICE-404", "공지사항을 찾을 수 없습니다."),
+	ADMIN_BLACKLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN-BLACKLIST-404", "블랙리스트 정보를 찾을 수 없습니다.");
 	
 	private final HttpStatus status;
 	private final String code;
