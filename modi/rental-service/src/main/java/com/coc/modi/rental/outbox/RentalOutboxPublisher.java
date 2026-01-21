@@ -63,6 +63,9 @@ public class RentalOutboxPublisher {
 			CartItemEvent payload = readPayload(event.getPayload(), CartItemEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.memberId().toString(), payload)
+					.get();
+			return;
+		}
 
 		if (event.getEventType() == RentalOutboxEventType.RENTAL_RETURNED_EVENT) {
 			RentalReturnedEvent payload = readPayload(event.getPayload(), RentalReturnedEvent.class);
