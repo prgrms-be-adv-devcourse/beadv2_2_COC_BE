@@ -98,6 +98,17 @@ public class MemberAuthService {
 		}
 		
 		Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new MemberNotFoundException(memberId));
+
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			refreshTokenService.delete(memberId);
+			throw new MemberAccessDeniedException("탈퇴한 회원입니다.");
+		}
+		if (member.getStatus() == MemberStatus.INACTIVE) {
+			refreshTokenService.delete(memberId);
+			throw new MemberAccessDeniedException("정지된 회원입니다.");
+		}
 		
 		if (!refreshTokenService.matches(memberId, refreshToken)) {
 			

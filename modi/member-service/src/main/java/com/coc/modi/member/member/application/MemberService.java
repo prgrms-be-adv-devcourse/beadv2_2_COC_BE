@@ -1,10 +1,8 @@
 package com.coc.modi.member.member.application;
 
 import com.coc.modi.common.ErrorCode;
-import com.coc.modi.member.auth.application.EmailVerificationService;
-import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
-import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
+import com.coc.modi.member.auth.application.RefreshTokenService;
 import com.coc.modi.kafka.event.MemberCreatedEvent;
 import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
@@ -18,9 +16,8 @@ import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
-import com.coc.modi.member.member.exception.MemberEmailMismatchException;
 import com.coc.modi.member.member.exception.MemberException;
-import com.coc.modi.member.member.exception.MemberNameMismatchException;
+import com.coc.modi.member.member.exception.MemberPasswordMismatchException;
 import com.coc.modi.member.member.exception.MemberNotFoundException;
 import com.coc.modi.member.member.exception.PhoneDuplicatedException;
 import com.coc.modi.member.member.exception.WalletBalanceCheckFailedException;
@@ -39,21 +36,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.regex.Pattern;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class MemberService {
-	
-	private static final Pattern VERIFICATION_CODE_PATTERN = Pattern.compile("^\\d{6}$");
-	
+
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccountClientAdapter accountClientAdapter;
-	private final EmailVerificationCodeStore emailVerificationCodeStore;
 	private final EmailVerificationTokenStore emailVerificationTokenStore;
-	private final EmailVerificationService emailVerificationService;
+	private final RefreshTokenService refreshTokenService;
 	private final MemberOutboxService memberOutboxService;
 	private final JwtTokenProvider jwtTokenProvider;
 	
@@ -118,7 +110,10 @@ public class MemberService {
 		}
 		
 		if (command.phone() != null && !command.phone().isBlank()) {
-			
+			if (!command.phone().equals(member.getPhone())
+					&& memberRepository.existsByPhone(command.phone())) {
+				throw new PhoneDuplicatedException(command.phone());
+			}
 			member.changePhone(command.phone());
 		}
 		
@@ -130,28 +125,12 @@ public class MemberService {
 	public void updatePassword(UpdateMemberPasswordCommand command) {
 		
 		Member member = getMemberOrThrow(command.memberId());
-		
-		if (!member.getEmail().equals(command.email())) {
-			
-			throw new MemberEmailMismatchException("이메일이 일치하지 않습니다.");
+
+		if (!passwordEncoder.matches(command.currentPassword(), member.getPassword())) {
+			throw new MemberPasswordMismatchException("기존 비밀번호가 일치하지 않습니다.");
 		}
-		
-		if (command.name() == null || command.name().isBlank()) {
-			
-			throw new MemberNameMismatchException("이름을 입력해주세요.");
-		}
-		
-		if (!member.getName().equals(command.name())) {
-			
-			throw new MemberNameMismatchException("이름이 일치하지 않습니다.");
-		}
-		
-		// 이메일 검증 코드 발송
-		emailVerificationService.sendVerificationEmail(new SendEmailVerificationCommand(member.getEmail()));
-		
-		validateVerificationCode(command.email(), command.verificationCode());
-		
-		String encodedPassword = passwordEncoder.encode(command.password());
+
+		String encodedPassword = passwordEncoder.encode(command.newPassword());
 		
 		member.changePassword(encodedPassword);
 	}
@@ -184,6 +163,7 @@ public class MemberService {
 		}
 		
 		member.withdraw();
+		refreshTokenService.delete(memberId);
 	}
 	
 	private Member getMemberOrThrow(Long memberId) {
@@ -192,33 +172,6 @@ public class MemberService {
 				.orElseThrow(() -> new MemberNotFoundException(memberId));
 	}
 	
-	private void validateVerificationCode(String email, String verificationCode) {
-		
-		if (verificationCode == null || verificationCode.isBlank()) {
-			
-			throw new AuthCodeInvalidException("인증 코드를 입력해주세요.");
-		}
-		
-		if (!VERIFICATION_CODE_PATTERN.matcher(verificationCode).matches()) {
-			
-			throw new AuthCodeInvalidException("인증 코드는 6자리 숫자입니다.");
-		}
-		
-		String storedCode = emailVerificationCodeStore.getCode(email);
-		
-		if (storedCode == null) {
-			
-			throw new AuthCodeInvalidException("이메일 인증 요청이 존재하지 않습니다.");
-		}
-		
-		if (!storedCode.equals(verificationCode)) {
-			
-			throw new AuthCodeInvalidException("인증 코드가 일치하지 않습니다.");
-		}
-		
-		emailVerificationCodeStore.deleteCode(email);
-	}
-
 	private void validateVerificationToken(String email, String verificationToken) {
 
 		if (verificationToken == null || verificationToken.isBlank()) {
@@ -277,6 +230,9 @@ public class MemberService {
 
 	private List<String> rolesFor(MemberRole role) {
 
+		if (role == MemberRole.ADMIN) {
+			return List.of(MemberRole.MEMBER.name(), MemberRole.ADMIN.name());
+		}
 		if (role == MemberRole.SELLER) {
 			return List.of(MemberRole.MEMBER.name(), MemberRole.SELLER.name());
 		}
