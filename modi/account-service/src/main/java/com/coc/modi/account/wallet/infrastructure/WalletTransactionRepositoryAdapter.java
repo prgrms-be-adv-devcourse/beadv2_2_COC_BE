@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,6 +26,12 @@ public class WalletTransactionRepositoryAdapter implements WalletTransactionRepo
 
         return jpaRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
     }
+
+	@Override
+	public Optional<WalletTransaction> findByTxTypeAndRequestId(WalletTransactionType txType, String requestId) {
+
+		return jpaRepository.findByTxTypeAndRequestId(txType, requestId);
+	}
 
 	@Override
 	public boolean existsByRelatedSettlementIdAndTxType(Long relatedSettlementId, WalletTransactionType txType) {

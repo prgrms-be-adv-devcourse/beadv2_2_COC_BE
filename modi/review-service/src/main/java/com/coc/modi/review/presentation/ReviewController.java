@@ -3,6 +3,8 @@ package com.coc.modi.review.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.review.application.ReviewService;
+import com.coc.modi.review.application.ReviewSummaryService;
+import com.coc.modi.review.application.dto.ReviewListResponse;
 import com.coc.modi.review.application.dto.ReviewResponse;
 import com.coc.modi.review.application.dto.ReviewSummaryResponse;
 import com.coc.modi.review.presentation.dto.ReviewCreateRequest;
@@ -35,6 +37,7 @@ import java.util.List;
 public class ReviewController {
 
 	private final ReviewService reviewService;
+	private final ReviewSummaryService reviewSummaryService;
 	
 	// 판매자 리뷰 작성
 	@PostMapping
@@ -67,30 +70,34 @@ public class ReviewController {
 		return ResponseEntity.noContent().build();
 	}
 	
-	// 리뷰 상세 조회
-	@GetMapping("/{reviewId}")
-	public ResponseEntity<ApiResponse<ReviewResponse>> getReview(@PathVariable Long reviewId) {
-
-		return ResponseEntity.ok(ApiResponse.ok(reviewService.getReview(reviewId)));
-	}
-	
 	// 판매자 리뷰 목록 조회
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<ReviewSummaryResponse>>> getReviewsBySeller(
+	public ResponseEntity<ApiResponse<List<ReviewListResponse>>> getReviewsBySeller(
 			@RequestParam Long sellerId,
+			@RequestParam(required = false) Integer rating,
 			@PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-		List<ReviewSummaryResponse> responses = reviewService.getReviewsBySeller(sellerId, pageable);
+		List<ReviewListResponse> responses = reviewService.getReviewsBySeller(sellerId, rating, pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
+	}
+
+	// 판매자 리뷰 요약 조회 (조건 미충족 시 204)
+	@GetMapping("/summary")
+	public ResponseEntity<ApiResponse<ReviewSummaryResponse>> getSellerReviewSummary(@RequestParam Long sellerId) {
+
+		return reviewSummaryService.getSummary(sellerId)
+				.map(summary -> ResponseEntity.ok(ApiResponse.ok(summary)))
+				.orElseGet(() -> ResponseEntity.noContent().build());
 	}
 	
 	// 내가 작성한 리뷰 목록 조회
 	@GetMapping("/me")
-	public ResponseEntity<ApiResponse<List<ReviewSummaryResponse>>> getMyReviews(@AuthenticationPrincipal CustomMember member,
+	public ResponseEntity<ApiResponse<List<ReviewListResponse>>> getMyReviews(@AuthenticationPrincipal CustomMember member,
+																			 @RequestParam(required = false) Integer rating,
 																				 @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 		
-		List<ReviewSummaryResponse> responses = reviewService.getReviewsByMember(member.memberId(), pageable);
+		List<ReviewListResponse> responses = reviewService.getReviewsByMember(member.memberId(), rating, pageable);
 
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}

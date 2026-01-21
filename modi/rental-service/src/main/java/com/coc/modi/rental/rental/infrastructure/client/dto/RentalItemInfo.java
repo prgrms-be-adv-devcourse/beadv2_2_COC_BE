@@ -13,6 +13,7 @@ public record RentalItemInfo(
 		BigDecimal totalAmount,
 		LocalDate startDate,
 		LocalDate endDate,
-		LocalDateTime paidAt
+		LocalDateTime paidAt,
+		LocalDateTime returnedAt
 ) {
 }

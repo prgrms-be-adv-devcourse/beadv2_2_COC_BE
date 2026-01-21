@@ -41,7 +41,6 @@ public class ProductSearchLogService {
 		ProductSearchLog logEntity = ProductSearchLog.create(
 				memberId,
 				keywordRaw,
-				keywordRaw,
 				keywordNorm,
 				condition.category(),
 				condition.minPrice(),

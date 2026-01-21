@@ -90,4 +90,5 @@ public class Review extends BaseEntity {
 		
 		this.status = ReviewStatus.DELETED;
 	}
+
 }

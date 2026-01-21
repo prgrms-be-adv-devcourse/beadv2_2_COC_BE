@@ -127,6 +127,7 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 		BooleanBuilder builder = new BooleanBuilder();
 		builder.and(rentalItem.sellerId.eq(sellerId));
 		builder.and(rentalItem.status.eq(RentalItemStatus.RETURNED));
+		builder.and(rentalItem.canceledAt.isNull());
 		
 		if (startDate != null) {
 			

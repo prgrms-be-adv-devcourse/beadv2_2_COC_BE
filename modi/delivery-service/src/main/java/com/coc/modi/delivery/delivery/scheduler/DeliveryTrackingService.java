@@ -27,7 +27,7 @@ public class DeliveryTrackingService {
 	@Transactional
 	public void claimAndProcess(int limit, int intervalMinutes) {
 		
-		List<Delivery> targets = deliveryRepository.findTargetsForTrackingWithSkipLocked(limit, intervalMinutes);
+		List<Delivery> targets = deliveryRepository.findTargetsForTrackingWithSkipLocked(intervalMinutes, limit);
 		int failCount = 0;
 		
 		log.info("[배송추적] 대상 건수: {}", targets.size());

@@ -32,13 +32,21 @@ public class ProductViewLog extends BaseEntity {
 	@Column(name = "view_date", nullable = false)
 	private LocalDate viewDate;
 
-	private ProductViewLog(Long productId, Long memberId, LocalDate viewDate) {
+	@Column(name = "added_to_cart", nullable = false)
+	private boolean addedToCart;
+
+	private ProductViewLog(Long productId, Long memberId, LocalDate viewDate, boolean addedToCart) {
 		this.productId = productId;
 		this.memberId = memberId;
 		this.viewDate = viewDate;
+		this.addedToCart = addedToCart;
 	}
 
 	public static ProductViewLog create(Long productId, Long memberId, LocalDate viewDate) {
-		return new ProductViewLog(productId, memberId, viewDate);
+		return new ProductViewLog(productId, memberId, viewDate, false);
+	}
+
+	public static ProductViewLog create(Long productId, Long memberId, LocalDate viewDate, boolean addedToCart) {
+		return new ProductViewLog(productId, memberId, viewDate, addedToCart);
 	}
 }
