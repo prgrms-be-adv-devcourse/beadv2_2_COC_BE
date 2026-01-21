@@ -16,12 +16,13 @@ public interface ProductSearchLogRepository extends JpaRepository<ProductSearchL
 	List<ProductSearchLog> findByCreatedAtLessThanEqual(LocalDateTime end);
 
 	@Query(value = """
-			select keyword
+			select keyword_raw
 			from (
-			    select distinct on (keyword) keyword, created_at
+			    select distinct on (keyword_raw) keyword_raw, created_at
 			    from product.product_search_log
 			    where member_id = :memberId
-			    order by keyword, created_at desc
+			      and keyword_raw is not null
+			    order by keyword_raw, created_at desc
 			) t
 			order by t.created_at desc
 			limit :limit

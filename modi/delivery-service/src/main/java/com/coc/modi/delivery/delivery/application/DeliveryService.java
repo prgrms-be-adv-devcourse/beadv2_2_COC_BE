@@ -3,6 +3,7 @@ package com.coc.modi.delivery.delivery.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.coc.modi.common.ErrorCode;
 import com.coc.modi.delivery.delivery.application.dto.DeliveryCreateCommand;
 import com.coc.modi.delivery.delivery.application.dto.DeliveryCreateResponse;
 import com.coc.modi.delivery.delivery.application.dto.DeliveryDetailResponse;
@@ -10,6 +11,7 @@ import com.coc.modi.delivery.delivery.application.dto.DeliveryUpdateCommand;
 import com.coc.modi.delivery.delivery.domain.Delivery;
 import com.coc.modi.delivery.delivery.domain.DeliveryRepository;
 import com.coc.modi.delivery.delivery.exception.DeliveryConflictException;
+import com.coc.modi.delivery.delivery.exception.DeliveryException;
 import com.coc.modi.delivery.delivery.exception.DeliveryForbiddenException;
 import com.coc.modi.delivery.delivery.exception.DeliveryNotFoundException;
 import com.coc.modi.delivery.delivery.infrastructure.client.rental.RentalInternalFeignClient;
@@ -17,9 +19,12 @@ import com.coc.modi.delivery.delivery.infrastructure.client.rental.dto.RentalIte
 import com.coc.modi.delivery.delivery.infrastructure.client.seller.SellerInternalFeignClient;
 import com.coc.modi.delivery.delivery.infrastructure.client.seller.dto.SellerIdResponse;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DeliveryService {
 	
@@ -101,9 +106,20 @@ public class DeliveryService {
 		if (memberId == null) {
 			throw new DeliveryForbiddenException("판매자 정보가 없습니다.");
 		}
-		
-		RentalItemSellerResponse rentalInfo = rentalInternalFeignClient.getRentalItemSeller(rentalItemId);
-		SellerIdResponse sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
+
+		RentalItemSellerResponse rentalInfo;
+		SellerIdResponse sellerInfo;
+		try {
+			rentalInfo = rentalInternalFeignClient.getRentalItemSeller(rentalItemId);
+			sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
+		} catch (FeignException ex) {
+			log.warn("내부 서비스 호출 실패 rentalItemId={}, memberId={}", rentalItemId, memberId, ex);
+			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈/판매자 서비스 호출에 실패했습니다.");
+		}
+
+		if (rentalInfo == null) {
+			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈 정보를 확인할 수 없습니다. rentalItemId: " + rentalItemId);
+		}
 		
 		if (sellerInfo == null || sellerInfo.sellerId() == null) {
 			throw new DeliveryForbiddenException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
@@ -121,14 +137,25 @@ public class DeliveryService {
 		if (memberId == null) {
 			throw new DeliveryForbiddenException("회원 정보가 없습니다.");
 		}
-		
-		RentalItemSellerResponse rentalInfo = rentalInternalFeignClient.getRentalItemSeller(rentalItemId);
-		SellerIdResponse sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
+
+		RentalItemSellerResponse rentalInfo;
+		SellerIdResponse sellerInfo;
+		try {
+			rentalInfo = rentalInternalFeignClient.getRentalItemSeller(rentalItemId);
+			sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
+		} catch (FeignException ex) {
+			log.warn("내부 서비스 호출 실패 rentalItemId={}, memberId={}", rentalItemId, memberId, ex);
+			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈/판매자 서비스 호출에 실패했습니다.");
+		}
+
+		if (rentalInfo == null) {
+			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈 정보를 확인할 수 없습니다. rentalItemId: " + rentalItemId);
+		}
 		
 		Long sellerId = sellerInfo != null ? sellerInfo.sellerId() : null;
-		Long buyerId = rentalInfo != null ? rentalInfo.memberId() : null;
+		Long buyerId = rentalInfo.memberId();
 		
-		boolean sellerMatch = sellerId != null && rentalInfo != null && sellerId.equals(rentalInfo.sellerId());
+		boolean sellerMatch = sellerId != null && sellerId.equals(rentalInfo.sellerId());
 		boolean buyerMatch = buyerId != null && buyerId.equals(memberId);
 		
 		if (!sellerMatch && !buyerMatch) {

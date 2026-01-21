@@ -130,6 +130,9 @@
   - Res: `SellerDetailResponse { sellerId, memberId, storeName, bizRegNo, storePhone, status:SellerStatus, createdAt, updatedAt }`
 - **GET /api/sellers/self** — 내 판매자 (Auth)
   - Res: `SellerDetailResponse`
+- **GET /api/sellers/{sellerId}** — 판매자 조회 (Auth)
+  - Path: `sellerId:long`
+  - Res: `SellerDetailResponse`
 - **GET /api/sellers/self/rentals** — 내 대여 목록 (Auth)
   - Query: `productId?:long`, `status:string`, `startDate:yyyy-MM-dd`, `endDate:yyyy-MM-dd`, `page?:int`, `size?:int`
   - Res: `SellerRentalResponse[] { rentalItemId, productId, memberId, sellerId, status, totalAmount:decimal, startDate, endDate, paidAt }`
@@ -355,7 +358,7 @@
 
 ### 내부
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **GET /internal/rentals/items/{rentalItemId}** (rental-service)
+- **GET /internal/rentals/items/{rentalItemId}/info** (rental-service)
   - Res: `RentalItemReviewInfo { rentalItemId, memberId, sellerId, status }`
 
 ---

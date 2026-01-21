@@ -4,4 +4,5 @@ dependencies {
     implementation project(':common-kafka')
     // Redis 캐시/세션
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testRuntimeOnly 'com.h2database:h2'
 }

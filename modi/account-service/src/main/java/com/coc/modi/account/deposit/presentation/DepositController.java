@@ -37,9 +37,10 @@ public class DepositController {
 
     // 예치금 충전 승인
     @PostMapping("/approve")
-    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@Valid @RequestBody DepositApprovalRequest request) {
+    public ResponseEntity<ApiResponse<DepositResponse>> approveDeposit(@Valid @RequestBody DepositApprovalRequest request,
+																	   @AuthenticationPrincipal CustomMember member) {
 
-        DepositResponse response = depositService.approveDeposit(request.toCommand());
+        DepositResponse response = depositService.approveDeposit(member.memberId(), request.toCommand());
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -69,9 +70,10 @@ public class DepositController {
 	
 	// 예치금 충전 실패
 	@PostMapping("/payments/fail")
-	public ResponseEntity<ApiResponse<DepositResponse>> failDeposit(@Valid @RequestBody DepositFailRequest request) {
+	public ResponseEntity<ApiResponse<DepositResponse>> failDeposit(@Valid @RequestBody DepositFailRequest request,
+																	@AuthenticationPrincipal CustomMember member) {
 		
-		DepositResponse response = depositService.failDeposit(request.toCommand());
+		DepositResponse response = depositService.failDeposit(member.memberId(), request.toCommand());
 		
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}

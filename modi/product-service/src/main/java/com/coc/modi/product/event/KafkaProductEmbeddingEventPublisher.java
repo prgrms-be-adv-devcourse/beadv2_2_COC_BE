@@ -9,6 +9,8 @@ import com.coc.modi.kafka.topic.KafkaTopics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -25,13 +27,22 @@ public class KafkaProductEmbeddingEventPublisher {
 		ProductEmbeddingEvent event = ProductEmbeddingEvent.update(productId);
 		try {
 			
-			log.info("Kafka 이벤트 발행. event=product-embedding topic={} eventId={} productId={} action={}",
-					KafkaTopics.PRODUCT_EMBEDDING_EVENTS, event.eventId(), productId, event.action());
+			log.info("kafka_event_publish",
+					kv("event.name", "product_embedding"),
+					kv("kafka.topic", KafkaTopics.PRODUCT_EMBEDDING_EVENTS),
+					kv("event.id", event.eventId()),
+					kv("product.id", productId),
+					kv("event.action", event.action()));
 			kafkaTemplate.send(KafkaTopics.PRODUCT_EMBEDDING_EVENTS, productId.toString(), event);
 		} catch (Exception ex) {
 			
-			log.warn("Kafka 이벤트 발행 실패. event=product-embedding eventId={} productId={} action={}",
-					event.eventId(), productId, event.action(), ex);
+			log.warn("kafka_event_publish_failed",
+					kv("event.name", "product_embedding"),
+					kv("event.id", event.eventId()),
+					kv("product.id", productId),
+					kv("event.action", event.action()),
+					kv("exception.class", ex.getClass().getName()),
+					ex);
 		}
 	}
 }

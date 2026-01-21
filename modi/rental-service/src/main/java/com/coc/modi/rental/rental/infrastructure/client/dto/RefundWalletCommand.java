@@ -6,6 +6,7 @@ public record RefundWalletCommand(
 		Long memberId,
 		Long rentalId,
 		Long rentalItemId,
-		BigDecimal amount
+		BigDecimal amount,
+		String requestId
 ) {
 }
