@@ -3,7 +3,8 @@ package com.coc.modi.rental.outbox;
 import com.coc.modi.kafka.topic.KafkaTopics;
 
 public enum RentalOutboxEventType {
-	NOTIFICATION_EVENT(KafkaTopics.NOTIFICATION_EVENTS);
+	NOTIFICATION_EVENT(KafkaTopics.NOTIFICATION_EVENTS),
+	CART_ITEM_EVENT(KafkaTopics.CART_ITEM_EVENTS);
 
 	private final String topic;
 

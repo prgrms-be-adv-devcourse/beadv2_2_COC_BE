@@ -39,4 +39,16 @@ public class ProductViewService {
 		int resolvedLimit = limit > 0 ? limit : 10;
 		return productViewLogRepository.findRecentViewedProductIds(memberId, resolvedLimit);
 	}
+
+	@Transactional
+	public void updateAddedToCart(Long memberId, Long productId, boolean addedToCart) {
+		if (memberId == null || productId == null) {
+			return;
+		}
+		int updated = productViewLogRepository.updateLatestAddedToCart(memberId, productId, addedToCart);
+		if (updated == 0 && addedToCart) {
+			ProductViewLog log = ProductViewLog.create(productId, memberId, LocalDate.now(), true);
+			productViewLogRepository.save(log);
+		}
+	}
 }

@@ -31,9 +31,6 @@ public class ProductSearchLog extends BaseEntity {
 	@Column(name = "member_id")
 	private Long memberId;
 
-	@Column(nullable = false, length = 200)
-	private String keyword;
-
 	@Column(name = "keyword_raw", length = 200)
 	private String keywordRaw;
 
@@ -70,7 +67,6 @@ public class ProductSearchLog extends BaseEntity {
 	private Integer size;
 
 	private ProductSearchLog(Long memberId,
-						 String keyword,
 						 String keywordRaw,
 						 String keywordNorm,
 						 ProductCategory category,
@@ -84,7 +80,6 @@ public class ProductSearchLog extends BaseEntity {
 						 Integer size) {
 
 		this.memberId = memberId;
-		this.keyword = keyword;
 		this.keywordRaw = keywordRaw;
 		this.keywordNorm = keywordNorm;
 		this.category = category;
@@ -99,7 +94,6 @@ public class ProductSearchLog extends BaseEntity {
 	}
 
 	public static ProductSearchLog create(Long memberId,
-								  String keyword,
 								  String keywordRaw,
 								  String keywordNorm,
 								  ProductCategory category,
@@ -114,7 +108,6 @@ public class ProductSearchLog extends BaseEntity {
 
 		return new ProductSearchLog(
 				memberId,
-				keyword,
 				keywordRaw,
 				keywordNorm,
 				category,

@@ -1,5 +1,22 @@
--- Keyword normalization migration for product_search_log.
--- Assumes product.product_search_log already exists.
+-- Schema bootstrap for product search logging and keyword normalization.
+
+CREATE TABLE IF NOT EXISTS product.product_search_log (
+    id BIGSERIAL PRIMARY KEY,
+    member_id BIGINT,
+    keyword_raw VARCHAR(200) NOT NULL,
+    keyword_norm VARCHAR(200),
+    category VARCHAR(50),
+    min_price NUMERIC(18, 2),
+    max_price NUMERIC(18, 2),
+    seller_id BIGINT,
+    start_date DATE,
+    end_date DATE,
+    sort_type VARCHAR(20),
+    cursor VARCHAR(200),
+    size INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
 
 CREATE SCHEMA IF NOT EXISTS product;
 
@@ -24,7 +41,9 @@ CREATE TABLE IF NOT EXISTS product.product_search_log (
 
 ALTER TABLE IF EXISTS product.product_search_log
     ADD COLUMN IF NOT EXISTS keyword_raw VARCHAR(200),
-    ADD COLUMN IF NOT EXISTS keyword_norm VARCHAR(200);
+    ADD COLUMN IF NOT EXISTS keyword_norm VARCHAR(200),
+    ALTER COLUMN keyword_raw SET NOT NULL,
+    DROP COLUMN IF EXISTS keyword;
 
 CREATE TABLE IF NOT EXISTS product.keyword_dictionary (
     id BIGSERIAL PRIMARY KEY,
@@ -197,13 +216,3 @@ ON CONFLICT (source, type) DO UPDATE
 SET target = EXCLUDED.target,
     priority = EXCLUDED.priority,
     active = EXCLUDED.active;
-
--- Backfill from legacy keyword column when present.
-UPDATE product.product_search_log
-SET keyword_raw = COALESCE(keyword_raw, keyword),
-    keyword_norm = COALESCE(keyword_norm, product.normalize_keyword(keyword))
-WHERE (keyword_raw IS NULL OR keyword_norm IS NULL)
-  AND keyword IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS product_search_log_keyword_norm_idx
-    ON product.product_search_log (keyword_norm);

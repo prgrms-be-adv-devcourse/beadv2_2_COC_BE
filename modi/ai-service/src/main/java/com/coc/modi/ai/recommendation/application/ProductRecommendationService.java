@@ -13,6 +13,7 @@ import com.coc.modi.ai.recommendation.infrastructure.ProductRecommendationReposi
 import com.coc.modi.ai.recommendation.presentation.dto.ProductRecommendationRequest;
 import com.coc.modi.ai.recommendation.presentation.dto.ProductRecommendationResponse;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +77,13 @@ public class ProductRecommendationService {
 			return List.of();
 		}
 		
-		List<Long> recentProductIds = productEmbeddingClient.getRecentViewedProductIds(memberId, DEFAULT_RECENT_VIEW_LIMIT);
+		List<Long> recentProductIds;
+		try {
+			recentProductIds = productEmbeddingClient.getRecentViewedProductIds(memberId, DEFAULT_RECENT_VIEW_LIMIT);
+		} catch (FeignException ex) {
+			log.warn("최근 조회 상품 조회 실패 memberId={}", memberId, ex);
+			return List.of();
+		}
 		if (recentProductIds == null || recentProductIds.isEmpty()) {
 			return List.of();
 		}

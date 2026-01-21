@@ -19,7 +19,7 @@ import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
-import com.coc.modi.product.event.KafkaProductEmbeddingEventPublisher;
+import com.coc.modi.product.embedding.outbox.ProductEmbeddingOutboxService;
 import com.coc.modi.product.product.search.application.ProductSearchPort;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
@@ -50,7 +50,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final KafkaProductEmbeddingEventPublisher productEmbeddingEventPublisher;
+	private final ProductEmbeddingOutboxService productEmbeddingOutboxService;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -79,7 +79,41 @@ public class ProductService {
 		return response;
 	}
 	
+	// 상품 다건 조회
+	@Transactional(readOnly = true)
+	public List<ProductListResponse> getProductListByIds(List<Long> productIds) {
+		
+		if (productIds == null || productIds.isEmpty()) {
+			throw new ProductInvalidInputException("조회할 상품 ID가 없습니다.");
+		}
+		
+		List<Long> distinctIds = productIds.stream()
+				.distinct()
+				.toList();
+		
+		List<Product> products = productRepository.findByIdIn(distinctIds);
+		Map<Long, Product> productMap = products.stream()
+				.collect(Collectors.toMap(Product::getId, Function.identity(), (existing, ignore) -> existing));
+		
+		List<Long> thumbnailIds = products.stream()
+				.map(Product::getThumbnailImageId)
+				.distinct()
+				.toList();
+		
+		Map<Long, String> thumbnailUrlMap = productImageRepository.findUrlMapByIds(thumbnailIds);
+		
+		return distinctIds.stream()
+				.map(productMap::get)
+				.map(product -> product == null
+						? null
+						: ProductListResponse.fromProduct(
+						product,
+						thumbnailUrlMap.get(product.getThumbnailImageId())))
+				.toList();
+	}
+	
 	// 사용자의 판매 리스트 조회
+	@Transactional(readOnly = true)
 	public Page<ProductListResponse> searchSellerProducts(Long memberId, Pageable pageable) {
 		
 		Long sellerId = sellerIdResolver.getSellerId(memberId);
@@ -148,7 +182,7 @@ public class ProductService {
 				kv("product.price_per_day", saved.getPricePerDay()));
 		
 		// ES 인덱싱/임베딩 이벤트 발행
-		productEmbeddingEventPublisher.publishUpdate(saved.getId());
+		productEmbeddingOutboxService.enqueueUpdate(saved.getId());
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -189,7 +223,7 @@ public class ProductService {
 				kv("product.category", product.getCategory()),
 				kv("product.price_per_day", product.getPricePerDay()));
 		
-		productEmbeddingEventPublisher.publishUpdate(product.getId());
+		productEmbeddingOutboxService.enqueueUpdate(product.getId());
 	
 		return ProductDetailResponse.from(product);
 	}

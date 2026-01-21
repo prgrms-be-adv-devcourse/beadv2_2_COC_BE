@@ -1,14 +1,13 @@
 package com.coc.modi.seller.settlement.batch;
 
 
+import com.coc.modi.seller.settlement.application.SettlementNotificationService;
+import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublisher;
 import com.coc.modi.seller.settlement.exception.SellerSettlementNotFoundException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
-import com.coc.modi.seller.settlement.infrastructure.client.wallet.WalletClientAdapter;
-import com.coc.modi.seller.settlement.infrastructure.client.wallet.dto.SettlementPayoutRequest;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
@@ -21,8 +20,9 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> {
 
-	private final WalletClientAdapter walletClientAdapter;
 	private final SellerSettlementJpaRepository settlementRepository;
+	private final SettlementPayoutRequestPublisher settlementPayoutRequestPublisher;
+	private final SettlementNotificationService settlementNotificationService;
 
 	@Override
 	public void write(Chunk<? extends SettlementPayoutItem> chunk) {
@@ -50,17 +50,14 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 				continue;
 			}
 
-			try {
-				walletClientAdapter.payoutSettlement(new SettlementPayoutRequest(
-						item.memberId(),
-						item.settlementId(),
-						amount
-				));
-				markAsPaid(settlement);
-			} catch (FeignException.Conflict ex) {
-				log.info("Settlement payout already processed. settlementId={}", item.settlementId());
-				markAsPaid(settlement);
-			}
+			settlement.requestPayout();
+			settlementRepository.save(settlement);
+			settlementPayoutRequestPublisher.publish(
+					item.settlementId(),
+					item.sellerId(),
+					item.memberId(),
+					amount
+			);
 		}
 	}
 
@@ -71,5 +68,6 @@ public class SettlementPayoutWriter implements ItemWriter<SettlementPayoutItem> 
 		}
 		settlement.pay(LocalDateTime.now());
 		settlementRepository.save(settlement);
+		settlementNotificationService.notifySettlementPaid(settlement);
 	}
 }
