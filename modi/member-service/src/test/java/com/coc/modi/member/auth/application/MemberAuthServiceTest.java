@@ -52,12 +52,9 @@ class MemberAuthServiceTest {
 		when(refreshCookieManager.extract(request)).thenReturn(oldRefresh);
 		when(jwtTokenProvider.validateToken(oldRefresh)).thenReturn(true);
 		when(jwtTokenProvider.getMemberId(oldRefresh)).thenReturn(1L);
-		when(jwtTokenProvider.getRole(oldRefresh)).thenReturn("MEMBER");
-		when(jwtTokenProvider.getName(oldRefresh)).thenReturn("tester");
-		when(jwtTokenProvider.getEmail(oldRefresh)).thenReturn("test@example.com");
 		when(refreshTokenService.matches(1L, oldRefresh)).thenReturn(true);
-		when(jwtTokenProvider.generateAccessToken(1L, "MEMBER", "tester", "test@example.com")).thenReturn(newAccess);
-		when(jwtTokenProvider.generateRefreshToken(1L, "MEMBER", "tester", "test@example.com")).thenReturn(newRefresh);
+		when(jwtTokenProvider.generateAccessToken(1L)).thenReturn(newAccess);
+		when(jwtTokenProvider.generateRefreshToken(1L)).thenReturn(newRefresh);
 		when(jwtTokenProvider.getRefreshTokenValidityInMs()).thenReturn(3_600_000L);
 		
 		ResponseCookie rotatedCookie = ResponseCookie.from("refresh_token", newRefresh).build();

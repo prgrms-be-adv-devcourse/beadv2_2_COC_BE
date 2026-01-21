@@ -17,6 +17,8 @@ public record RentalRefundRequest(
 		
 		@NotNull(message = "amount는 필수입니다.")
 		@Positive(message = "amount는 0보다 커야 합니다.")
-		BigDecimal amount
+		BigDecimal amount,
+		
+		String requestId
 ) {
 }

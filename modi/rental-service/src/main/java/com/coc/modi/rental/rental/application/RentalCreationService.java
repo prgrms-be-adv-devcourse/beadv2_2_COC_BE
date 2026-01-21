@@ -19,8 +19,11 @@ import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -100,7 +103,12 @@ public class RentalCreationService {
 		}
 		
 		rental.updateTotalAmount(total);
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT, "해당 기간에 이미 예약된 상품이 포함되어 있습니다.", ex);
+		}
+		removeCartItemsAfterCommit(command.memberId(), command.cartItemIds());
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),
@@ -136,7 +144,13 @@ public class RentalCreationService {
 		
 		rental.addItem(rentalItem);
 		rental.updateTotalAmount(rentalItem.calculateRentalAmount());
-		rentalRepository.save(rental);
+		try {
+			rentalRepository.saveAndFlush(rental);
+		} catch (DataIntegrityViolationException ex) {
+			throw new RentalException(ErrorCode.CONFLICT,
+					"해당 기간에 이미 예약된 상품입니다. productId=" + command.productId()
+							+ ", startDate=" + command.startDate() + ", endDate=" + command.endDate(), ex);
+		}
 		
 		rentalEventLogService.logEvent(rental, RentalEventType.CREATED,
 				Map.of("memberId", rental.getMemberId(),
@@ -196,5 +210,21 @@ public class RentalCreationService {
 			
 			rentalOutboxService.enqueueNotificationEvent(item.getId(), event);
 		}
+	}
+
+	private void removeCartItemsAfterCommit(Long memberId, List<Long> cartItemIds) {
+		if (memberId == null || cartItemIds == null || cartItemIds.isEmpty()) {
+			return;
+		}
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			cartRepository.removeItems(memberId, cartItemIds);
+			return;
+		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				cartRepository.removeItems(memberId, cartItemIds);
+			}
+		});
 	}
 }

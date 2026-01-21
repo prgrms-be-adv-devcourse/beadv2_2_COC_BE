@@ -6,6 +6,7 @@ import com.coc.modi.member.auth.application.dto.SendEmailVerificationCommand;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationCodeStore;
 import com.coc.modi.member.auth.infrastructure.EmailVerificationTokenStore;
 import com.coc.modi.kafka.event.MemberCreatedEvent;
+import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
 import com.coc.modi.member.member.application.dto.MemberEmailResponse;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -258,7 +260,26 @@ public class MemberService {
 		}
 		
 		member.updateRole(MemberRole.SELLER);
+
+		memberOutboxService.enqueueMemberRoleChanged(
+				MemberRoleChangedEvent.of(memberId, member.getRole().name())
+		);
 		
-		return jwtTokenProvider.generateAccessToken(memberId, member.getRole().name(), member.getName(), member.getEmail());
+		return jwtTokenProvider.generateAccessToken(memberId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<String> getMemberRoles(Long memberId) {
+
+		Member member = getMemberOrThrow(memberId);
+		return rolesFor(member.getRole());
+	}
+
+	private List<String> rolesFor(MemberRole role) {
+
+		if (role == MemberRole.SELLER) {
+			return List.of(MemberRole.MEMBER.name(), MemberRole.SELLER.name());
+		}
+		return List.of(MemberRole.MEMBER.name());
 	}
 }

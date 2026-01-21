@@ -82,7 +82,8 @@ public class WalletCommandService {
                 command.relatedRentalItemId(),
                 command.relatedSettlementId(),
                 command.description(),
-				command.paymentKey()
+				command.paymentKey(),
+				command.requestId()
         );
 
         // 4. 예치금 잔액 변경
@@ -102,9 +103,26 @@ public class WalletCommandService {
         Long rentalId = command.rentalId();
         BigDecimal amount = command.amount();
 
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(memberId, rentalId, amount);
+		if (command.requestId() != null) {
+			WalletTransaction existing = findByRequestId(WalletTransactionType.RENTAL_PAYMENT, command.requestId());
+			if (existing != null) {
+				MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
+						.orElseThrow(() -> new AccountNotFoundException(memberId));
+				return RentalPaymentResponse.from(wallet);
+			}
+		}
 
-        createTransactionAndUpdateBalance(txCommand);
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(
+				memberId, rentalId, amount, command.requestId());
+
+        try {
+            createTransactionAndUpdateBalance(txCommand);
+        } catch (DataIntegrityViolationException ex) {
+            WalletTransaction existing = findByRequestId(WalletTransactionType.RENTAL_PAYMENT, command.requestId());
+            if (existing == null) {
+                throw ex;
+            }
+        }
 
         // 차감 후 지갑 상태 조회
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
@@ -117,16 +135,33 @@ public class WalletCommandService {
     public RentalPaymentResponse refundForRental(RentalRefundCommand command) {
 
         Long memberId = command.memberId();
+		
+		if (command.requestId() != null) {
+			WalletTransaction existing = findByRequestId(WalletTransactionType.RENTAL_REFUND, command.requestId());
+			if (existing != null) {
+				MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
+						.orElseThrow(() -> new AccountNotFoundException(memberId));
+				return RentalPaymentResponse.from(wallet);
+			}
+		}
 
         WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalRefund(
                 memberId,
                 command.rentalId(),
                 command.rentalItemId(),
                 command.amount(),
-                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId())
+                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId()),
+				command.requestId()
         );
 
-        createTransactionAndUpdateBalance(txCommand);
+        try {
+            createTransactionAndUpdateBalance(txCommand);
+        } catch (DataIntegrityViolationException ex) {
+            WalletTransaction existing = findByRequestId(WalletTransactionType.RENTAL_REFUND, command.requestId());
+            if (existing == null) {
+                throw ex;
+            }
+        }
 
         MemberWallet wallet = memberWalletRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new AccountNotFoundException(memberId));
@@ -160,5 +195,14 @@ public class WalletCommandService {
 		} catch (DataIntegrityViolationException ex) {
 			return false;
 		}
+	}
+
+	private WalletTransaction findByRequestId(WalletTransactionType type, String requestId) {
+
+		if (requestId == null || requestId.isBlank()) {
+			return null;
+		}
+
+		return walletTransactionRepository.findByTxTypeAndRequestId(type, requestId).orElse(null);
 	}
 }

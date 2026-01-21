@@ -2,6 +2,7 @@ package com.coc.modi.rental.outbox;
 
 import com.coc.modi.kafka.event.CartItemEvent;
 import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.RentalReturnedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,7 +18,7 @@ public class RentalOutboxService {
 	
 	public void enqueueNotificationEvent(Long rentalItemId, NotificationEvent event) {
 		
-		String payload = writePayload(event, "Failed to serialize rental notification event");
+		String payload = writePayload(event);
 		RentalOutboxEvent outboxEvent = RentalOutboxEvent.create(
 				"RENTAL_ITEM",
 				rentalItemId,
@@ -42,7 +43,7 @@ public class RentalOutboxService {
 
 	private void enqueueCartItemEvent(Long cartItemId, CartItemEvent event) {
 		
-		String payload = writePayload(event, "Failed to serialize cart item event");
+		String payload = writePayload(event);
 		RentalOutboxEvent outboxEvent = RentalOutboxEvent.create(
 				"CART_ITEM",
 				cartItemId,
@@ -52,13 +53,26 @@ public class RentalOutboxService {
 		
 		outboxEventRepository.save(outboxEvent);
 	}
+  
+	public void enqueueRentalReturnedEvent(Long rentalItemId, RentalReturnedEvent event) {
+
+		String payload = writePayload(event);
+		RentalOutboxEvent outboxEvent = RentalOutboxEvent.create(
+				"RENTAL_ITEM",
+				rentalItemId,
+				RentalOutboxEventType.RENTAL_RETURNED_EVENT,
+				payload
+		);
+
+		outboxEventRepository.save(outboxEvent);
+	}
 	
-	private String writePayload(Object event, String errorMessage) {
+	private String writePayload(Object event) {
 		
 		try {
 			return objectMapper.writeValueAsString(event);
 		} catch (JsonProcessingException ex) {
-			throw new IllegalStateException(errorMessage, ex);
+			throw new IllegalStateException("Failed to serialize rental outbox event", ex);
 		}
 	}
 }
