@@ -2,6 +2,7 @@ package com.coc.modi.seller.seller.application;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.coc.modi.kafka.event.SellerApprovedEvent;
 import com.coc.modi.kafka.event.SellerRejectedEvent;
@@ -15,8 +16,10 @@ import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapt
 import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SellerApprovalService {
 
@@ -36,8 +39,13 @@ public class SellerApprovalService {
 
 		if (wasPending) {
 			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
+			String email = emailResponse != null ? emailResponse.email() : null;
+			if (!StringUtils.hasText(email)) {
+				log.warn("승인 메일 발송을 위한 이메일이 비어있습니다. sellerId={}, memberId={}",
+						seller.getId(), seller.getMemberId());
+			}
 			sellerOutboxService.enqueueSellerApproved(
-					SellerApprovedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
+					SellerApprovedEvent.of(seller.getId(), seller.getMemberId(), email)
 			);
 		}
 
@@ -56,8 +64,13 @@ public class SellerApprovalService {
 
 		if (wasPending) {
 			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
+			String email = emailResponse != null ? emailResponse.email() : null;
+			if (!StringUtils.hasText(email)) {
+				log.warn("거절 메일 발송을 위한 이메일이 비어있습니다. sellerId={}, memberId={}",
+						seller.getId(), seller.getMemberId());
+			}
 			sellerOutboxService.enqueueSellerRejected(
-					SellerRejectedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
+					SellerRejectedEvent.of(seller.getId(), seller.getMemberId(), email)
 			);
 		}
 
