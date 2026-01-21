@@ -24,6 +24,7 @@ import com.coc.modi.product.embedding.outbox.ProductEmbeddingOutboxService;
 import com.coc.modi.product.product.search.application.ProductSearchPort;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
+import com.coc.modi.product.support.ProductSearchSizeNormalizer;
 import com.coc.modi.product.viewlog.application.ProductViewService;
 
 import lombok.RequiredArgsConstructor;
@@ -63,16 +64,16 @@ public class ProductService {
 												int size,
 												ProductSortType sortType,
 												Long memberId) {
-		
-		ProductScrollResponse response = productSearchPort.searchProducts(condition, cursor, size, sortType);
+		int resolvedSize = ProductSearchSizeNormalizer.normalize(size);
+		ProductScrollResponse response = productSearchPort.searchProducts(condition, cursor, resolvedSize, sortType);
 		try {
-			productSearchLogService.recordSearchLog(condition, sortType, cursor, size, memberId);
+			productSearchLogService.recordSearchLog(condition, sortType, cursor, resolvedSize, memberId);
 		} catch (Exception e) {
 			log.warn("product_search_log_record_failed",
-					kv("product.search.keyword", condition.keyword()),
+					kv("product.search.keyword", condition != null ? condition.keyword() : null),
 					kv("product.search.sort_type", sortType),
 					kv("product.search.cursor", cursor),
-					kv("product.search.size", size),
+					kv("product.search.size", resolvedSize),
 					kv("member.id", memberId),
 					kv("exception.class", e.getClass().getName()),
 					e);
@@ -98,6 +99,7 @@ public class ProductService {
 		
 		List<Long> thumbnailIds = products.stream()
 				.map(Product::getThumbnailImageId)
+				.filter(Objects::nonNull)
 				.distinct()
 				.toList();
 		
@@ -105,9 +107,8 @@ public class ProductService {
 		
 		return distinctIds.stream()
 				.map(productMap::get)
-				.map(product -> product == null
-						? null
-						: ProductListResponse.fromProduct(
+				.filter(Objects::nonNull)
+				.map(product -> ProductListResponse.fromProduct(
 						product,
 						thumbnailUrlMap.get(product.getThumbnailImageId())))
 				.toList();
@@ -147,6 +148,9 @@ public class ProductService {
 		}
 		
 		if (product.getStatus() == ProductStatus.INACTIVE) {
+			if (memberId == null) {
+				throw new ProductAccessDeniedException("접근");
+			}
 			
 			Long sellerId = sellerIdResolver.getSellerId(memberId);
 			
@@ -270,9 +274,12 @@ public class ProductService {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
-		String thumbnailImageUrl = productImageRepository.findById(product.getThumbnailImageId())
-				.map(ProductImage::getUrl)
-				.orElse(null);
+		Long thumbnailImageId = product.getThumbnailImageId();
+		String thumbnailImageUrl = thumbnailImageId == null
+				? null
+				: productImageRepository.findById(thumbnailImageId)
+						.map(ProductImage::getUrl)
+						.orElse(null);
 		
 		return ProductInternalSellerResponse.from(product, thumbnailImageUrl);
 	}
