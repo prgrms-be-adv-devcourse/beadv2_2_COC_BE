@@ -10,6 +10,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,10 @@ public class RentalAvailabilityClient {
 	
 	private RentalResponse fallbackUnavailableProducts(RentalRequest rentalRequest, Throwable throwable) {
 		
-		log.warn("렌탈 서비스로부터 예약 불가 상품 조회 실패 request={}", rentalRequest, throwable);
+		log.warn("rental_unavailable_products_fallback",
+				kv("rental.request", rentalRequest),
+				kv("exception.class", throwable.getClass().getName()),
+				throwable);
 		return new RentalResponse(java.util.List.of());
 	}
 }
