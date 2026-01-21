@@ -47,17 +47,19 @@ public class ProductModerationResultService {
 
 		product.updateModerationStatus(status);
 
-		if (status == ProductModerationStatus.CLEAR) {
-			embeddingEventPublisher.publishUpdate(product.getId());
-			return;
-		}
-		if (status != ProductModerationStatus.REVIEW && status != ProductModerationStatus.BLOCKED) {
+		if (status != ProductModerationStatus.CLEAR
+				&& status != ProductModerationStatus.REVIEW
+				&& status != ProductModerationStatus.BLOCKED) {
 			return;
 		}
 
 		Long memberId = sellerMemberResolver.getMemberId(product.getSellerId());
 		NotificationEvent notification = buildNotification(memberId, product, status, event);
 		productOutboxService.enqueueNotificationEvent(product.getId(), notification);
+
+		if (status == ProductModerationStatus.CLEAR) {
+			embeddingEventPublisher.publishUpdate(product.getId());
+		}
 	}
 
 	private ProductModerationStatus parseStatus(String result) {
@@ -79,20 +81,31 @@ public class ProductModerationResultService {
 										ProductModerationStatus status,
 										ProductModerationResultEvent event) {
 
-		String title = status == ProductModerationStatus.REVIEW
-				? "상품 검토 필요"
-				: "상품 등록 차단";
-		String baseContent = status == ProductModerationStatus.REVIEW
-				? "상품에 확인이 필요한 내용이 있습니다."
-				: "상품이 정책 위반으로 차단되었습니다.";
+		String title;
+		String baseContent;
+		if (status == ProductModerationStatus.CLEAR) {
+			title = "상품 등록 승인";
+			baseContent = "상품이 승인되었습니다.";
+		} else if (status == ProductModerationStatus.REVIEW) {
+			title = "상품 검토 필요";
+			baseContent = "상품에 확인이 필요한 내용이 있습니다.";
+		} else {
+			title = "상품 등록 차단";
+			baseContent = "상품이 정책 위반으로 차단되었습니다.";
+		}
 		String content = baseContent;
 		if (StringUtils.hasText(event.message())) {
 			content = baseContent + " " + event.message();
 		}
 
-		String type = status == ProductModerationStatus.REVIEW
-				? NotificationType.PRODUCT_MODERATION_REVIEW.name()
-				: NotificationType.PRODUCT_MODERATION_BLOCKED.name();
+		String type;
+		if (status == ProductModerationStatus.CLEAR) {
+			type = NotificationType.PRODUCT_MODERATION_APPROVED.name();
+		} else if (status == ProductModerationStatus.REVIEW) {
+			type = NotificationType.PRODUCT_MODERATION_REVIEW.name();
+		} else {
+			type = NotificationType.PRODUCT_MODERATION_BLOCKED.name();
+		}
 
 		return NotificationEvent.of(
 				Objects.requireNonNull(memberId),

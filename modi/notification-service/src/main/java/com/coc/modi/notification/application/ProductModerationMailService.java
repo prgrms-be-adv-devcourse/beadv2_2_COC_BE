@@ -30,6 +30,13 @@ public class ProductModerationMailService {
 			등록하신 상품이 정책 위반으로 차단되었습니다.
 			자세한 내용은 고객센터에 문의해 주세요.
 			""";
+	private static final String APPROVED_SUBJECT = "상품 등록 승인";
+	private static final String APPROVED_BODY = """
+			안녕하세요, MODI입니다.
+
+			등록하신 상품이 승인되었습니다.
+			판매자 페이지에서 상품 상태를 확인해 주세요.
+			""";
 
 	private final JavaMailSender mailSender;
 
@@ -44,6 +51,11 @@ public class ProductModerationMailService {
 	public void sendBlockedMail(String email, String detail) {
 
 		sendMail(email, BLOCKED_SUBJECT, appendDetail(BLOCKED_BODY, detail));
+	}
+
+	public void sendApprovedMail(String email, String detail) {
+
+		sendMail(email, APPROVED_SUBJECT, appendDetail(APPROVED_BODY, detail));
 	}
 
 	private String appendDetail(String base, String detail) {
