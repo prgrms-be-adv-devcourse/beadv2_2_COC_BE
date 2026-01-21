@@ -46,7 +46,7 @@ public class Product extends BaseEntity {
 	private ProductStatus status;
 
 	@Enumerated(STRING)
-	@Column(name = "moderation_status", nullable = false, length = 20)
+	@Column(name = "moderation_status", nullable = true, length = 20)
 	private ProductModerationStatus moderationStatus;
 	
 	@Enumerated(STRING)
@@ -140,6 +140,11 @@ public class Product extends BaseEntity {
 		if (moderationStatus != null) {
 			this.moderationStatus = moderationStatus;
 		}
+	}
+
+	public ProductModerationStatus getModerationStatus() {
+
+		return moderationStatus != null ? moderationStatus : ProductModerationStatus.CLEAR;
 	}
 	
 	public void addImage(ProductImage image) {
