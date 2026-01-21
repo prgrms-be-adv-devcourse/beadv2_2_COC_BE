@@ -14,6 +14,7 @@ import com.coc.modi.product.product.domain.ProductImage;
 import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
@@ -118,7 +119,7 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(memberId);
 		
-		Page<Product> products = productRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+		Page<Product> products = productRepository.findNonDeletedBySellerId(sellerId, pageable);
 		
 		List<Long> thumbnailIds = products.getContent().stream().map(Product::getThumbnailImageId).toList();
 		
@@ -132,8 +133,18 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public ProductDetailResponse getProductDetail(Long memberId, Long productId) {
 		
-		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
+		
+		if (product.getModerationStatus() != ProductModerationStatus.CLEAR) {
+			
+			Long sellerId = sellerIdResolver.getSellerId(memberId);
+			
+			if (!Objects.equals(product.getSellerId(), sellerId)) {
+				
+				throw new ProductAccessDeniedException("접근");
+			}
+		}
 		
 		if (product.getStatus() == ProductStatus.INACTIVE) {
 			
@@ -181,8 +192,11 @@ public class ProductService {
 				kv("product.category", saved.getCategory()),
 				kv("product.price_per_day", saved.getPricePerDay()));
 		
-		// ES 인덱싱/임베딩 이벤트 발행
-		productEmbeddingOutboxService.enqueueUpdate(saved.getId());
+
+		// 모더레이션 통과 후에만 인덱싱/임베딩 이벤트 발행
+		if (saved.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productEmbeddingEventPublisher.publishUpdate(saved.getId());
+		}
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -193,8 +207,10 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(command.memberId());
 		
-		Product product = productRepository.findByIdAndStatusNot(command.productId(), ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(command.productId())
 				.orElseThrow(() -> new ProductNotFoundException(command.productId()));
+
+		boolean moderationChanged = shouldModerate(product, command);
 		
 		if (!sellerId.equals(product.getSellerId())) {
 			throw new ProductAccessDeniedException("수정");
@@ -215,6 +231,10 @@ public class ProductService {
 		}
 		
 		productRepository.flush();
+
+		if (moderationChanged) {
+			product.updateModerationStatus(ProductModerationStatus.PENDING);
+		}
 		
 		product.refreshThumbnailImage();
 		log.info("product_updated",
@@ -223,7 +243,10 @@ public class ProductService {
 				kv("product.category", product.getCategory()),
 				kv("product.price_per_day", product.getPricePerDay()));
 		
-		productEmbeddingOutboxService.enqueueUpdate(product.getId());
+
+		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productEmbeddingEventPublisher.publishUpdate(product.getId());
+		}
 	
 		return ProductDetailResponse.from(product);
 	}
@@ -268,7 +291,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public List<Long> getEmbeddingTargetIds() {
 		
-		return productRepository.findByStatusNot(ProductStatus.DELETE).stream()
+		return productRepository.findNonDeletedByModerationStatus(ProductModerationStatus.CLEAR).stream()
 				.map(Product::getId)
 				.toList();
 	}
@@ -301,5 +324,19 @@ public class ProductService {
 				});
 		
 		return products;
+	}
+
+	private boolean shouldModerate(Product product, ProductUpdateCommand command) {
+
+		if (!Objects.equals(product.getName(), command.name())) {
+			return true;
+		}
+		if (!Objects.equals(product.getDescription(), command.description())) {
+			return true;
+		}
+		if (!Objects.equals(product.getSpecs(), command.specs())) {
+			return true;
+		}
+		return command.images() != null;
 	}
 }

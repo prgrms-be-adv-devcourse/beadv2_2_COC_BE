@@ -2,6 +2,7 @@ package com.coc.modi.product.product.search.infrastructure;
 
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.domain.Product;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 
@@ -54,6 +55,8 @@ public class ProductSearchQueryRepository {
 
 		where.add("p.status <> :deletedStatus");
 		params.put("deletedStatus", ProductStatus.DELETE.name());
+		where.add("p.moderation_status = :moderationStatus");
+		params.put("moderationStatus", ProductModerationStatus.CLEAR.name());
 
 		if (cond != null) {
 			if (StringUtils.hasText(cond.keyword()) || StringUtils.hasText(normalizedKeyword)) {

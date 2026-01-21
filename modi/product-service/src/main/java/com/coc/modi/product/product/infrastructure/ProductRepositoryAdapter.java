@@ -2,6 +2,7 @@ package com.coc.modi.product.product.infrastructure;
 
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 
 import org.springframework.data.domain.Page;
@@ -20,9 +21,9 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	private final ProductJpaRepository productJpaRepository;
 	
 	@Override
-	public Optional<Product> findByIdAndStatusNot(Long id,  ProductStatus status) {
-		
-		return productJpaRepository.findByIdAndStatusNot(id, status);
+	public Optional<Product> findNonDeletedById(Long id) {
+
+		return productJpaRepository.findByIdAndStatusNot(id, ProductStatus.DELETE);
 	}
 	
 	@Override
@@ -32,9 +33,20 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 	
 	@Override
-	public Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable) {
-		
-		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, status, pageable);
+	public Page<Product> findNonDeletedBySellerId(Long sellerId, Pageable pageable) {
+
+		return productJpaRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+	}
+
+	@Override
+	public Page<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus,
+														  Pageable pageable) {
+
+		return productJpaRepository.findByStatusNotAndModerationStatus(
+				ProductStatus.DELETE,
+				moderationStatus,
+				pageable
+		);
 	}
 	
 	@Override
@@ -56,8 +68,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findByStatusNot(ProductStatus status) {
-		
-		return productJpaRepository.findByStatusNot(status);
+	public List<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus) {
+
+		return productJpaRepository.findByStatusNotAndModerationStatus(
+				ProductStatus.DELETE,
+				moderationStatus
+		);
 	}
 }
