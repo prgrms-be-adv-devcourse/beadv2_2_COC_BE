@@ -3,7 +3,7 @@ name: Build, Push & Deploy (dev)
 on:
   push:
     branches:
-      - dev-cicd
+      - dev
 
 permissions:
   contents: read
