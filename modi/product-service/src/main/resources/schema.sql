@@ -18,6 +18,27 @@ CREATE TABLE IF NOT EXISTS product.product_search_log (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE SCHEMA IF NOT EXISTS product;
+
+CREATE TABLE IF NOT EXISTS product.product_search_log (
+    id BIGSERIAL PRIMARY KEY,
+    member_id BIGINT,
+    keyword VARCHAR(200) NOT NULL,
+    keyword_raw VARCHAR(200),
+    keyword_norm VARCHAR(200),
+    category VARCHAR(50),
+    min_price NUMERIC(18, 2),
+    max_price NUMERIC(18, 2),
+    seller_id BIGINT,
+    start_date DATE,
+    end_date DATE,
+    sort_type VARCHAR(20),
+    cursor VARCHAR(200),
+    size INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 ALTER TABLE IF EXISTS product.product_search_log
     ADD COLUMN IF NOT EXISTS keyword_raw VARCHAR(200),
     ADD COLUMN IF NOT EXISTS keyword_norm VARCHAR(200),
