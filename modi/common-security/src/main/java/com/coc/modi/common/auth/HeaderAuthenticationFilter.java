@@ -52,10 +52,20 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 		
-		List<String> roles = Arrays.stream(rolesHeader.split(","))
+		List<String> rawRoles = Arrays.stream(rolesHeader.split(","))
 				.map(String::trim)
 				.filter(StringUtils::hasText)
 				.toList();
+
+		List<String> roles = rawRoles.stream()
+				.map(this::normalizeRole)
+				.filter(StringUtils::hasText)
+				.distinct()
+				.toList();
+		if (roles.isEmpty()) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 		
 		String role = resolvePrimaryRole(roles);
 		
@@ -85,5 +95,16 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 			return "SELLER";
 		}
 		return "MEMBER";
+	}
+
+	private String normalizeRole(String role) {
+		if (!StringUtils.hasText(role)) {
+			return "";
+		}
+		String value = role.trim();
+		if (value.regionMatches(true, 0, "ROLE_", 0, 5)) {
+			value = value.substring(5);
+		}
+		return value.toUpperCase();
 	}
 }

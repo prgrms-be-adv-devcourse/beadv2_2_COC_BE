@@ -23,6 +23,16 @@ public class SecurityConfig {
 			"/webjars/**", "swagger-ui.html"
 		
 	};
+	private static final String[] AUTH_PUBLIC_POST_ENDPOINTS = {
+			"/api/auth/login",
+			"/api/auth/email/verify/send",
+			"/api/auth/email/verify/confirm",
+			"/api/auth/password/reset/send",
+			"/api/auth/password/reset/confirm",
+			"/api/auth/reissue",
+			"/api/auth/logout",
+			"/api/auth/oauth2/signup"
+	};
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -57,7 +67,7 @@ public class SecurityConfig {
 							.requestMatchers("/payments/**").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/members/signup").permitAll()
 							.requestMatchers(HttpMethod.POST, "/api/auth/oauth2/connect").authenticated()
-							.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+							.requestMatchers(HttpMethod.POST, AUTH_PUBLIC_POST_ENDPOINTS).permitAll()
 							.requestMatchers(
 									"/oauth2/**",
 									"/login/oauth2/**",
