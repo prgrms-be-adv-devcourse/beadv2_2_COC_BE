@@ -50,7 +50,7 @@ class AdminBlacklistControllerTest {
 	@Test
 	void getBlacklists_returnsPage() {
 		Page<BlacklistSummaryResponse> page = new PageImpl<>(List.of(summaryFixture()));
-		when(blacklistService.getBlacklists(any(), any(), any())).thenReturn(page);
+		when(blacklistService.getBlacklists(any(), any())).thenReturn(page);
 
 		ResponseEntity<ApiResponse<Page<BlacklistSummaryResponse>>> response =
 				adminBlacklistController.getBlacklists(adminMember(), null, Pageable.unpaged());
@@ -67,7 +67,7 @@ class AdminBlacklistControllerTest {
 
 	@Test
 	void searchByEmail_returnsResponse() {
-		when(blacklistService.searchByEmail(any(), any())).thenReturn(summaryFixture());
+		when(blacklistService.searchByEmail(any())).thenReturn(summaryFixture());
 
 		ResponseEntity<ApiResponse<BlacklistSummaryResponse>> response =
 				adminBlacklistController.searchByEmail(adminMember(), "test@test.com");
@@ -84,7 +84,7 @@ class AdminBlacklistControllerTest {
 
 	@Test
 	void getBlacklistDetail_returnsResponse() {
-		when(blacklistService.getBlacklistDetail(any(), any())).thenReturn(detailFixture());
+		when(blacklistService.getBlacklistDetail(any())).thenReturn(detailFixture());
 
 		ResponseEntity<ApiResponse<BlacklistDetailResponse>> response =
 				adminBlacklistController.getBlacklistDetail(adminMember(), 1L);

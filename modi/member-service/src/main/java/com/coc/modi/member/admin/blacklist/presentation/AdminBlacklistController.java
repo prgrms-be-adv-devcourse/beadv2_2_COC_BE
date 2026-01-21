@@ -45,7 +45,7 @@ public class AdminBlacklistController {
 
 		requireAdmin(member);
 		Page<BlacklistSummaryResponse> responses =
-				blacklistService.getBlacklists(status, pageable, member.memberId());
+				blacklistService.getBlacklists(status, pageable);
 		return ResponseEntity.ok(ApiResponse.ok(responses));
 	}
 
@@ -56,7 +56,7 @@ public class AdminBlacklistController {
 	) {
 
 		requireAdmin(member);
-		BlacklistSummaryResponse response = blacklistService.searchByEmail(email, member.memberId());
+		BlacklistSummaryResponse response = blacklistService.searchByEmail(email);
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 
@@ -67,7 +67,7 @@ public class AdminBlacklistController {
 	) {
 
 		requireAdmin(member);
-		BlacklistDetailResponse response = blacklistService.getBlacklistDetail(memberId, member.memberId());
+		BlacklistDetailResponse response = blacklistService.getBlacklistDetail(memberId);
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 

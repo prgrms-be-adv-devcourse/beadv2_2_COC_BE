@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,14 +40,14 @@ public class BlacklistService {
 	private long defaultSuspendDays;
 
 	@Transactional
-	public Page<BlacklistSummaryResponse> getBlacklists(BlacklistStatus status, Pageable pageable, Long adminMemberId) {
+	public Page<BlacklistSummaryResponse> getBlacklists(BlacklistStatus status, Pageable pageable) {
 
 		Page<Member> members = (status == null)
 				? memberRepository.findAll(pageable)
 				: blacklistQueryRepository.findMembersByBlacklistStatus(status, pageable);
 
 		List<Member> content = members.getContent();
-		Map<Long, MemberBlacklist> blacklists = loadBlacklists(content, adminMemberId);
+		Map<Long, MemberBlacklist> blacklists = loadBlacklists(content);
 
 		List<BlacklistSummaryResponse> responses = content.stream()
 				.map(member -> BlacklistSummaryResponse.of(member, blacklists.get(member.getId())))
@@ -58,7 +57,7 @@ public class BlacklistService {
 	}
 
 	@Transactional
-	public BlacklistSummaryResponse searchByEmail(String email, Long adminMemberId) {
+	public BlacklistSummaryResponse searchByEmail(String email) {
 
 		if (email == null || email.isBlank()) {
 			throw new IllegalArgumentException("email은 필수입니다.");
@@ -67,17 +66,17 @@ public class BlacklistService {
 		Member member = memberRepository.findByEmail(email)
 				.orElseThrow(() -> new MemberNotFoundException(email));
 
-		MemberBlacklist blacklist = findAndApplyLazyRelease(member.getId(), adminMemberId).orElse(null);
+		MemberBlacklist blacklist = blacklistRepository.findById(member.getId()).orElse(null);
 		return BlacklistSummaryResponse.of(member, blacklist);
 	}
 
 	@Transactional
-	public BlacklistDetailResponse getBlacklistDetail(Long memberId, Long adminMemberId) {
+	public BlacklistDetailResponse getBlacklistDetail(Long memberId) {
 
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new MemberNotFoundException(memberId));
 
-		MemberBlacklist blacklist = findAndApplyLazyRelease(memberId, adminMemberId).orElse(null);
+		MemberBlacklist blacklist = blacklistRepository.findById(memberId).orElse(null);
 		return BlacklistDetailResponse.of(member, blacklist);
 	}
 
@@ -127,7 +126,7 @@ public class BlacklistService {
 		return BlacklistDetailResponse.of(member, saved);
 	}
 
-	private Map<Long, MemberBlacklist> loadBlacklists(List<Member> members, Long adminMemberId) {
+	private Map<Long, MemberBlacklist> loadBlacklists(List<Member> members) {
 
 		List<Long> memberIds = members.stream()
 				.map(Member::getId)
@@ -138,38 +137,8 @@ public class BlacklistService {
 		}
 
 		List<MemberBlacklist> blacklists = blacklistRepository.findByMemberIdIn(memberIds);
-		List<MemberBlacklist> expired = new ArrayList<>();
-		LocalDateTime now = LocalDateTime.now();
-
-		for (MemberBlacklist blacklist : blacklists) {
-			if (blacklist.isExpired(now)) {
-				blacklist.release(null, now, adminMemberId);
-				expired.add(blacklist);
-			}
-		}
-
-		if (!expired.isEmpty()) {
-			blacklistRepository.saveAll(expired);
-		}
-
 		return blacklists.stream()
 				.collect(Collectors.toMap(MemberBlacklist::getMemberId, blacklist -> blacklist));
-	}
-
-	private Optional<MemberBlacklist> findAndApplyLazyRelease(Long memberId, Long adminMemberId) {
-
-		Optional<MemberBlacklist> optional = blacklistRepository.findById(memberId);
-		if (optional.isEmpty()) {
-			return Optional.empty();
-		}
-
-		MemberBlacklist blacklist = optional.get();
-		if (blacklist.isExpired(LocalDateTime.now())) {
-			blacklist.release(null, LocalDateTime.now(), adminMemberId);
-			return Optional.of(blacklistRepository.save(blacklist));
-		}
-
-		return optional;
 	}
 
 	private void validateSuspendCommand(BlacklistSuspendCommand command) {
