@@ -41,7 +41,7 @@ public class SettlementAggregationWriter implements ItemWriter<SettlementAggrega
 			if (item == null) {
 				continue;
 			}
-			settlementAggregationService.aggregateLine(
+			boolean inserted = settlementAggregationService.aggregateLine(
 					batchId,
 					item.sellerId(),
 					item.periodYm(),
@@ -50,7 +50,9 @@ public class SettlementAggregationWriter implements ItemWriter<SettlementAggrega
 					item.productId(),
 					item.rentalAmount()
 			);
-			accumulate(context, item.rentalAmount());
+			if (inserted) {
+				accumulate(context, item.rentalAmount());
+			}
 		}
 	}
 	

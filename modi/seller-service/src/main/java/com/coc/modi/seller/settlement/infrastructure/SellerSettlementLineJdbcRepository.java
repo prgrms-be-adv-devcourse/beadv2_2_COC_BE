@@ -1,0 +1,52 @@
+package com.coc.modi.seller.settlement.infrastructure;
+
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+
+@Repository
+@RequiredArgsConstructor
+public class SellerSettlementLineJdbcRepository {
+
+	private final JdbcTemplate jdbcTemplate;
+
+	public boolean insertLineAndAccumulate(Long settlementId,
+										   Long sellerId,
+										   Long rentalItemId,
+										   Long memberId,
+										   Long productId,
+										   BigDecimal rentalAmount,
+										   BigDecimal feeAmount) {
+
+		int updated = jdbcTemplate.update("""
+				WITH inserted AS (
+					INSERT INTO seller.seller_settlement_line
+						(seller_settlement_id, seller_id, rental_item_id, member_id, product_id,
+						 rental_amount, fee_amount, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, ?, now(), now())
+					ON CONFLICT (seller_settlement_id, rental_item_id) DO NOTHING
+					RETURNING rental_amount, fee_amount
+				)
+				UPDATE seller.seller_settlement
+				SET total_rental_amount = total_rental_amount + COALESCE((SELECT SUM(rental_amount) FROM inserted), 0),
+					total_fee_amount = total_fee_amount + COALESCE((SELECT SUM(fee_amount) FROM inserted), 0),
+					settlement_amount = settlement_amount + COALESCE((SELECT SUM(rental_amount - fee_amount) FROM inserted), 0),
+					updated_at = now()
+				WHERE id = ?
+				  AND EXISTS (SELECT 1 FROM inserted)
+				""",
+				settlementId,
+				sellerId,
+				rentalItemId,
+				memberId,
+				productId,
+				rentalAmount,
+				feeAmount,
+				settlementId);
+
+		return updated > 0;
+	}
+}
