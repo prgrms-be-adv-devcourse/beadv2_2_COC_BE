@@ -36,7 +36,7 @@ public class ProductSearchStatsService {
 		for (ProductSearchLog logEntry : logs) {
 			String keyword = logEntry.getKeywordNorm();
 			if (keyword == null || keyword.isBlank()) {
-				keyword = logEntry.getKeyword();
+				keyword = logEntry.getKeywordRaw();
 			}
 			if (keyword == null || keyword.isBlank()) {
 				continue;

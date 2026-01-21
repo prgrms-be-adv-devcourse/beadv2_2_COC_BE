@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public enum RentalOutboxEventType {
 	NOTIFICATION_EVENT(KafkaTopics.NOTIFICATION_EVENTS),
+	CART_ITEM_EVENT(KafkaTopics.CART_ITEM_EVENTS),
 	RENTAL_RETURNED_EVENT(KafkaTopics.RENTAL_RETURNED_EVENTS);
 
 	private final String topic;

@@ -2,6 +2,7 @@ package com.coc.modi.rental.outbox;
 
 import java.util.List;
 
+import com.coc.modi.kafka.event.CartItemEvent;
 import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.kafka.event.RentalReturnedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -54,6 +55,14 @@ public class RentalOutboxPublisher {
 			NotificationEvent payload = readPayload(event.getPayload(), NotificationEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.receiverId().toString(), payload)
+					.get();
+			return;
+		}
+    
+		if (event.getEventType() == RentalOutboxEventType.CART_ITEM_EVENT) {
+			CartItemEvent payload = readPayload(event.getPayload(), CartItemEvent.class);
+			kafkaTemplate
+					.send(event.getEventType().getTopic(), payload.memberId().toString(), payload)
 					.get();
 			return;
 		}

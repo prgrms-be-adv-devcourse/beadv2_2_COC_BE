@@ -32,6 +32,7 @@ shared_paths = [
   'gradlew',
   'gradle.properties',
   'common',
+  'common-logging',
   'common-security',
   'common-notification',
   'common-openapi',
@@ -166,7 +167,9 @@ def auto_init_for(name):
 k8s_resource('pgvector', auto_init=auto_init_for('pgvector'), port_forwards=5432)
 k8s_resource('kafka', auto_init=auto_init_for('kafka'), port_forwards=9092)
 k8s_resource('redis', auto_init=auto_init_for('redis'))
-k8s_resource('elasticsearch', auto_init=auto_init_for('elasticsearch'))
+k8s_resource('elasticsearch', auto_init=auto_init_for('elasticsearch'), port_forwards=9200)
+k8s_resource('logstash', auto_init=auto_init_for('logstash'), port_forwards=5044)
+k8s_resource('kibana', auto_init=auto_init_for('kibana'), port_forwards=5601)
 
 core_deps = ['modi-config', 'modi-discovery']
 kafka_deps = core_deps + ['kafka']
