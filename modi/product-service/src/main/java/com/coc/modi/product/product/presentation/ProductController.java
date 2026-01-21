@@ -10,12 +10,15 @@ import com.coc.modi.product.product.application.dto.ProductListResponse;
 import com.coc.modi.product.product.application.dto.ProductScrollResponse;
 import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.product.presentation.dto.ProductBulkRequest;
 import com.coc.modi.product.product.presentation.dto.ProductCreateRequest;
 import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +38,7 @@ public class ProductController {
 	private final ProductStatusService productStatusService;
 	
 	// 상품 목록 조회
-	@GetMapping
+	@GetMapping("/search")
 	public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
 			@AuthenticationPrincipal CustomMember member,
 			@ModelAttribute ProductSearchCondition condition,
@@ -46,6 +49,14 @@ public class ProductController {
 		Long memberId = member != null ? member.memberId() : null;
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType, memberId)));
+	}
+	
+	// 상품 다건 조회
+	@PostMapping("/bulk")
+	public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProductsBulk(
+			@Valid @RequestBody ProductBulkRequest request) {
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductListByIds(request.productIds())));
 	}
 	
 	// 판매자 상품 목록 조회
@@ -66,7 +77,9 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
 																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
+		Long memberId = member != null ? member.memberId() : null;
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(memberId, productId)));
 	}
 	
 	// 상품 등록

@@ -29,7 +29,7 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 			where (:startDate is null or pvd.view_date >= :startDate)
 			  and (:endDate is null or pvd.view_date <= :endDate)
 			group by pvd.product_id, p.name
-			order by view_count desc, pvd.product_id
+			order by viewCount desc, pvd.product_id
 			limit :limit
 			""", nativeQuery = true)
 	List<PopularProductRow> findPopularProducts(@Param("startDate") LocalDate startDate,
