@@ -26,6 +26,11 @@ public class ProductViewStatsService {
 			LocalDate endDate) {
 
 		int limit = StatsSizeNormalizer.normalize(size);
+		if (startDate == null && endDate == null) {
+			LocalDate today = LocalDate.now();
+			startDate = today;
+			endDate = today;
+		}
 		List<PopularProductRow> rows = productViewDailyRepository.findPopularProducts(startDate, endDate, limit);
 		List<PopularProductResponse> results = new ArrayList<>(rows.size());
 		for (PopularProductRow row : rows) {

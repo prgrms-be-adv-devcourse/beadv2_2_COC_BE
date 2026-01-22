@@ -167,7 +167,7 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 		String actualMime = head.contentType();
 		
 		boolean sizeOk = actualSize == expectedSize;
-		boolean mimeOk = actualMime.equalsIgnoreCase(expectedMime);
+		boolean mimeOk = actualMime != null && actualMime.equalsIgnoreCase(expectedMime);
 		
 		if (!sizeOk || !mimeOk) {
 			

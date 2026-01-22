@@ -22,6 +22,8 @@ bin/
 .idea
 *.iws
 *.iml
+*.DS_Store
+.DS_Store
 *.ipr
 out/
 .idea/

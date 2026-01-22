@@ -47,6 +47,8 @@ spec:
                 secretKeyRef:
                   name: modi-env
                   key: DB_URL
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
           envFrom:
             - secretRef:
                 name: modi-env
