@@ -99,4 +99,22 @@ class AdminMemberControllerTest {
 						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isForbidden());
 	}
+
+	@Test
+	void create_admin_rejects_non_admin_role() throws Exception {
+
+		AdminMemberCreateRequest request = new AdminMemberCreateRequest(
+				"admin@example.com",
+				"Password!1",
+				"Admin",
+				"010-1234-5678"
+		);
+
+		mockMvc.perform(post("/api/admin/members")
+						.header("X-Member-Id", "2")
+						.header("X-Roles", "SELLER")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isForbidden());
+	}
 }

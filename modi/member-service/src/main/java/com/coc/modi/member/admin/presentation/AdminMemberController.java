@@ -5,6 +5,7 @@ import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.member.admin.application.AdminMemberService;
 import com.coc.modi.member.admin.application.dto.AdminMemberCreateResponse;
 import com.coc.modi.member.admin.presentation.dto.AdminMemberCreateRequest;
+import com.coc.modi.member.admin.exception.AdminAccessDeniedException;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,19 @@ public class AdminMemberController {
 			@Valid @RequestBody AdminMemberCreateRequest request
 	) {
 
+		requireAdmin(member);
 		AdminMemberCreateResponse response = adminMemberService.createAdmin(
 				request.toCommand(),
 				member.memberId()
 		);
 
 		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+
+	private void requireAdmin(CustomMember member) {
+
+		if (member == null || !"ADMIN".equals(member.role())) {
+			throw new AdminAccessDeniedException("관리자 권한이 필요합니다.");
+		}
 	}
 }

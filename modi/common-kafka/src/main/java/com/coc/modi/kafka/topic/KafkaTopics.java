@@ -19,8 +19,8 @@ public final class KafkaTopics {
 
 	public static final String MEMBER_CREATED_EVENTS = "member-created-events";
 	public static final String MEMBER_ROLE_CHANGED_EVENTS = "member-role-changed-events";
-	public static final String SELLER_APPROVED = "seller-approved";
-	public static final String SELLER_REJECTED = "seller-rejected";
+	public static final String SELLER_REGISTRATION_APPROVED = "seller-registration-approved";
+	public static final String SELLER_REGISTRATION_REJECTED = "seller-registration-rejected";
 
 	public static final String CART_ITEM_EVENTS = "cart-item-events";
 	public static final String RENTAL_RETURNED_EVENTS = "rental-returned-events";
