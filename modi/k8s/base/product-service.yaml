@@ -36,6 +36,8 @@ spec:
             - name: http
               containerPort: 8082
           env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
             - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
               value: "false"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
@@ -52,6 +54,11 @@ spec:
           envFrom:
             - secretRef:
                 name: modi-env
+          resources:
+            requests:
+              memory: "200Mi"
+            limits:
+              memory: "512Mi"
           startupProbe:
             tcpSocket:
               port: 8082

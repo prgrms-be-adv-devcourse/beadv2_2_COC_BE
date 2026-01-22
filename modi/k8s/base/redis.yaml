@@ -33,10 +33,15 @@ spec:
         - name: redis
           image: redis:7
           imagePullPolicy: IfNotPresent
-          args: ["--appendonly", "yes"]
+          args: ["--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
           ports:
             - name: redis
               containerPort: 6379
+          resources:
+            requests:
+              memory: "128Mi"
+            limits:
+              memory: "256Mi"
           volumeMounts:
             - name: redis-data
               mountPath: /data

@@ -65,6 +65,11 @@ spec:
                   key: DB_PASSWORD
             - name: POSTGRES_DB
               value: modi
+          resources:
+            requests:
+              memory: "256Mi"
+            limits:
+              memory: "512Mi"
           volumeMounts:
             - name: pgvector-data
               mountPath: /var/lib/postgresql

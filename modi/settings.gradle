@@ -17,5 +17,6 @@ include(
         'notification-service',
         'modi-gateway',
         'modi-discovery',
-        'modi-config'
+        'modi-config',
+        'delivery-service'
 )
