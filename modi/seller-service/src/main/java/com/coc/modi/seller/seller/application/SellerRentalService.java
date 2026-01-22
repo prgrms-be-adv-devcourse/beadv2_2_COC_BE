@@ -8,6 +8,8 @@ import com.coc.modi.seller.seller.infrastructure.client.rental.RentalClientAdapt
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalItemInfo;
 import com.coc.modi.seller.seller.infrastructure.client.rental.dto.RentalListResponse;
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
+import com.coc.modi.seller.seller.exception.SellerException;
+import com.coc.modi.common.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,9 @@ public class SellerRentalService {
                 page != null ? page : 0,
                 size != null ? size : 20
         );
+        if (response == null) {
+            throw new SellerException(ErrorCode.INTERNAL_ERROR, "렌탈 서비스 응답이 비어 있습니다.");
+        }
         List<RentalItemInfo> rentals = response.content();
         if (rentals == null || rentals.isEmpty()) {
             return List.of();

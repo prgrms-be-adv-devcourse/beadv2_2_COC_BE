@@ -63,7 +63,7 @@ class SettlementPayoutOutboxPublishWorkerTest {
 
 		assertThat(outbox.getStatus()).isEqualTo(SettlementPayoutOutboxStatus.SENT);
 		verify(kafkaTemplate).send(
-				eq(KafkaTopics.SETTLEMENT_PAYOUT_COMPLETED_EVENTS),
+				eq(KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_COMPLETED),
 				eq(outbox.getSettlementId().toString()),
 				any()
 		);
@@ -89,7 +89,7 @@ class SettlementPayoutOutboxPublishWorkerTest {
 
 		assertThat(outbox.getStatus()).isEqualTo(SettlementPayoutOutboxStatus.SENT);
 		verify(kafkaTemplate).send(
-				eq(KafkaTopics.SETTLEMENT_PAYOUT_FAILED_EVENTS),
+				eq(KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_FAILED),
 				eq(outbox.getSettlementId().toString()),
 				any()
 		);
