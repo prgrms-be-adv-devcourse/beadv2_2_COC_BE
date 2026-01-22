@@ -3,7 +3,8 @@ package com.coc.modi.product.outbox;
 import com.coc.modi.kafka.topic.KafkaTopics;
 
 public enum ProductOutboxEventType {
-	PRODUCT_MODERATION_REQUESTED(KafkaTopics.PRODUCT_MODERATION_REQUESTED);
+	PRODUCT_MODERATION_REQUESTED(KafkaTopics.PRODUCT_MODERATION_REQUESTED),
+	NOTIFICATION_EVENT(KafkaTopics.NOTIFICATION_EVENTS);
 
 	private final String topic;
 

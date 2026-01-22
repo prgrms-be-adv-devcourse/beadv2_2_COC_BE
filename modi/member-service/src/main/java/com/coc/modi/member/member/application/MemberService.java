@@ -6,9 +6,13 @@ import com.coc.modi.member.auth.application.RefreshTokenService;
 import com.coc.modi.kafka.event.MemberCreatedEvent;
 import com.coc.modi.kafka.event.MemberRoleChangedEvent;
 import com.coc.modi.member.member.application.dto.CreateMemberCommand;
+import com.coc.modi.member.member.application.dto.InternalAdminMemberCreateCommand;
+import com.coc.modi.member.member.application.dto.InternalAdminMemberCreateResponse;
 import com.coc.modi.member.member.application.dto.MemberEmailResponse;
+import com.coc.modi.member.member.application.dto.MemberPageResponse;
 import com.coc.modi.member.member.application.dto.MemberProfileResponse;
 import com.coc.modi.member.member.application.dto.MemberSignupResponse;
+import com.coc.modi.member.member.application.dto.MemberSummaryResponse;
 import com.coc.modi.member.member.application.dto.UpdateMemberCommand;
 import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
 import com.coc.modi.member.member.domain.Member;
@@ -33,9 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -199,6 +208,94 @@ public class MemberService {
 		Member member = getMemberOrThrow(memberId);
 		
 		return MemberEmailResponse.from(member);
+	}
+
+	@Transactional(readOnly = true)
+	public MemberSummaryResponse getMemberSummary(Long memberId) {
+
+		Member member = getMemberOrThrow(memberId);
+		return MemberSummaryResponse.from(member);
+	}
+
+	@Transactional(readOnly = true)
+	public MemberSummaryResponse getMemberSummaryByEmail(String email) {
+
+		if (email == null || email.isBlank()) {
+			throw new IllegalArgumentException("email은 필수입니다.");
+		}
+
+		Member member = memberRepository.findByEmail(email)
+				.orElseThrow(() -> new MemberNotFoundException(email));
+		return MemberSummaryResponse.from(member);
+	}
+
+	@Transactional(readOnly = true)
+	public MemberPageResponse getMemberPage(Pageable pageable) {
+
+		Page<Member> members = memberRepository.findAll(pageable);
+		return MemberPageResponse.from(members);
+	}
+
+	@Transactional(readOnly = true)
+	public List<MemberSummaryResponse> getMembersByIds(List<Long> memberIds) {
+
+		if (memberIds == null || memberIds.isEmpty()) {
+			return List.of();
+		}
+
+		List<Member> members = memberRepository.findByIdIn(memberIds);
+		Map<Long, MemberSummaryResponse> summaries = members.stream()
+				.map(MemberSummaryResponse::from)
+				.collect(Collectors.toMap(MemberSummaryResponse::memberId, summary -> summary));
+
+		return memberIds.stream()
+				.map(summaries::get)
+				.filter(Objects::nonNull)
+				.toList();
+	}
+
+	@Transactional
+	public InternalAdminMemberCreateResponse createAdmin(InternalAdminMemberCreateCommand command) {
+
+		if (command == null) {
+			throw new IllegalArgumentException("요청 본문이 비어 있습니다.");
+		}
+		if (command.email() == null || command.email().isBlank()) {
+			throw new IllegalArgumentException("email은 필수입니다.");
+		}
+		if (command.password() == null || command.password().isBlank()) {
+			throw new IllegalArgumentException("password는 필수입니다.");
+		}
+		if (command.name() == null || command.name().isBlank()) {
+			throw new IllegalArgumentException("name은 필수입니다.");
+		}
+		if (command.phone() == null || command.phone().isBlank()) {
+			throw new IllegalArgumentException("phone은 필수입니다.");
+		}
+
+		if (memberRepository.existsByEmail(command.email())) {
+			throw new EmailDuplicatedException(command.email());
+		}
+
+		if (memberRepository.existsByPhone(command.phone())) {
+			throw new PhoneDuplicatedException(command.phone());
+		}
+
+		String encodedPassword = passwordEncoder.encode(command.password());
+
+		Member member = Member.create(
+				command.email(),
+				encodedPassword,
+				command.name(),
+				command.phone(),
+				MemberRole.ADMIN
+		);
+
+		Member saved = memberRepository.save(member);
+
+		log.info("admin_account_created createdBy={} targetMemberId={}", command.createdBy(), saved.getId());
+
+		return InternalAdminMemberCreateResponse.from(saved);
 	}
 	
 	

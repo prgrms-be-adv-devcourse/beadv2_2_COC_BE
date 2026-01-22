@@ -12,12 +12,9 @@ include(
         'rental-service',
         'seller-service',
         'member-service',
-        'review-service',
-        'delivery-service',
+        'support-service',
         'ai-service',
-        'notification-service',
         'modi-gateway',
         'modi-discovery',
-        'modi-config',
-        'delivery-service'
+        'modi-config'
 )

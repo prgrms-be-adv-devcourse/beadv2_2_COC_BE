@@ -2,6 +2,7 @@ package com.coc.modi.product.outbox;
 
 import java.util.List;
 
+import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,6 +55,13 @@ public class ProductOutboxPublisher {
 					readPayload(event.getPayload(), ProductModerationRequestedEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.productId().toString(), payload)
+					.get();
+			return;
+		}
+		if (event.getEventType() == ProductOutboxEventType.NOTIFICATION_EVENT) {
+			NotificationEvent payload = readPayload(event.getPayload(), NotificationEvent.class);
+			kafkaTemplate
+					.send(event.getEventType().getTopic(), payload.receiverId().toString(), payload)
 					.get();
 			return;
 		}
