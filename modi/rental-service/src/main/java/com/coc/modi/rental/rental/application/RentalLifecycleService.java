@@ -98,11 +98,13 @@ public class RentalLifecycleService {
 						"lateReason", command.lateReason(),
 						"memo", command.memo()));
 
+		BigDecimal rentalAmount = rentalItem.calculateRentalAmount();
 		RentalReturnedEvent event = RentalReturnedEvent.of(
 				rentalItem.getId(),
 				rental.getMemberId(),
 				rentalItem.getSellerId(),
 				rentalItem.getProductId(),
+				rentalAmount,
 				rentalItem.getStatus().name(),
 				rentalItem.getReturnedAt()
 		);
