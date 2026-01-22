@@ -1,6 +1,6 @@
 package com.coc.modi.seller.outbox;
 
-import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
 import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,13 +15,13 @@ public class SellerOutboxService {
 	private final SellerOutboxEventRepository outboxEventRepository;
 	private final ObjectMapper objectMapper;
 
-	public void enqueueSellerApproved(SellerApprovedEvent event) {
+	public void enqueueSellerApproved(SellerRegistrationApprovedEvent event) {
 
 		String payload = writePayload(event);
 		SellerOutboxEvent outboxEvent = SellerOutboxEvent.create(
-				"SELLER",
-				event.sellerId(),
-				SellerOutboxEventType.SELLER_APPROVED,
+				"SELLER_REGISTRATION",
+				event.registrationId(),
+				SellerOutboxEventType.SELLER_REGISTRATION_APPROVED,
 				payload
 		);
 

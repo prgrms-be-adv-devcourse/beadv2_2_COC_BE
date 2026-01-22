@@ -2,7 +2,7 @@ package com.coc.modi.seller.seller.application;
 
 import java.util.Optional;
 
-import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
 import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.coc.modi.seller.outbox.SellerOutboxService;
 import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
@@ -66,9 +66,10 @@ class SellerApprovalServiceTest {
 
 		verify(sellerRepository).save(any(Seller.class));
 		verify(sellerRegistrationRepository).save(registration);
-		ArgumentCaptor<SellerApprovedEvent> captor = ArgumentCaptor.forClass(SellerApprovedEvent.class);
+		ArgumentCaptor<SellerRegistrationApprovedEvent> captor =
+				ArgumentCaptor.forClass(SellerRegistrationApprovedEvent.class);
 		verify(sellerOutboxService).enqueueSellerApproved(captor.capture());
-		assertThat(captor.getValue().sellerId()).isEqualTo(1L);
+		assertThat(captor.getValue().registrationId()).isEqualTo(100L);
 		assertThat(captor.getValue().memberId()).isEqualTo(10L);
 		assertThat(captor.getValue().email()).isEqualTo("seller10@example.com");
 		assertThat(response.status()).isEqualTo(SellerRegistrationStatus.APPROVED);

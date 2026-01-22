@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
 import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.coc.modi.seller.outbox.SellerOutboxService;
 import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
@@ -68,7 +68,7 @@ public class SellerApprovalService {
 					seller.getId(), seller.getMemberId());
 		}
 		sellerOutboxService.enqueueSellerApproved(
-				SellerApprovedEvent.of(seller.getId(), seller.getMemberId(), email)
+				SellerRegistrationApprovedEvent.of(registration.getId(), seller.getMemberId(), email)
 		);
 
 		return SellerRegistrationResponse.from(registration);

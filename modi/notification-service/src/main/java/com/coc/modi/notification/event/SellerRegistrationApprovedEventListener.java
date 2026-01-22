@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.coc.modi.common.NotificationType;
 import com.coc.modi.kafka.event.NotificationEvent;
-import com.coc.modi.kafka.event.SellerApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
 import com.coc.modi.kafka.topic.KafkaTopics;
 import com.coc.modi.notification.application.NotificationApplicationService;
 import com.coc.modi.notification.application.SellerApprovalMailService;
@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SellerApprovedEventListener {
+public class SellerRegistrationApprovedEventListener {
 
 	private static final String TITLE = "판매자 등록 승인";
 	private static final String CONTENT = "판매자 등록이 승인되었습니다.";
@@ -23,19 +23,19 @@ public class SellerApprovedEventListener {
 	private final SellerApprovalMailService sellerApprovalMailService;
 
 	@KafkaListener(
-			topics = KafkaTopics.SELLER_APPROVED,
+			topics = KafkaTopics.SELLER_REGISTRATION_APPROVED,
 			groupId = "notification-service",
 			containerFactory = "notificationKafkaListenerContainerFactory"
 	)
-	public void onSellerApproved(SellerApprovedEvent event) {
+	public void onSellerApproved(SellerRegistrationApprovedEvent event) {
 
 		NotificationEvent notification = NotificationEvent.of(
 				event.memberId(),
 				NotificationType.SELLER_APPROVED.name(),
 				TITLE,
 				CONTENT,
-				"SELLER",
-				event.sellerId().toString()
+				"SELLER_REGISTRATION",
+				event.registrationId().toString()
 		);
 
 		notificationApplicationService.handle(notification);
