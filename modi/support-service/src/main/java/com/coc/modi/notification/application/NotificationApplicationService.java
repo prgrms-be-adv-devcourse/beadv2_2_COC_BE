@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationApplicationService {
 
-	private static final String CONSUMER_NAME = "notification-service";
+	private static final String CONSUMER_NAME = "support-service-notification";
 	
 	private final NotificationRepository notificationRepository;
 	private final NotificationSseService notificationSseService;
