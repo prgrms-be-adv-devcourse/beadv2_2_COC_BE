@@ -17,7 +17,7 @@ public class SettlementPayoutResultEventListener {
 	private final SettlementPayoutResultService settlementPayoutResultService;
 
 	@KafkaListener(
-			topics = KafkaTopics.SETTLEMENT_PAYOUT_COMPLETED_EVENTS,
+			topics = KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_COMPLETED,
 			groupId = "seller-service",
 			containerFactory = "settlementPayoutCompletedKafkaListenerContainerFactory"
 	)
@@ -27,7 +27,7 @@ public class SettlementPayoutResultEventListener {
 	}
 
 	@KafkaListener(
-			topics = KafkaTopics.SETTLEMENT_PAYOUT_FAILED_EVENTS,
+			topics = KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_FAILED,
 			groupId = "seller-service",
 			containerFactory = "settlementPayoutFailedKafkaListenerContainerFactory"
 	)

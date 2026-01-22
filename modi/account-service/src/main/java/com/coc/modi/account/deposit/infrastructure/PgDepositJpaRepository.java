@@ -26,4 +26,16 @@ public interface PgDepositJpaRepository extends JpaRepository<PgDeposit, Long> {
 
     List<PgDeposit> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p
+            from PgDeposit p
+            where p.memberId = :memberId
+              and p.status = :status
+              and p.remainingAmount > 0
+            order by p.approvedAt asc, p.id asc
+            """)
+    List<PgDeposit> findAllocatableByMemberId(@Param("memberId") Long memberId,
+                                              @Param("status") PgDepositStatus status);
+
 }

@@ -85,7 +85,7 @@ class DepositServiceConcurrencyTest {
                         paymentKey,
                         "order-id",
                         "DONE",
-                        1030L,
+                        1000L,
                         null,
                         null,
                         null,
@@ -97,7 +97,7 @@ class DepositServiceConcurrencyTest {
         walletCommandService.createWalletForMember(memberId);
 
         DepositResponse request = depositService.requestDeposit(new DepositCommand(memberId, amount));
-        BigDecimal approvedAmount = request.totalAmount();
+        BigDecimal approvedAmount = request.amount();
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),

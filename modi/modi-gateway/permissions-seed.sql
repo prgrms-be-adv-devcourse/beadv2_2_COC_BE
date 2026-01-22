@@ -62,19 +62,17 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('D
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/review-service/api/reviews/{reviewId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/sellers', 'MEMBER');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/{sellerId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/products/{productId}', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/self', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PUT', '/seller-service/api/sellers/self', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/sellers/self/rentals', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self', 'MEMBER');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/settlements/sellers/self/batches/run', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}/cancel', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}/lines', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}/pay', 'MEMBER');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/member-service/oauth2/**', '');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/member-service/login/oauth2/**', '');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/member-service/api/auth/oauth2/signup', '');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/admin/settlements/seller-settlements', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/admin/settlements/seller-settlements/{sellerSettlementId}/pay', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/admin/settlements/seller-settlements/pay-bulk', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/admin/settlements/batches/run', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/member-service/api/auth/oauth2/connect', 'MEMBER');
-

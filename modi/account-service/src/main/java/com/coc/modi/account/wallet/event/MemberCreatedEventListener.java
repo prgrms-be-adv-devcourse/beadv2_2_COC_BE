@@ -19,7 +19,7 @@ public class MemberCreatedEventListener {
     private final WalletCommandService walletCommandService;
 
     @KafkaListener(
-            topics = KafkaTopics.MEMBER_CREATED,
+            topics = KafkaTopics.MEMBER_CREATED_EVENTS,
             groupId = "account-service",
             containerFactory = "memberCreatedKafkaListenerContainerFactory"
     )

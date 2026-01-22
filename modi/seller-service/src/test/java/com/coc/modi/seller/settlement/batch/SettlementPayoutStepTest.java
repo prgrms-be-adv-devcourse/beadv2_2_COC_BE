@@ -9,6 +9,8 @@ import com.coc.modi.seller.settlement.application.SettlementPayoutRequestPublish
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionLogRepository;
+import com.coc.modi.seller.settlement.domain.SettlementBatchExecutionRepository;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementJpaRepository;
 import com.coc.modi.seller.settlement.infrastructure.SettlementBatchJpaRepository;
 
@@ -69,14 +71,17 @@ class SettlementPayoutStepTest {
     @Autowired
     private SellerSettlementJpaRepository sellerSettlementJpaRepository;
 
+    @Autowired
+    private SettlementBatchExecutionRepository settlementBatchExecutionRepository;
+
+    @Autowired
+    private SettlementBatchExecutionLogRepository settlementBatchExecutionLogRepository;
+
     @MockBean
     private SettlementPayoutRequestPublisher settlementPayoutRequestPublisher;
 
     @MockBean
     private SettlementNotificationService settlementNotificationService;
-
-    @MockBean
-    private RedisMessageListenerContainer redisMessageListenerContainer;
 
     @MockBean
     private RedisConnectionFactory redisConnectionFactory;
@@ -95,6 +100,8 @@ class SettlementPayoutStepTest {
 
         jobLauncherTestUtils.setJob(settlementPayoutTestJob);
         reset(settlementPayoutRequestPublisher, settlementNotificationService);
+        settlementBatchExecutionLogRepository.deleteAll();
+        settlementBatchExecutionRepository.deleteAll();
         sellerSettlementJpaRepository.deleteAll();
         settlementBatchJpaRepository.deleteAll();
         sellerJpaRepository.deleteAll();

@@ -20,6 +20,11 @@ public class RentalRepositoryAdapter implements RentalRepository {
 		
 		rentalJpaRepository.save(rental);
 	}
+
+	@Override
+	public void saveAndFlush(Rental rental) {
+		rentalJpaRepository.saveAndFlush(rental);
+	}
 	
 	@Override
 	public Optional<Rental> findById(Long rentalId) {

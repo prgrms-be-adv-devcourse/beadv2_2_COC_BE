@@ -10,6 +10,7 @@ import com.coc.modi.ai.embedding.infrastructure.ProductEmbeddingRepository;
 import com.coc.modi.ai.embedding.infrastructure.client.ProductEmbeddingClient;
 import com.coc.modi.ai.event.KafkaProductEmbeddingEventPublisher;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +25,13 @@ public class ProductEmbeddingReindexService {
 	
 	public int reindexMissing() {
 		
-		List<Long> productIds = productEmbeddingClient.getEmbeddingTargetIds();
+		List<Long> productIds;
+		try {
+			productIds = productEmbeddingClient.getEmbeddingTargetIds();
+		} catch (FeignException ex) {
+			log.warn("임베딩 대상 ID 목록 조회 실패", ex);
+			return 0;
+		}
 		if (productIds == null || productIds.isEmpty()) {
 			return 0;
 		}
