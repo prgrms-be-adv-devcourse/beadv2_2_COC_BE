@@ -14,8 +14,7 @@ public record WalletTransactionCommand(
         Long relatedRentalItemId,
         Long relatedSettlementId,
         String description,
-		String paymentKey,
-		String requestId
+		String paymentKey
 ) {
 
     public static WalletTransactionCommand forDepositCharge(
@@ -34,16 +33,14 @@ public record WalletTransactionCommand(
                 null,
                 null,
                 "예치금 충전",
-				paymentKey,
-				null
+				paymentKey
         );
     }
 
     public static WalletTransactionCommand forRentalPayment(
             Long memberId,
             Long rentalId,
-            BigDecimal amount,
-			String requestId
+            BigDecimal amount
     ) {
 
         return new WalletTransactionCommand(
@@ -55,8 +52,7 @@ public record WalletTransactionCommand(
                 null,
                 null,
                 "렌탈결제",
-				null,
-				requestId
+				null
         );
     }
 
@@ -65,8 +61,7 @@ public record WalletTransactionCommand(
             Long rentalId,
             Long rentalItemId,
             BigDecimal amount,
-            String description,
-			String requestId
+            String description
     ) {
 
         return new WalletTransactionCommand(
@@ -78,8 +73,7 @@ public record WalletTransactionCommand(
                 rentalItemId,
                 null,
                 description,
-				null,
-				requestId
+				null
         );
     }
 
@@ -99,16 +93,15 @@ public record WalletTransactionCommand(
                 null,
                 null,
                 "예치금 충전 취소",
-				paymentKey,
-				null
+				paymentKey
         );
     }
 
-	public static WalletTransactionCommand forSettlementPayout(
-			Long memberId,
-			Long settlementId,
-			BigDecimal amount
-	) {
+    public static WalletTransactionCommand forSettlementPayout(
+            Long memberId,
+            Long settlementId,
+            BigDecimal amount
+    ) {
 
 		return new WalletTransactionCommand(
 				memberId,
@@ -118,9 +111,46 @@ public record WalletTransactionCommand(
 				null,
 				null,
 				settlementId,
-				"정산금 지급",
-				null,
-				null
-		);
-	}
+                "정산금 지급",
+                null
+        );
+    }
+
+    public static WalletTransactionCommand forWithdrawalRequest(
+            Long memberId,
+            BigDecimal amount,
+            String description
+    ) {
+
+        return new WalletTransactionCommand(
+                memberId,
+                WalletTransactionType.WITHDRAWAL_REQUEST,
+                amount,
+                null,
+                null,
+                null,
+                null,
+                description != null ? description : "예치금 출금 요청",
+                null
+        );
+    }
+
+    public static WalletTransactionCommand forWithdrawalRefund(
+            Long memberId,
+            BigDecimal amount,
+            String description
+    ) {
+
+        return new WalletTransactionCommand(
+                memberId,
+                WalletTransactionType.WITHDRAWAL_REFUND,
+                amount,
+                null,
+                null,
+                null,
+                null,
+                description != null ? description : "예치금 출금 실패 환불",
+                null
+        );
+    }
 }

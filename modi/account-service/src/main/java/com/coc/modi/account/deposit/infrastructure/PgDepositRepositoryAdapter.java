@@ -50,4 +50,10 @@ public class PgDepositRepositoryAdapter implements PgDepositRepository {
 
         return pgDepositJpaRepository.findByMemberIdAndStatus(memberId, status);
     }
+
+    @Override
+    public List<PgDeposit> findAllocatableByMemberId(Long memberId) {
+
+        return pgDepositJpaRepository.findAllocatableByMemberId(memberId, PgDepositStatus.SUCCESS);
+    }
 }

@@ -44,8 +44,7 @@ import static org.mockito.Mockito.when;
                 "spring.datasource.driverClassName=org.h2.Driver",
                 "spring.datasource.username=sa",
                 "spring.datasource.password=",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
-                "account.deposit.card-fee-rate=0.03"
+                "spring.jpa.hibernate.ddl-auto=create-drop"
         }
 )
 class DepositFeePolicyTest {
@@ -79,7 +78,7 @@ class DepositFeePolicyTest {
     }
 
     @Test
-    void requestDeposit_calculatesFeeAndTotalAmount() {
+    void requestDeposit_keepsRequestedAmount() {
 
         Long memberId = 1L;
         BigDecimal amount = new BigDecimal("1000.00");
@@ -87,16 +86,12 @@ class DepositFeePolicyTest {
         DepositResponse response = depositService.requestDeposit(new DepositCommand(memberId, amount));
 
         assertThat(response.amount()).isEqualByComparingTo("1000");
-        assertThat(response.feeAmount()).isEqualByComparingTo("30");
-        assertThat(response.totalAmount()).isEqualByComparingTo("1030");
-
         PgDeposit deposit = pgDepositRepository.findByPgTid(response.orderId()).orElseThrow();
-        assertThat(deposit.getFeeAmount()).isEqualByComparingTo("30");
-        assertThat(deposit.getTotalAmount()).isEqualByComparingTo("1030");
+        assertThat(deposit.getRemainingAmount()).isEqualByComparingTo("1000");
     }
 
     @Test
-    void approveDeposit_usesTotalAmountAndCreditsNetAmount() {
+    void approveDeposit_usesRequestedAmount() {
 
         String paymentKey = "payment-key-" + UUID.randomUUID();
 
@@ -105,7 +100,7 @@ class DepositFeePolicyTest {
                         paymentKey,
                         "order-id",
                         "DONE",
-                        1030L,
+                        1000L,
                         null,
                         null,
                         null,
@@ -121,7 +116,7 @@ class DepositFeePolicyTest {
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),
-                request.totalAmount()
+                request.amount()
         );
 
         DepositResponse approved = depositService.approveDeposit(approveCommand);
@@ -136,7 +131,7 @@ class DepositFeePolicyTest {
     }
 
     @Test
-    void cancelDeposit_refundsTotalAmountAndDebitsNetAmount() {
+    void cancelDeposit_refundsRequestedAmount() {
 
         String paymentKey = "payment-key-" + UUID.randomUUID();
 
@@ -145,7 +140,7 @@ class DepositFeePolicyTest {
                         paymentKey,
                         "order-id",
                         "DONE",
-                        1030L,
+                        1000L,
                         null,
                         null,
                         null,
@@ -156,7 +151,7 @@ class DepositFeePolicyTest {
                         "CANCELED",
                         paymentKey,
                         "order-id",
-                        1030L
+                        1000L
                 ));
 
         Long memberId = 3L;
@@ -168,7 +163,7 @@ class DepositFeePolicyTest {
         DepositApprovalCommand approveCommand = new DepositApprovalCommand(
                 paymentKey,
                 request.orderId(),
-                request.totalAmount()
+                request.amount()
         );
         depositService.approveDeposit(approveCommand);
 
@@ -176,7 +171,7 @@ class DepositFeePolicyTest {
                 memberId,
                 paymentKey,
                 request.orderId(),
-                request.totalAmount(),
+                request.amount(),
                 "user-request"
         );
         DepositResponse canceled = depositService.cancelDeposit(cancelCommand);

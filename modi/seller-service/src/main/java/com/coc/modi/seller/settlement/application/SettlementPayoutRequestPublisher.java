@@ -64,7 +64,7 @@ public class SettlementPayoutRequestPublisher {
 		);
 
 		try {
-			kafkaTemplate.send(KafkaTopics.SETTLEMENT_PAYOUT_EVENTS, settlementId.toString(), event);
+			kafkaTemplate.send(KafkaTopics.SELLER_SETTLEMENT_PAYOUT_REQUESTED, settlementId.toString(), event);
 		} catch (Exception ex) {
 			log.warn("정산 지급 요청 발행 실패. settlementId={} sellerId={} memberId={}",
 					settlementId, sellerId, memberId, ex);

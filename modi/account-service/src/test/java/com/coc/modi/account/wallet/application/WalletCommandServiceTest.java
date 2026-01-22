@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import com.coc.modi.account.deposit.domain.PgDepositUsageRepository;
+import com.coc.modi.account.deposit.domain.PgDepositRepository;
 import com.coc.modi.account.wallet.domain.MemberWallet;
 import com.coc.modi.account.wallet.domain.MemberWalletRepository;
 import com.coc.modi.account.wallet.domain.WalletTransaction;
@@ -36,6 +38,12 @@ class WalletCommandServiceTest {
 	@Mock
 	private WalletTransactionRepository walletTransactionRepository;
 
+	@Mock
+	private PgDepositRepository pgDepositRepository;
+
+	@Mock
+	private PgDepositUsageRepository pgDepositUsageRepository;
+
 	@InjectMocks
 	private WalletCommandService walletCommandService;
 
@@ -59,6 +67,7 @@ class WalletCommandServiceTest {
 
 		assertThat(processed).isTrue();
 		assertThat(wallet.getBalance()).isEqualByComparingTo(amount);
+		assertThat(wallet.getNonCardBalance()).isEqualByComparingTo(amount);
 		ArgumentCaptor<WalletTransaction> txCaptor = ArgumentCaptor.forClass(WalletTransaction.class);
 		verify(walletTransactionRepository).save(txCaptor.capture());
 		WalletTransaction tx = txCaptor.getValue();

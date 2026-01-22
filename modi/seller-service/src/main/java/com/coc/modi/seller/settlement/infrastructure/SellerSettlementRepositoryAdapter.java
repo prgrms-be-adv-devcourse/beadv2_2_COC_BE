@@ -2,6 +2,7 @@ package com.coc.modi.seller.settlement.infrastructure;
 
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
+import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -40,6 +42,23 @@ public class SellerSettlementRepositoryAdapter implements SellerSettlementReposi
 
 		return sellerSettlementJpaRepository.findAll(pageable);
 	}
+
+	@Override
+	public Page<SellerSettlement> findByFilter(Long sellerId,
+											   String periodYm,
+											   SellerSettlementStatus status,
+											   Pageable pageable) {
+
+		return sellerSettlementJpaRepository.findByFilter(sellerId, periodYm, status, pageable);
+	}
+
+	@Override
+	public List<SellerSettlement> findListByFilter(Long sellerId,
+												   String periodYm,
+												   SellerSettlementStatus status) {
+
+		return sellerSettlementJpaRepository.findListByFilter(sellerId, periodYm, status);
+	}
 	
 	@Override
 	public Optional<SellerSettlement> findBySellerIdAndPeriodYm(Long sellerId, String periodYm) {
@@ -49,7 +68,7 @@ public class SellerSettlementRepositoryAdapter implements SellerSettlementReposi
 	
 	@Override
 	public Optional<SellerSettlement> findById(Long sellerSettlementId) {
-		
+
 		return sellerSettlementJpaRepository.findById(sellerSettlementId);
 	}
 	

@@ -71,7 +71,7 @@
                     const order = requestBody.data; // orderId, amount 포함
 
                     await tossPayments.requestPayment('간편결제', {
-                        amount: order.totalAmount,
+                        amount: order.amount,
                         orderId: order.orderId,
                         orderName: '예치금 충전',
                         successUrl: config.successUrl,
