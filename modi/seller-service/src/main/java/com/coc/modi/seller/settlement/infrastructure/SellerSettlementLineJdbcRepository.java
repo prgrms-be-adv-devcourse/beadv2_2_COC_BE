@@ -6,6 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -48,5 +51,17 @@ public class SellerSettlementLineJdbcRepository {
 				settlementId);
 
 		return updated > 0;
+	}
+
+	public Set<Long> findRentalItemIdsBySellerAndPeriod(Long sellerId, String periodYm) {
+		List<Long> rentalItemIds = jdbcTemplate.queryForList("""
+				SELECT line.rental_item_id
+				FROM seller.seller_settlement_line line
+				JOIN seller.seller_settlement settlement
+				  ON line.seller_settlement_id = settlement.id
+				WHERE settlement.seller_id = ?
+				  AND settlement.period_ym = ?
+				""", Long.class, sellerId, periodYm);
+		return new HashSet<>(rentalItemIds);
 	}
 }
