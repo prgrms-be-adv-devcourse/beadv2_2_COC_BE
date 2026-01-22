@@ -60,10 +60,36 @@ public class ChatRoomService {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ChatRoomNotFoundException("채팅방을 찾을 수 없습니다. roomId=" + roomId));
 
-        chatParticipantRepository.findByRoomIdAndMemberId(roomId, requesterMemberId)
+        chatParticipantRepository.findActiveByRoomIdAndMemberId(roomId, requesterMemberId)
                 .orElseThrow(() -> new ChatAccessDeniedException("채팅방 접근 권한이 없습니다. roomId=" + roomId));
 
         return toResponse(room);
+    }
+
+    public List<ChatRoomResponse> getRooms(Long requesterMemberId) {
+        if (requesterMemberId == null) {
+            throw new ChatInputInvalidException("memberId는 필수입니다.");
+        }
+
+        List<ChatParticipant> participants = chatParticipantRepository.findActiveByMemberId(requesterMemberId);
+        return participants.stream()
+                .map(ChatParticipant::getRoom)
+                .distinct()
+                .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public void leaveRoom(Long roomId, Long requesterMemberId) {
+        if (roomId == null || requesterMemberId == null) {
+            throw new ChatInputInvalidException("roomId와 memberId는 필수입니다.");
+        }
+
+        ChatParticipant participant = chatParticipantRepository.findByRoomIdAndMemberId(roomId, requesterMemberId)
+                .orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다. roomId=" + roomId));
+
+        participant.leave(java.time.LocalDateTime.now());
     }
 
 	private ChatRoomParticipants resolveParticipants(ChatRoomCreateCommand command) {
@@ -113,6 +139,12 @@ public class ChatRoomService {
 
     private void ensureParticipant(ChatRoom room, Long memberId, ChatParticipantRole role) {
         chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), memberId)
+                .map(existing -> {
+                    if (!existing.isActive()) {
+                        existing.reactivate();
+                    }
+                    return existing;
+                })
                 .orElseGet(() -> chatParticipantRepository.save(
                         ChatParticipant.builder()
                                 .room(room)
