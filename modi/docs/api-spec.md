@@ -171,17 +171,11 @@
 | GET | `/api/settlements/sellers/self` | 정산 목록 조회 |
 | GET | `/api/settlements/sellers/self/{sellerSettlementId}` | 정산 상세 조회 |
 | GET | `/api/settlements/sellers/self/{sellerSettlementId}/lines` | 정산 상세 라인 조회 |
-| POST | `/api/settlements/sellers/self/{sellerSettlementId}/pay` | 정산 지급 처리 |
-| POST | `/api/settlements/sellers/self/{sellerSettlementId}/cancel` | 정산 취소 |
-| POST | `/api/settlements/sellers/self/batches/run` | 정산 배치 실행 |
 
 ### 내부 API
 | Method | Path | 설명 |
 | --- | --- | --- |
 | GET | `/internal/sellers/by-member/{memberId}` | memberId로 sellerId 조회 |
 | GET | `/internal/sellers/{sellerId}` | sellerId로 판매자 조회 |
-| POST | `/internal/settlements/batches` | 정산 배치 생성 |
-| POST | `/internal/settlements/batches/{batchId}/start` | 정산 배치 시작 |
-| POST | `/internal/settlements/batches/{batchId}/complete` | 정산 배치 완료 |
 | GET | `/internal/settlements/batches` | 정산 배치 목록 조회 |
 | GET | `/internal/settlements/batches/{batchId}` | 정산 배치 상세 조회 |
