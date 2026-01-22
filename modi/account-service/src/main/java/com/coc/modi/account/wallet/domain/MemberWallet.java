@@ -27,6 +27,9 @@ public class MemberWallet extends BaseEntity {
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @Column(name = "non_card_balance", nullable = false, precision = 18, scale = 2)
+    private BigDecimal nonCardBalance = BigDecimal.ZERO;
+
     @Version
     @Column(nullable = false)
     private Long version;
@@ -37,6 +40,7 @@ public class MemberWallet extends BaseEntity {
 
         wallet.memberId = memberId;
         wallet.balance = BigDecimal.ZERO;
+        wallet.nonCardBalance = BigDecimal.ZERO;
         wallet.version = 0L;
 
         return wallet;
@@ -45,5 +49,10 @@ public class MemberWallet extends BaseEntity {
     public void changeBalance(BigDecimal balanceAfter) {
 
         this.balance = balanceAfter;
+    }
+
+    public void changeNonCardBalance(BigDecimal balanceAfter) {
+
+        this.nonCardBalance = balanceAfter;
     }
 }

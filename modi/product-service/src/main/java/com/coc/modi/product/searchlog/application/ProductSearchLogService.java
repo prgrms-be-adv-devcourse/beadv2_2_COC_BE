@@ -27,6 +27,9 @@ public class ProductSearchLogService {
 								String cursor,
 								int size,
 								Long memberId) {
+		if (condition == null) {
+			return;
+		}
 
 		String keywordRaw = normalizeRawKeyword(condition.keyword());
 		if (keywordRaw == null) {

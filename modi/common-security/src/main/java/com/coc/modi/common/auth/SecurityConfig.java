@@ -80,6 +80,7 @@ public class SecurityConfig {
 									"/member-service/oauth2/**",
 									"/member-service/login/oauth2/**"
 							).permitAll()
+							.requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
 							.requestMatchers("/internal/**").hasRole("INTERNAL")
 							.requestMatchers("/ws/**").authenticated()
 							.requestMatchers("/actuator/**").permitAll()

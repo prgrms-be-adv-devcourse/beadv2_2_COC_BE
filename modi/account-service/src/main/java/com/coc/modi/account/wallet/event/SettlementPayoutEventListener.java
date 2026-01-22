@@ -20,7 +20,7 @@ public class SettlementPayoutEventListener {
 	private final SettlementPayoutEventPublisher settlementPayoutEventPublisher;
 
 	@KafkaListener(
-			topics = KafkaTopics.SETTLEMENT_PAYOUT_EVENTS,
+			topics = KafkaTopics.SELLER_SETTLEMENT_PAYOUT_REQUESTED,
 			groupId = "account-service",
 			containerFactory = "settlementPayoutKafkaListenerContainerFactory"
 	)

@@ -4,7 +4,20 @@
 
 ## 인증/권한
 - JWT Bearer: 헤더 `Authorization: Bearer <accessToken>`
-- 토큰 예외: 회원가입 `POST /api/members/signup`, 인증 구간 `/api/auth/**`, Swagger(`/swagger-ui/**`, `/v3/api-docs/**`), Actuator(`/actuator/**`), 내부용 `/internal/**`
+- 토큰 예외:
+  - 회원가입 `POST /api/members/signup`
+  - 인증 구간 `POST /api/auth/**` (단, `POST /api/auth/oauth2/connect`는 인증 필요)
+  - OAuth2 구간 `/oauth2/**`, `/login/oauth2/**`
+  - 결제/정적 페이지 `/toss-payment.html`, `/payments/**`
+  - 판매자 조회 `GET /api/sellers/{sellerId}`
+  - 상품 조회
+    - `GET /product-service/api/products/search`
+    - `GET /product-service/api/products/popular-keywords`
+    - `GET /product-service/api/products/popular-products`
+    - `GET /product-service/api/products/{productId}`
+  - Swagger(`/swagger-ui/**`, `/v3/api-docs/**`)
+  - Actuator(`/actuator/**`)
+  - 내부용 `/internal/**`
 - 기본 role 클레임: `MemberRole` 값(`MEMBER` 기본, `SELLER`)이 `role`로 담김. principal(CustomMember.memberId) 필요 API는 토큰 필수.
 - 내부 API 인증: `/internal/**` 요청 시 내부 토큰 헤더 필요. 헤더명 `X-Internal-Token`(설정: `internal.api.header`), 값은 `internal.api.token`.
 
@@ -66,6 +79,12 @@
 - **POST /api/auth/password/reset/confirm**
   - Req: `email`, `code:string(6)`, `newPassword:string(규칙 동일)`
   - Res: `Void`
+- **POST /api/auth/oauth2/signup**
+  - Req: `OAuth2SignupRequest`
+  - Res: `String accessToken` (body), 리프레시 토큰 HttpOnly 쿠키 발급
+- **POST /api/auth/oauth2/connect** — OAuth2 계정 연결 (Auth)
+  - Req: `OAuth2ConnectRequest`
+  - Res: `Void`
 
 ### 관리자
 - **POST /api/admin/members** — 관리자 계정 생성 (Auth)
@@ -76,6 +95,10 @@
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
 - **PATCH /internal/members/{memberId}/role** — 판매자 롤로 변경 및 새 액세스 토큰 발급
   - Res: `String accessToken` (래퍼 없음)
+- **GET /internal/members/{memberId}/authz** — 역할 목록 조회
+  - Res: `MemberAuthzResponse { memberId, roles:string[] }`
+- **GET /internal/members/{memberId}/email** — 이메일 조회
+  - Res: `MemberEmailResponse { memberId, email }`
 
 ---
 ## account-service
@@ -215,12 +238,23 @@
 - ProductSortType: `LATEST`, `OLDEST`, `PRICE_HIGH`, `PRICE_LOW`
 
 ### 상품
-- **GET /api/products** — 상품 스크롤 목록
+- **GET /api/products/search** — 상품 스크롤 목록
   - Query: `keyword?`, `category?:ProductCategory`, `minPrice?:decimal`, `maxPrice?:decimal`, `sellerId?:long`, `startDate?:date`, `endDate?:date`, `cursor?:string`, `size:int=20`, `sortType:ProductSortType=LATEST`
   - Res: `ProductScrollResponse { products:ProductListResponse[], nextCursor:string, hasNext:boolean }`, `ProductListResponse { productId, name, pricePerDay, status:ProductStatus, sellerId, thumbnailUrl }`
+- **POST /api/products/bulk** — 상품 다건 조회
+  - Req: `ProductBulkRequest { productIds:long[] }`
+  - Res: `ProductListResponse[]`
 - **GET /api/products/recent-searches** — 최근 검색어 (Auth)
   - Query: `size?:int=10`
   - Res: `string[]`
+- **GET /api/products/popular-keywords** — 인기 검색어
+  - Query: `size?:int=10`, `startDate?:date(yyyy-MM-dd)`, `endDate?:date(yyyy-MM-dd)`
+  - Note: `startDate`와 `endDate`가 모두 없으면 오늘 하루 기준으로 집계
+  - Res: `PopularKeywordResponse[] { keyword:string, count:long }`
+- **GET /api/products/popular-products** — 인기 상품
+  - Query: `size?:int=10`, `startDate?:date(yyyy-MM-dd)`, `endDate?:date(yyyy-MM-dd)`
+  - Note: `startDate`와 `endDate`가 모두 없으면 오늘 하루 기준으로 집계
+  - Res: `PopularProductResponse[] { productId:long, productName:string, viewCount:long }`
 - **GET /api/products/seller** — 내 상품 목록 (Auth)
   - Query: `pageable`(size=20, sort=createdAt,desc 기본)
   - Res: `Page<ProductListResponse>`
@@ -334,6 +368,8 @@
 - **POST /internal/rentals/unavailable-products** — 기간 중 대여 불가 상품
   - Req: `startDate:date(오늘 이후)`, `endDate:date(오늘 이후)`, `productIds:long[]`
   - Res: `UnavailableProductsResponse { unavailableProductIds:long[] }`
+- **GET /internal/rentals/items/{rentalItemId}** — 대여 아이템 판매자 정보
+  - Res: `RentalItemSellerResponse`
 
 ---
 ## review-service
@@ -403,3 +439,10 @@
 - **POST /api/ai/ai/chat-test** — AI 채팅 테스트
   - Req: `message:string`
   - Res: `String`
+- **POST /api/ai/descriptions** — 상품 설명 추천
+  - Req: `ProductDescriptionRequest`
+  - Res: `String`
+- **POST /api/ai/embeddings/reindex** — 임베딩 미생성 건 재색인
+  - Res: `Integer`(재색인 개수)
+- **POST /api/ai/{productId}/embedding** — 단건 임베딩 미생성 재색인
+  - Res: `Boolean`

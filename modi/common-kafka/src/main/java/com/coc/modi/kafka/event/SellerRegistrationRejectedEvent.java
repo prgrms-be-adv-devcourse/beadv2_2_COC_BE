@@ -3,20 +3,20 @@ package com.coc.modi.kafka.event;
 import java.time.Instant;
 import java.util.UUID;
 
-public record SellerRejectedEvent(
+public record SellerRegistrationRejectedEvent(
 		String eventId,
 		Instant occurredAt,
-		Long sellerId,
+		Long registrationId,
 		Long memberId,
 		String email
 ) {
 
-	public static SellerRejectedEvent of(Long sellerId, Long memberId, String email) {
+	public static SellerRegistrationRejectedEvent of(Long registrationId, Long memberId, String email) {
 
-		return new SellerRejectedEvent(
+		return new SellerRegistrationRejectedEvent(
 				UUID.randomUUID().toString(),
 				Instant.now(),
-				sellerId,
+				registrationId,
 				memberId,
 				email
 		);

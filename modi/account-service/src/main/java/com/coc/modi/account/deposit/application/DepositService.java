@@ -21,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
-
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
@@ -36,26 +33,15 @@ public class DepositService {
     private final WalletCommandService  walletCommandService;
     private static final String PG_PROVIDER = "TOSS_PAYMENTS";
 
-    @Value("${account.deposit.card-fee-rate:0.03}")
-    private BigDecimal cardFeeRate;
-
-    private static final int MONEY_SCALE = 0;
-
     // 예치금 충전 요청
     @Transactional
     public DepositResponse requestDeposit(DepositCommand command) {
 
         String orderId = generateOrderId();
 
-        BigDecimal amount = command.amount();
-        BigDecimal feeAmount = calculateFee(amount);
-        BigDecimal totalAmount = amount.add(feeAmount);
-
         PgDeposit pgDeposit = PgDeposit.createRequest(
                 command.memberId(),
-                amount,
-                feeAmount,
-                totalAmount,
+                command.amount(),
                 PG_PROVIDER,
                 orderId
         );
@@ -79,7 +65,7 @@ public class DepositService {
 
         if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
 
-            BigDecimal requestedAmount = deposit.getTotalAmount();
+            BigDecimal requestedAmount = deposit.getAmount();
             BigDecimal approvedAmount = command.amount();
 
             if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
@@ -101,7 +87,7 @@ public class DepositService {
         }
 
         // 2. 금액 검증
-        BigDecimal requestedAmount = deposit.getTotalAmount();
+        BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal approvedAmount = command.amount();
 
         if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
@@ -191,7 +177,11 @@ public class DepositService {
         }
 
         // 3. 금액 검증
-        BigDecimal requestedAmount = deposit.getTotalAmount();
+        if (deposit.getStatus() == PgDepositStatus.SUCCESS && !deposit.isUnused()) {
+            throw new AccountException(ErrorCode.CONFLICT, "사용된 충전은 취소할 수 없습니다.");
+        }
+
+        BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
@@ -251,11 +241,4 @@ public class DepositService {
         return DepositResponse.from(deposit);
     }
 
-    private BigDecimal calculateFee(BigDecimal amount) {
-
-        if (amount == null) {
-            return BigDecimal.ZERO;
-        }
-        return amount.multiply(cardFeeRate).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
-    }
 }
