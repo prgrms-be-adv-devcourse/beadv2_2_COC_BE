@@ -112,7 +112,8 @@ public class WalletCommandService {
                 command.relatedRentalItemId(),
                 command.relatedSettlementId(),
                 command.description(),
-				command.paymentKey()
+				command.paymentKey(),
+				command.requestId()
         );
 
         // 4. 예치금 잔액 변경
@@ -138,7 +139,12 @@ public class WalletCommandService {
         Long rentalId = command.rentalId();
         BigDecimal amount = command.amount();
 
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(memberId, rentalId, amount);
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(
+				memberId,
+				rentalId,
+				amount,
+				command.requestId()
+		);
 
         createTransactionAndUpdateBalance(txCommand);
 
@@ -155,12 +161,13 @@ public class WalletCommandService {
         Long memberId = command.memberId();
 
         WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalRefund(
-                memberId,
-                command.rentalId(),
-                command.rentalItemId(),
-                command.amount(),
-                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId())
-        );
+				memberId,
+				command.rentalId(),
+				command.rentalItemId(),
+				command.amount(),
+				String.format("렌탈 환불 (itemId=%d)", command.rentalItemId()),
+				command.requestId()
+		);
 
         createTransactionAndUpdateBalance(txCommand);
 

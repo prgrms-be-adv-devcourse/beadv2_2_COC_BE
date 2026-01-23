@@ -59,13 +59,4 @@ public class SellerSettlementController {
 		List<SellerSettlementLineResponse> lines = sellerSettlementService.getSettlementLines(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
-	
-	@PostMapping("/{sellerSettlementId}/cancel")
-	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(@AuthenticationPrincipal CustomMember member,
-																					@PathVariable Long sellerSettlementId) {
-		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
-		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.sellerId(), sellerSettlementId);
-		return ResponseEntity.ok(ApiResponse.ok(settlement));
-	}
 }

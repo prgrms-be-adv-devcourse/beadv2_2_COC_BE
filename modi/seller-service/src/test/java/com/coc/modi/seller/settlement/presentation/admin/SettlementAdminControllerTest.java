@@ -2,8 +2,6 @@ package com.coc.modi.seller.settlement.presentation.admin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,26 +11,18 @@ import java.util.List;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.seller.settlement.application.SellerSettlementService;
-import com.coc.modi.seller.settlement.application.SettlementBatchRunner;
-import com.coc.modi.seller.settlement.application.SettlementBatchService;
 import com.coc.modi.seller.settlement.application.dto.SellerSettlementResponse;
-import com.coc.modi.seller.settlement.application.dto.SettlementBatchCreateCommand;
-import com.coc.modi.seller.settlement.application.dto.SettlementBatchResponse;
-import com.coc.modi.seller.settlement.application.dto.SettlementBatchRunCommand;
 import com.coc.modi.seller.settlement.application.dto.SettlementBulkPayResponse;
 import com.coc.modi.seller.settlement.batch.support.SettlementPayoutFixture;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
-import com.coc.modi.seller.settlement.domain.SettlementBatchStatus;
 import com.coc.modi.seller.settlement.exception.SettlementAccessDeniedException;
 import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
-import com.coc.modi.seller.settlement.presentation.admin.dto.SettlementAdminBatchRunRequest;
 import com.coc.modi.seller.settlement.presentation.admin.dto.SettlementBulkPayRequest;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,12 +38,6 @@ class SettlementAdminControllerTest {
 
 	@Mock
 	private SellerSettlementService sellerSettlementService;
-
-	@Mock
-	private SettlementBatchService settlementBatchService;
-
-	@Mock
-	private SettlementBatchRunner settlementBatchRunner;
 
 	@InjectMocks
 	private SettlementAdminController settlementAdminController;
@@ -154,51 +138,6 @@ class SettlementAdminControllerTest {
 		verify(sellerSettlementService).requestPayoutsByAdmin(3L, "2025-03", SellerSettlementStatus.FAILED, paidAt);
 	}
 
-	@Test
-	void runBatch_requiresAdmin() {
-		SettlementAdminBatchRunRequest request = new SettlementAdminBatchRunRequest("2025-04", null, null, null, null);
-
-		assertThatThrownBy(() -> settlementAdminController.runBatch(sellerMember(), request))
-				.isInstanceOf(SettlementAccessDeniedException.class);
-	}
-
-	@Test
-	void runBatch_requiresPeriodYm() {
-		SettlementAdminBatchRunRequest request = new SettlementAdminBatchRunRequest(null, null, null, null, null);
-
-		assertThatThrownBy(() -> settlementAdminController.runBatch(adminMember(), request))
-				.isInstanceOf(SettlementInputInvalidException.class);
-	}
-
-	@Test
-	void runBatch_runsWithDefaults() {
-		SettlementAdminBatchRunRequest request = new SettlementAdminBatchRunRequest("2025-04", null, null, 10L, 50);
-		SettlementBatchResponse createResponse = batchResponseFixture(99L, "2025-04");
-		when(settlementBatchService.createBatch(any(SettlementBatchCreateCommand.class)))
-				.thenReturn(createResponse);
-		when(settlementBatchService.getBatch(99L)).thenReturn(createResponse);
-
-		ResponseEntity<ApiResponse<SettlementBatchResponse>> result =
-				settlementAdminController.runBatch(adminMember(), request);
-
-		assertThat(result.getBody().success()).isTrue();
-		assertThat(result.getBody().data().id()).isEqualTo(99L);
-
-		ArgumentCaptor<SettlementBatchCreateCommand> createCaptor =
-				ArgumentCaptor.forClass(SettlementBatchCreateCommand.class);
-		verify(settlementBatchService).createBatch(createCaptor.capture());
-		assertThat(createCaptor.getValue().periodYm()).isEqualTo("2025-04");
-
-		ArgumentCaptor<SettlementBatchRunCommand> commandCaptor =
-				ArgumentCaptor.forClass(SettlementBatchRunCommand.class);
-		verify(settlementBatchRunner).run(eq(99L), commandCaptor.capture());
-		SettlementBatchRunCommand command = commandCaptor.getValue();
-		assertThat(command.periodYm()).isEqualTo("2025-04");
-		assertThat(command.startDate()).isEqualTo("2025-04-01");
-		assertThat(command.endDate()).isEqualTo("2025-04-30");
-		assertThat(command.sellerId()).isEqualTo(10L);
-		assertThat(command.pageSize()).isEqualTo(50);
-	}
 
 	private CustomMember adminMember() {
 		return new CustomMember(1L, "ADMIN");
@@ -220,17 +159,5 @@ class SettlementAdminControllerTest {
 		);
 		ReflectionTestUtils.setField(settlement, "id", settlementId);
 		return SellerSettlementResponse.from(settlement);
-	}
-
-	private SettlementBatchResponse batchResponseFixture(Long batchId, String periodYm) {
-		return new SettlementBatchResponse(
-				batchId,
-				periodYm,
-				SettlementBatchStatus.READY,
-				null,
-				null,
-				null,
-				null
-		);
 	}
 }

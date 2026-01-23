@@ -11,6 +11,7 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.kafka.event.RentalReturnedEvent;
 import com.coc.modi.rental.outbox.RentalOutboxService;
 
@@ -31,6 +32,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class RentalLifecycleService {
+
+	private static final int SEQUENCE_RETURNED = 1;
+	private static final String CLOSED_TYPE_RETURNED = "RETURNED";
 	
 	private final RentalAppSupport rentalAppSupport;
 	private final AccountClientAdapter accountClientAdapter;
@@ -98,15 +102,30 @@ public class RentalLifecycleService {
 						"lateReason", command.lateReason(),
 						"memo", command.memo()));
 
+		BigDecimal rentalAmount = rentalItem.calculateRentalAmount();
 		RentalReturnedEvent event = RentalReturnedEvent.of(
 				rentalItem.getId(),
 				rental.getMemberId(),
 				rentalItem.getSellerId(),
 				rentalItem.getProductId(),
+				rentalAmount,
 				rentalItem.getStatus().name(),
 				rentalItem.getReturnedAt()
 		);
 		rentalOutboxService.enqueueRentalReturnedEvent(rentalItem.getId(), event);
+
+		RentalClosedEvent closedEvent = RentalClosedEvent.of(
+				rentalItem.getId(),
+				rental.getMemberId(),
+				rentalItem.getSellerId(),
+				rentalItem.getProductId(),
+				rentalAmount,
+				CLOSED_TYPE_RETURNED,
+				rentalItem.getReturnedAt(),
+				null,
+				SEQUENCE_RETURNED
+		);
+		rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);
 		
 		return new RentalReturnResponse(
 				rental.getId(),

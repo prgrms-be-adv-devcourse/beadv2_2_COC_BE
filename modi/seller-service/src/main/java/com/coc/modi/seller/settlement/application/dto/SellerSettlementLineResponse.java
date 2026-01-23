@@ -3,6 +3,7 @@ package com.coc.modi.seller.settlement.application.dto;
 import com.coc.modi.seller.settlement.domain.SellerSettlementLine;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record SellerSettlementLineResponse(
 		Long id,
@@ -12,7 +13,9 @@ public record SellerSettlementLineResponse(
 		Long memberId,
 		Long productId,
 		BigDecimal rentalAmount,
-		BigDecimal feeAmount
+		BigDecimal feeAmount,
+		String status,
+		LocalDateTime canceledAt
 ) {
 	
 	public static SellerSettlementLineResponse from(SellerSettlementLine line) {
@@ -25,7 +28,9 @@ public record SellerSettlementLineResponse(
 				line.getMemberId(),
 				line.getProductId(),
 				line.getRentalAmount(),
-				line.getFeeAmount()
+				line.getFeeAmount(),
+				line.getStatus() != null ? line.getStatus().name() : null,
+				line.getCanceledAt()
 		);
 	}
 }
