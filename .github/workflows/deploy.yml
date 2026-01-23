@@ -171,7 +171,7 @@ jobs:
             echo "▶ Restarting deployments on k3s (sequential)"
 
             priority=(modi-config modi-discovery modi-gateway)
-            k8s_base_dir="/home/ec2-user/app/modi/k8s/base"
+            k8s_base_dir="/home/ec2-user/k8s/base"
 
             ensure_deploy() {
               local service="$1"
