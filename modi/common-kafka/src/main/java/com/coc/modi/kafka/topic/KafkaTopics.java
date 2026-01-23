@@ -26,4 +26,5 @@ public final class KafkaTopics {
 
 	public static final String CART_ITEM_EVENTS = "cart-item-events";
 	public static final String RENTAL_RETURNED_EVENTS = "rental-returned-events";
+	public static final String RENTAL_CLOSED_EVENTS = "rental-closed-events";
 }

@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@ToString(of = {"id", "eventType", "level", "stepName", "createdAt"})
+@ToString(of = {"id", "eventType", "level", "stepName"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "settlement_batch_execution_log", schema = "seller")

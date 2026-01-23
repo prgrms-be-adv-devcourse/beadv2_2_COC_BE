@@ -1,5 +1,6 @@
 package com.coc.modi.kafka.event;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,6 +12,7 @@ public record RentalReturnedEvent(
 		Long memberId,
 		Long sellerId,
 		Long productId,
+		BigDecimal rentalAmount,
 		String status,
 		LocalDateTime returnedAt
 ) {
@@ -20,6 +22,7 @@ public record RentalReturnedEvent(
 			Long memberId,
 			Long sellerId,
 			Long productId,
+			BigDecimal rentalAmount,
 			String status,
 			LocalDateTime returnedAt
 	) {
@@ -30,6 +33,7 @@ public record RentalReturnedEvent(
 				memberId,
 				sellerId,
 				productId,
+				rentalAmount,
 				status,
 				returnedAt
 		);

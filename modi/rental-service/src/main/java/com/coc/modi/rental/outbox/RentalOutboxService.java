@@ -1,6 +1,7 @@
 package com.coc.modi.rental.outbox;
 
 import com.coc.modi.kafka.event.CartItemEvent;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.kafka.event.RentalReturnedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -61,6 +62,19 @@ public class RentalOutboxService {
 				"RENTAL_ITEM",
 				rentalItemId,
 				RentalOutboxEventType.RENTAL_RETURNED_EVENT,
+				payload
+		);
+
+		outboxEventRepository.save(outboxEvent);
+	}
+
+	public void enqueueRentalClosedEvent(Long rentalItemId, RentalClosedEvent event) {
+
+		String payload = writePayload(event);
+		RentalOutboxEvent outboxEvent = RentalOutboxEvent.create(
+				"RENTAL_ITEM",
+				rentalItemId,
+				RentalOutboxEventType.RENTAL_CLOSED_EVENT,
 				payload
 		);
 

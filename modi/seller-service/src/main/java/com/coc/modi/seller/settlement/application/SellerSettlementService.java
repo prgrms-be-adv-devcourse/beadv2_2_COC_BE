@@ -117,14 +117,6 @@ public class SellerSettlementService {
 
 		return new SettlementBulkPayResponse(total, requested, skipped);
 	}
-	
-	@Transactional
-	public SellerSettlementResponse cancelSettlement(Long sellerId, Long sellerSettlementId) {
-		
-		SellerSettlement settlement = findOwnedSettlement(sellerId, sellerSettlementId);
-		settlement.cancel();
-		return SellerSettlementResponse.from(settlement);
-	}
 
 	private SellerSettlementResponse processPayoutRequest(SellerSettlement settlement, LocalDateTime requestedAt) {
 

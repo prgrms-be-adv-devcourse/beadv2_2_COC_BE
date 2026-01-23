@@ -1,5 +1,7 @@
 package com.coc.modi.seller.settlement.batch;
 
+import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.*;
+
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionLogService;
 import com.coc.modi.seller.settlement.application.SettlementBatchExecutionService;
 import com.coc.modi.seller.settlement.application.SettlementBatchService;
@@ -16,10 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
-
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.FEE_AMOUNT;
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.LAST_CURSOR;
-import static com.coc.modi.seller.settlement.batch.SettlementBatchContextKeys.TOTAL_AMOUNT;
 
 @Component
 @RequiredArgsConstructor
@@ -69,6 +67,11 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 		long writeCount = jobExecution.getStepExecutions().stream()
 				.mapToLong(se -> se.getWriteCount())
 				.sum();
+		long insertedCount = jobExecution.getStepExecutions().stream()
+				.map(se -> se.getExecutionContext().get(TOTAL_COUNT))
+				.filter(value -> value instanceof Number)
+				.mapToLong(value -> ((Number) value).longValue())
+				.sum();
 		long skipCount = jobExecution.getStepExecutions().stream()
 				.mapToLong(se -> se.getProcessSkipCount() + se.getReadSkipCount() + se.getWriteSkipCount())
 				.sum();
@@ -103,7 +106,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 			executionService.complete(
 					executionId,
 					Math.toIntExact(readCount),
-					Math.toIntExact(writeCount),
+					Math.toIntExact(insertedCount),
 					Math.toIntExact(failTotal),
 					totalAmount,
 					feeAmount,
@@ -113,7 +116,8 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 					executionId,
 					SettlementBatchExecutionLogEventType.COMPLETED,
 					SettlementBatchExecutionLogLevel.INFO,
-					"Batch execution completed. read=" + readCount + ", write=" + writeCount + ", fail=" + failTotal,
+					"Batch execution completed. read=" + readCount + ", write=" + writeCount
+							+ ", inserted=" + insertedCount + ", fail=" + failTotal,
 					null
 			);
 		} else {
@@ -125,7 +129,7 @@ public class SettlementBatchJobListener implements JobExecutionListener {
 					executionId,
 					errorMessage,
 					Math.toIntExact(readCount),
-					Math.toIntExact(writeCount),
+					Math.toIntExact(insertedCount),
 					Math.toIntExact(failTotal),
 					lastCursor
 			);
