@@ -55,17 +55,22 @@ public class ChatParticipant extends BaseEntity {
 	@Column(name = "last_read_at")
 	private LocalDateTime lastReadAt;
 
+	@Column(name = "left_at")
+	private LocalDateTime leftAt;
+
 	@Builder
 	private ChatParticipant(ChatRoom room,
 							Long memberId,
 							ChatParticipantRole role,
 							Long lastReadMessageId,
-							LocalDateTime lastReadAt) {
+							LocalDateTime lastReadAt,
+							LocalDateTime leftAt) {
 		this.room = room;
 		this.memberId = memberId;
 		this.role = role;
 		this.lastReadMessageId = lastReadMessageId;
 		this.lastReadAt = lastReadAt;
+		this.leftAt = leftAt;
 	}
 
 	public void markRead(Long messageId, LocalDateTime readAt) {
@@ -76,5 +81,23 @@ public class ChatParticipant extends BaseEntity {
 			this.lastReadMessageId = messageId;
 			this.lastReadAt = readAt;
 		}
+	}
+
+	public boolean isActive() {
+		return this.leftAt == null;
+	}
+
+	public void leave(LocalDateTime leftAt) {
+		if (this.leftAt != null) {
+			return;
+		}
+		this.leftAt = leftAt != null ? leftAt : LocalDateTime.now();
+	}
+
+	public void reactivate() {
+		if (this.leftAt == null) {
+			return;
+		}
+		this.leftAt = null;
 	}
 }

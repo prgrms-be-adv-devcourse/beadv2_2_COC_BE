@@ -8,11 +8,13 @@ import org.springframework.data.domain.Pageable;
 
 public interface ProductRepository {
 	
-	Optional<Product> findByIdAndStatusNot(Long id, ProductStatus status);
+	Optional<Product> findNonDeletedById(Long id);
 	
 	Optional<Product> findById(Long id);
 	
-	Page<Product> findBySellerIdAndStatusNot(Long sellerId, ProductStatus status, Pageable pageable);
+	Page<Product> findNonDeletedBySellerId(Long sellerId, Pageable pageable);
+
+	Page<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus, Pageable pageable);
 	
 	Product saveAndFlush(Product product);
 	
@@ -20,5 +22,5 @@ public interface ProductRepository {
 	
 	List<Product> findByIdIn(List<Long> productIds);
 
-	List<Product> findByStatusNot(ProductStatus status);
+	List<Product> findNonDeletedByModerationStatus(ProductModerationStatus moderationStatus);
 }

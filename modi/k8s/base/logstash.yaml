@@ -78,6 +78,46 @@ data:
         drop { }
       }
 
+      if [log_payload] and [log_payload] =~ /org\.hibernate\.SQL/ {
+        drop { }
+      }
+
+      if [event][message] and [event][message] =~ /org\.hibernate\.SQL/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /first \? rows only/ {
+        drop { }
+      }
+
+      if [event][message] and [event][message] =~ /first \? rows only/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /No active profile set, falling back to .*default profile/ {
+        drop { }
+      }
+
+      if [event][message] and [event][message] =~ /No active profile set, falling back to .*default profile/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /^Starting .*Application v.* using Java/ {
+        drop { }
+      }
+
+      if [event][message] and [event][message] =~ /^Starting .*Application v.* using Java/ {
+        drop { }
+      }
+
+      if [log_payload] and [log_payload] =~ /^\s*\( \( \)\\___|^\s*\\\/\\ \/ ___'_ __/ {
+        drop { }
+      }
+
+      if [event][message] and [event][message] =~ /^\s*\( \( \)\\___|^\s*\\\/\\ \/ ___'_ __/ {
+        drop { }
+      }
+
       if [log_payload] and [log_payload] =~ /(?i:^\s*\*\s*$)/ {
         drop { }
       }

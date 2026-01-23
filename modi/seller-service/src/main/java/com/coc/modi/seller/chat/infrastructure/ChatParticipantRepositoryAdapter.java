@@ -22,9 +22,20 @@ public class ChatParticipantRepositoryAdapter implements ChatParticipantReposito
 	}
 
 	@Override
+	public Optional<ChatParticipant> findActiveByRoomIdAndMemberId(Long roomId, Long memberId) {
+		return chatParticipantJpaRepository.findByRoomIdAndMemberIdAndLeftAtIsNull(roomId, memberId);
+	}
+
+	@Override
 	public List<ChatParticipant> findByRoomId(Long roomId) {
 
 		return chatParticipantJpaRepository.findByRoomId(roomId);
+	}
+
+	@Override
+	public List<ChatParticipant> findActiveByMemberId(Long memberId) {
+
+		return chatParticipantJpaRepository.findByMemberIdAndLeftAtIsNull(memberId);
 	}
 
 	@Override
