@@ -6,6 +6,9 @@ import com.coc.modi.review.application.dto.CreateReviewCommand;
 import com.coc.modi.review.application.dto.ReviewListResponse;
 import com.coc.modi.review.application.dto.ReviewResponse;
 import com.coc.modi.review.application.dto.UpdateReviewCommand;
+import com.coc.modi.review.cache.ReturnedRentalCache;
+import com.coc.modi.review.cache.ReturnedRentalItem;
+import com.coc.modi.review.config.ReviewPolicyProperties;
 import com.coc.modi.review.domain.Review;
 import com.coc.modi.review.domain.ReviewRepository;
 import com.coc.modi.review.domain.ReviewStatus;
@@ -18,18 +21,16 @@ import com.coc.modi.review.exception.ReviewNotFoundException;
 import com.coc.modi.review.infrastructure.client.RentalClientAdapter;
 import com.coc.modi.review.infrastructure.client.SellerClientAdapter;
 import com.coc.modi.review.infrastructure.client.dto.RentalItemInfo;
-import com.coc.modi.review.cache.ReturnedRentalCache;
-import com.coc.modi.review.cache.ReturnedRentalItem;
-import com.coc.modi.review.config.ReviewPolicyProperties;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,6 @@ public class ReviewService {
 	private final ReturnedRentalCache returnedRentalCache;
 	private final ReviewPolicyProperties reviewPolicyProperties;
 
-	
 	// 판매자 리뷰 작성
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
@@ -75,14 +75,14 @@ public class ReviewService {
 						String.valueOf(saved.getId())
 				)
 		);
-		
+
 		return ReviewResponse.from(saved);
 	}
-	
+
 	// 작성자가 본인 리뷰를 수정
 	@Transactional
 	public ReviewResponse updateReview(UpdateReviewCommand command) {
-		
+
 		Review review = reviewRepository.findByIdAndStatus(command.reviewId(), ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(command.reviewId()));
 
@@ -94,14 +94,14 @@ public class ReviewService {
 			short afterRating = review.getRating();
 			updateReviewAggregates(review.getSellerId(), 0L, (long) afterRating - beforeRating);
 		}
-		
+
 		return ReviewResponse.from(review);
 	}
-	
+
 	// 작성자가 본인 리뷰를 소프트 삭제
 	@Transactional
 	public void deleteReview(Long reviewId, Long memberId) {
-		
+
 		Review review = reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.ACTIVE)
 				.orElseThrow(() -> new ReviewNotFoundException(reviewId));
 
@@ -110,7 +110,7 @@ public class ReviewService {
 		review.delete();
 		updateReviewAggregates(review.getSellerId(), -1L, -review.getRating());
 	}
-	
+
 	// 특정 판매자 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
 	public List<ReviewListResponse> getReviewsBySeller(Long sellerId, Integer rating, Pageable pageable) {
@@ -132,7 +132,7 @@ public class ReviewService {
 				.map(ReviewListResponse::from)
 				.toList();
 	}
-	
+
 	// 내가 작성한 리뷰 목록 조회 (삭제된 리뷰 제외)
 	@Transactional(readOnly = true)
 	public List<ReviewListResponse> getReviewsByMember(Long memberId, Integer rating, Pageable pageable) {
@@ -156,9 +156,9 @@ public class ReviewService {
 	}
 
 	private void validateOwnership(Review review, Long memberId) {
-		
+
 		if (!review.getMemberId().equals(memberId)) {
-			
+
 			throw new ReviewAccessDeniedException();
 		}
 	}
@@ -200,10 +200,10 @@ public class ReviewService {
 	}
 
 	private void validateReturnedRental(CreateReviewCommand command,
-										Long memberId,
-										Long sellerId,
-										String status,
-										LocalDateTime returnedAt) {
+			Long memberId,
+			Long sellerId,
+			String status,
+			LocalDateTime returnedAt) {
 		if (!command.memberId().equals(memberId)) {
 			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
 		}
@@ -229,6 +229,7 @@ public class ReviewService {
 		LocalDateTime deadline = returnedAt.plus(reviewableWindow);
 		return !LocalDateTime.now().isAfter(deadline);
 	}
+
 	private void updateReviewAggregates(Long sellerId, long countDelta, long ratingDelta) {
 		if (countDelta == 0 && ratingDelta == 0) {
 			return;
@@ -236,17 +237,17 @@ public class ReviewService {
 
 		reviewSummaryRepository.findBySellerId(sellerId)
 				.ifPresentOrElse(
-						summary -> {
-							long updatedTotal = Math.max(0, summary.getTotalReviewCount() + countDelta);
-							long updatedRatingSum = Math.max(0, summary.getRatingSum() + ratingDelta);
-							summary.updateTotals(updatedTotal, updatedRatingSum);
-						},
-						() -> {
-							if (countDelta > 0) {
-								long initialRatingSum = Math.max(0, ratingDelta);
-								reviewSummaryRepository.save(ReviewSummary.createCounter(sellerId, countDelta, initialRatingSum));
-							}
+					summary -> {
+						long updatedTotal = Math.max(0, summary.getTotalReviewCount() + countDelta);
+						long updatedRatingSum = Math.max(0, summary.getRatingSum() + ratingDelta);
+						summary.updateTotals(updatedTotal, updatedRatingSum);
+					},
+					() -> {
+						if (countDelta > 0) {
+							long initialRatingSum = Math.max(0, ratingDelta);
+							reviewSummaryRepository.save(ReviewSummary.createCounter(sellerId, countDelta, initialRatingSum));
 						}
+					}
 				);
 	}
 }

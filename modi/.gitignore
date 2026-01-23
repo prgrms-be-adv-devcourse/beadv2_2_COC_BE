@@ -13,8 +13,6 @@ HELP.md
 .idea
 *.yml
 .env
-**/Dockerfile
-
 ### STS ###
 .apt_generated/
 .classpath

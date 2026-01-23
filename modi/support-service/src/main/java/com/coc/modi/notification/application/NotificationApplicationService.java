@@ -8,9 +8,9 @@ import org.springframework.util.StringUtils;
 import com.coc.modi.common.NotificationType;
 import com.coc.modi.kafka.event.NotificationEvent;
 import com.coc.modi.notification.domain.Notification;
-import com.coc.modi.notification.domain.NotificationRepository;
 import com.coc.modi.notification.domain.NotificationEventDedup;
 import com.coc.modi.notification.domain.NotificationEventDedupRepository;
+import com.coc.modi.notification.domain.NotificationRepository;
 import com.coc.modi.notification.infrastructure.client.member.MemberClientAdapter;
 
 import lombok.RequiredArgsConstructor;
@@ -22,13 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationApplicationService {
 
 	private static final String CONSUMER_NAME = "support-service-notification";
-	
+
 	private final NotificationRepository notificationRepository;
 	private final NotificationSseService notificationSseService;
 	private final MemberClientAdapter memberClientAdapter;
 	private final ProductModerationMailService productModerationMailService;
 	private final NotificationEventDedupRepository notificationEventDedupRepository;
-	
+
 	@Transactional
 	public void handle(NotificationEvent event) {
 		if (!tryMarkProcessed(event)) {

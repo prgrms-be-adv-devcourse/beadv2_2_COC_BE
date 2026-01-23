@@ -27,32 +27,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class DeliveryService {
-	
+
 	private final DeliveryRepository deliveryRepository;
 	private final RentalInternalFeignClient rentalInternalFeignClient;
 	private final SellerInternalFeignClient sellerInternalFeignClient;
-	
+
 	// 배송 등록
 	@Transactional
 	public DeliveryCreateResponse createDelivery(DeliveryCreateCommand command, Long memberId) {
-		
+
 		validateSeller(command.rentalItemId(), memberId);
-		
+
 		boolean exists = deliveryRepository.findByRentalItemId(command.rentalItemId())
 				.isPresent();
 		if (exists) {
 			throw new DeliveryConflictException(
 					"이미 등록된 배송 정보입니다. rentalItemId: " + command.rentalItemId());
 		}
-		
+
 		Delivery delivery = Delivery.create(
 				command.rentalItemId(),
 				command.carrierCode(),
 				command.trackingNumber()
 		);
-		
+
 		Delivery saved = deliveryRepository.save(delivery);
-		
+
 		return new DeliveryCreateResponse(
 				saved.getId(),
 				saved.getRentalItemId(),
@@ -60,49 +60,49 @@ public class DeliveryService {
 				saved.getTrackingNumber(),
 				saved.getStatus());
 	}
-	
+
 	// 배송 정보 수정
 	@Transactional
 	public DeliveryDetailResponse updateDeliveryByRentalItemId(Long rentalItemId,
 			DeliveryUpdateCommand command,
 			Long memberId) {
-		
+
 		validateSeller(rentalItemId, memberId);
-		
+
 		Delivery delivery = deliveryRepository.findByRentalItemId(rentalItemId)
 				.orElseThrow(() -> new DeliveryNotFoundException("rentalItemId", rentalItemId));
-		
+
 		delivery.updateTrackingInfo(command.carrierCode(), command.trackingNumber());
-		
+
 		return DeliveryDetailResponse.from(delivery);
 	}
-	
+
 	// 배송 단건 조회
 	@Transactional(readOnly = true)
 	public DeliveryDetailResponse getDelivery(Long deliveryId, Long memberId) {
-		
+
 		Delivery delivery = deliveryRepository.findById(deliveryId)
 				.orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
-		
+
 		validateAccess(delivery.getRentalItemId(), memberId);
-		
+
 		return DeliveryDetailResponse.from(delivery);
 	}
-	
+
 	// rentalItemId로 배송 단건 조회
 	@Transactional(readOnly = true)
 	public DeliveryDetailResponse getDeliveryByRentalItemId(Long rentalItemId, Long memberId) {
-		
+
 		validateAccess(rentalItemId, memberId);
-		
+
 		Delivery delivery = deliveryRepository.findByRentalItemId(rentalItemId)
 				.orElseThrow(() -> new DeliveryNotFoundException("rentalItemId", rentalItemId));
-		
+
 		return DeliveryDetailResponse.from(delivery);
 	}
 
 	private void validateSeller(Long rentalItemId, Long memberId) {
-		
+
 		if (memberId == null) {
 			throw new DeliveryForbiddenException("판매자 정보가 없습니다.");
 		}
@@ -120,20 +120,20 @@ public class DeliveryService {
 		if (rentalInfo == null) {
 			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈 정보를 확인할 수 없습니다. rentalItemId: " + rentalItemId);
 		}
-		
+
 		if (sellerInfo == null || sellerInfo.sellerId() == null) {
 			throw new DeliveryForbiddenException("판매자 정보를 찾을 수 없습니다. memberId: " + memberId);
 		}
-		
+
 		if (!sellerInfo.sellerId().equals(rentalInfo.sellerId())) {
 			throw new DeliveryForbiddenException(
 					"판매자 정보가 일치하지 않습니다. rentalItemId: " + rentalItemId
 							+ ", memberId: " + memberId);
 		}
 	}
-	
+
 	private void validateAccess(Long rentalItemId, Long memberId) {
-		
+
 		if (memberId == null) {
 			throw new DeliveryForbiddenException("회원 정보가 없습니다.");
 		}
@@ -151,13 +151,13 @@ public class DeliveryService {
 		if (rentalInfo == null) {
 			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈 정보를 확인할 수 없습니다. rentalItemId: " + rentalItemId);
 		}
-		
+
 		Long sellerId = sellerInfo != null ? sellerInfo.sellerId() : null;
 		Long buyerId = rentalInfo.memberId();
-		
+
 		boolean sellerMatch = sellerId != null && sellerId.equals(rentalInfo.sellerId());
 		boolean buyerMatch = buyerId != null && buyerId.equals(memberId);
-		
+
 		if (!sellerMatch && !buyerMatch) {
 			throw new DeliveryForbiddenException(
 					"조회 권한이 없습니다. rentalItemId: " + rentalItemId + ", memberId: " + memberId);
