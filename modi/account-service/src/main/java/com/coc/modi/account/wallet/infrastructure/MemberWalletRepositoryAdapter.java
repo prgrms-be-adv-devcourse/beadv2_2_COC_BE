@@ -25,6 +25,12 @@ public class MemberWalletRepositoryAdapter implements MemberWalletRepository {
         return jpaRepository.findByMemberId(memberId);
     }
 
+	@Override
+	public Optional<MemberWallet> findByMemberIdForUpdate(Long memberId) {
+
+		return jpaRepository.findByMemberIdForUpdate(memberId);
+	}
+
     @Override
     public MemberWallet save(MemberWallet wallet) {
 

@@ -228,50 +228,12 @@ services:
     networks:
       - msa-net
 
-#  review-service:
-#    build:
-#      context: .
-#      dockerfile: review-service/Dockerfile
-#    image: modi/review-service:local
-#    container_name: review-service
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      modi-config:
-#        condition: service_healthy
-#    expose:
-#      - "8080"
-#    env_file:
-#      - .env
-#    restart: always
-#    networks:
-#      - msa-net
-#
-#  notification-service:
-#    build:
-#      context: .
-#      dockerfile: notification-service/Dockerfile
-#    image: modi/notification-service:local
-#    container_name: notification-service
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      modi-config:
-#        condition: service_healthy
-#    expose:
-#      - "8080"
-#    env_file:
-#      - .env
-#    restart: always
-#    networks:
-#      - msa-net
-
-  delivery-service:
+  support-service:
     build:
       context: .
-      dockerfile: delivery-service/Dockerfile
-    image: modi/delivery-service:local
-    container_name: delivery-service
+      dockerfile: support-service/Dockerfile
+    image: modi/support-service:local
+    container_name: support-service
     depends_on:
       postgres:
         condition: service_healthy

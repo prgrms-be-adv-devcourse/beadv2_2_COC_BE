@@ -116,10 +116,10 @@
 | GET | `/internal/rentals` | 대여 아이템 목록 조회 |
 | POST | `/internal/rentals/unavailable-products` | 대여 불가 상품 조회 |
 
-## review-service
-서비스 ID: `review-service`
+## support-service
+서비스 ID: `support-service`
 
-### 외부 API
+### 외부 API - 리뷰
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/api/reviews` | 리뷰 작성 |
@@ -129,18 +129,12 @@
 | GET | `/api/reviews?sellerId={sellerId}` | 판매자 리뷰 목록 조회 |
 | GET | `/api/reviews/me` | 내 리뷰 목록 조회 |
 
-## notification-service
-서비스 ID: `notification-service`
-
-### 외부 API
+### 외부 API - 알림
 | Method | Path | 설명 |
 | --- | --- | --- |
 | GET | `/api/notifications/stream` | 알림 SSE 스트림 구독 |
 
-## delivery-service
-서비스 ID: `delivery-service`
-
-### 외부 API
+### 외부 API - 배송
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/api/deliveries` | 배송 등록 |

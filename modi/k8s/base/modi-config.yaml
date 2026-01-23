@@ -39,13 +39,21 @@ spec:
             - secretRef:
                 name: modi-env
           env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
               value: "true"
+          resources:
+            requests:
+              memory: "128Mi"
+            limits:
+              memory: "384Mi"
           startupProbe:
             tcpSocket:
               port: 8888
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             tcpSocket:
               port: 8888
