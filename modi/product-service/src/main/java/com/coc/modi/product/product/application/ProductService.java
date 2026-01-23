@@ -199,7 +199,7 @@ public class ProductService {
 
 		// 모더레이션 통과 후에만 인덱싱/임베딩 이벤트 발행
 		if (saved.getModerationStatus() == ProductModerationStatus.CLEAR) {
-			productEmbeddingEventPublisher.publishUpdate(saved.getId());
+			productEmbeddingOutboxService.enqueueUpdate(saved.getId());
 		}
 		
 		return ProductDetailResponse.from(saved);
@@ -249,7 +249,7 @@ public class ProductService {
 		
 
 		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
-			productEmbeddingEventPublisher.publishUpdate(product.getId());
+			productEmbeddingOutboxService.enqueueUpdate(product.getId());
 		}
 	
 		return ProductDetailResponse.from(product);

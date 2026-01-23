@@ -39,10 +39,15 @@ spec:
             - -Expack.security.enabled=false
           env:
             - name: ES_JAVA_OPTS
-              value: "-Xms512m -Xmx512m"
+              value: "-Xms1g -Xmx1g"
           ports:
             - name: http
               containerPort: 9200
+          resources:
+            requests:
+              memory: "1Gi"
+            limits:
+              memory: "2Gi"
           volumeMounts:
             - name: elasticsearch-data
               mountPath: /usr/share/elasticsearch/data

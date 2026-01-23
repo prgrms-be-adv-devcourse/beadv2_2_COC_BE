@@ -56,6 +56,9 @@ public class RentalAppSupport {
 	public void requireSeller(Long sellerId, Long memberId) {
 		
 		SellerInfoResponse sellerInfoResponse = sellerFeignClient.getSellerInfo(sellerId);
+		if (sellerInfoResponse == null || sellerInfoResponse.memberId() == null) {
+			throw new RentalStatusInvalidException("판매자 정보 조회에 실패했습니다.");
+		}
 		
 		if (!sellerInfoResponse.memberId().equals(memberId)) {
 			

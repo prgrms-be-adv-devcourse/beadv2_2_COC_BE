@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  labels:
+    app: support-service
+spec:
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+  selector:
+    app: support-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-service
+  labels:
+    app: support-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: support-service
+  template:
+    metadata:
+      labels:
+        app: support-service
+    spec:
+      containers:
+        - name: support-service
+          image: modi/support-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8086
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
+            - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
+              value: "false"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SERVER_PORT
+              value: "8086"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: modi-env
+                  key: SUPPORT_DB_URL
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+          envFrom:
+            - secretRef:
+                name: modi-env
+          resources:
+            requests:
+              memory: "200Mi"
+            limits:
+              memory: "512Mi"
+          startupProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 10
+            periodSeconds: 10

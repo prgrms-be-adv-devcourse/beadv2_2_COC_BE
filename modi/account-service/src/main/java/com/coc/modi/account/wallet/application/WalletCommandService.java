@@ -49,7 +49,11 @@ public class WalletCommandService {
 
         MemberWallet wallet = MemberWallet.create(memberId);
 
-        memberWalletRepository.save(wallet);
+        try {
+			memberWalletRepository.save(wallet);
+		} catch (DataIntegrityViolationException ex) {
+			throw new AccountAlreadyExistsException(String.valueOf(memberId));
+		}
     }
 
 
@@ -59,7 +63,7 @@ public class WalletCommandService {
     public WalletTransaction createTransactionAndUpdateBalance(WalletTransactionCommand command) {
 
         // 1. 예치금 조회
-        MemberWallet wallet = memberWalletRepository.findByMemberId(command.memberId())
+        MemberWallet wallet = memberWalletRepository.findByMemberIdForUpdate(command.memberId())
                 .orElseThrow(() -> new AccountNotFoundException(command.memberId()));
 
         // 2. txType에 따라 예치금 입금, 차감 결정
@@ -161,13 +165,13 @@ public class WalletCommandService {
         Long memberId = command.memberId();
 
         WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalRefund(
-				memberId,
-				command.rentalId(),
-				command.rentalItemId(),
-				command.amount(),
-				String.format("렌탈 환불 (itemId=%d)", command.rentalItemId()),
+                memberId,
+                command.rentalId(),
+                command.rentalItemId(),
+                command.amount(),
+                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId()),
 				command.requestId()
-		);
+        );
 
         createTransactionAndUpdateBalance(txCommand);
 

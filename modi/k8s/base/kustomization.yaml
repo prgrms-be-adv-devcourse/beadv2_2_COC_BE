@@ -21,4 +21,6 @@ resources:
   - notification-service.yaml
   - review-service.yaml
   - delivery-service.yaml
+  - support-service.yaml
+  - seller-settlement-cronjob.yaml
   - ai-service.yaml

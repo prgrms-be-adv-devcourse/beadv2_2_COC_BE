@@ -6,6 +6,7 @@ import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -19,7 +20,7 @@ public class OpenApiGatewayServerConfig {
 	private static final String BEARER_AUTH_SCHEME = "bearerAuth";
 	private static final String INTERNAL_AUTH_SCHEME = "internalApiToken";
 	
-	@Value("${app.gateway-prefix}")
+	@Value("${app.gateway-prefix:}")
 	private String gatewayPrefix;
 	
 	@Value("${internal.api.header:X-Internal-Token}")
@@ -29,8 +30,9 @@ public class OpenApiGatewayServerConfig {
 	public OpenApiCustomizer gatewayServerCustomizer() {
 		
 		return openApi -> {
-			
-			openApi.setServers(List.of(new Server().url("/" + gatewayPrefix)));
+			if (StringUtils.hasText(gatewayPrefix)) {
+				openApi.setServers(List.of(new Server().url("/" + gatewayPrefix)));
+			}
 		};
 	}
 	
