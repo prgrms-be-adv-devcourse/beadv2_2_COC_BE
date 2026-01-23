@@ -13,7 +13,6 @@ HELP.md
 .idea
 *.yml
 .env
-
 ### STS ###
 .apt_generated/
 .classpath
@@ -46,3 +45,9 @@ HELP.md
 
 ### VS Code ###
 **/.vscode/
+
+# -------------------------
+# Jar artifacts
+# -------------------------
+*.jar
+!gradle/wrapper/gradle-wrapper.jar

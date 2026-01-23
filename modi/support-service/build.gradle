@@ -1,0 +1,11 @@
+dependencies {
+
+    implementation project(':common')
+    implementation project(':common-kafka')
+
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation "net.javacrumbs.shedlock:shedlock-spring:5.10.0"
+    implementation "net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.10.0"
+}

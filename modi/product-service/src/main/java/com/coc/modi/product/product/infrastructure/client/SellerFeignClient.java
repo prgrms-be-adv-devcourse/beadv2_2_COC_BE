@@ -16,7 +16,7 @@ public interface SellerFeignClient {
 	
 	@GetMapping("/by-member/{memberId}")
 	SellerResponse getSellerIdByMemberId(@PathVariable("memberId") Long memberId);
-	
+
 	@GetMapping("/{sellerId}")
 	SellerDetailResponse getSellerById(@PathVariable("sellerId") Long sellerId);
 }

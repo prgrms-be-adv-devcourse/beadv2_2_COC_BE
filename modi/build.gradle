@@ -8,6 +8,7 @@ plugins {
 ext {
     // Spring Cloud BOM 버전을 중앙에서 관리.
     set('springCloudVersion', '2025.0.0')
+    set('springAiVersion', '1.0.0-M5')
 }
 
 group = 'com.coc'
@@ -32,6 +33,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
     }
 
     dependencies {
@@ -47,6 +49,7 @@ subprojects {
         // Spring Cloud 의존성 BOM 가져오기.
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
         }
     }
 
@@ -124,9 +127,7 @@ configure([
         project(':rental-service'),
         project(':seller-service'),
         project(':member-service'),
-        project(':review-service'),
-        project(':notification-service'),
-        project(':delivery-service'),
+        project(':support-service'),
         project(':ai-service')
 ]) {
     dependencies {

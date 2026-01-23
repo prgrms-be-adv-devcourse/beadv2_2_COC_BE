@@ -1,7 +1,5 @@
 package com.coc.modi.product.outbox;
 
-import com.coc.modi.kafka.event.NotificationEvent;
-import com.coc.modi.kafka.event.ProductEmbeddingEvent;
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
