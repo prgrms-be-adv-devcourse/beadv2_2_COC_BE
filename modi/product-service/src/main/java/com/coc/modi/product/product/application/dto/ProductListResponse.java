@@ -9,6 +9,7 @@ public record ProductListResponse(
 		Long productId,
 		String name,
 		BigDecimal pricePerDay,
+		BigDecimal securityDepositAmount,
 		ProductStatus status,
 		Long sellerId,
 		String thumbnailUrl
@@ -19,6 +20,7 @@ public record ProductListResponse(
 				product.getId(),
 				product.getName(),
 				product.getPricePerDay(),
+				product.getSecurityDepositAmount(),
 				product.getStatus(),
 				product.getSellerId(),
 				thumbnailUrl

@@ -11,6 +11,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
+import com.coc.modi.kafka.event.CartItemEvent;
 import com.coc.modi.kafka.event.ProductModerationResultEvent;
 
 @Configuration
@@ -38,11 +39,10 @@ public class KafkaConsumerConfig {
 		ConcurrentKafkaListenerContainerFactory<String, ProductModerationResultEvent> factory =
 				new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory);
-import com.coc.modi.kafka.event.CartItemEvent;
 
-@Configuration
-public class KafkaConsumerConfig {
-	
+		return factory;
+	}
+
 	@Bean
 	public ConsumerFactory<String, CartItemEvent> cartItemConsumerFactory(KafkaProperties kafkaProperties) {
 		

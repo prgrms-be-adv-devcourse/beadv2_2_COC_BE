@@ -1,5 +1,7 @@
 package com.coc.modi.product.outbox;
 
+import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.ProductEmbeddingEvent;
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,12 +29,37 @@ public class ProductOutboxService {
 		outboxEventRepository.save(outboxEvent);
 	}
 
-	private String writePayload(ProductModerationRequestedEvent event) {
+	public void enqueueEmbeddingUpdate(Long productId) {
+		ProductEmbeddingEvent event = ProductEmbeddingEvent.update(productId);
+		String payload = writePayload(event);
+		ProductOutboxEvent outboxEvent = ProductOutboxEvent.create(
+				"PRODUCT",
+				productId,
+				ProductOutboxEventType.PRODUCT_EMBEDDING_EVENT,
+				payload
+		);
+		outboxEventRepository.save(outboxEvent);
+	}
+
+	public void enqueueNotificationEvent(Long productId, NotificationEvent event) {
+
+		String payload = writePayload(event);
+		ProductOutboxEvent outboxEvent = ProductOutboxEvent.create(
+				"PRODUCT",
+				productId,
+				ProductOutboxEventType.NOTIFICATION_EVENT,
+				payload
+		);
+
+		outboxEventRepository.save(outboxEvent);
+	}
+
+	private String writePayload(Object event) {
 
 		try {
 			return objectMapper.writeValueAsString(event);
 		} catch (JsonProcessingException ex) {
-			throw new IllegalStateException("Failed to serialize product moderation request event", ex);
+			throw new IllegalStateException("Failed to serialize product outbox event", ex);
 		}
 	}
 }

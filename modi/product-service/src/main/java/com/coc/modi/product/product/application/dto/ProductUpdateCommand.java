@@ -13,6 +13,7 @@ public record ProductUpdateCommand(
 		String name,
 		String description,
 		BigDecimal pricePerDay,
+		BigDecimal securityDepositAmount,
 		ProductCategory category,
 		Map<String, String> specs,
 		List<ProductDetailResponse.ImageInfo> images
@@ -26,6 +27,7 @@ public record ProductUpdateCommand(
 				productUpdateRequest.name(),
 				productUpdateRequest.description(),
 				productUpdateRequest.pricePerDay(),
+				productUpdateRequest.securityDepositAmount(),
 				productUpdateRequest.category(),
 				productUpdateRequest.specs(),
 				productUpdateRequest.images()

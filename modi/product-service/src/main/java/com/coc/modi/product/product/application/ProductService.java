@@ -20,7 +20,7 @@ import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
-import com.coc.modi.product.embedding.outbox.ProductEmbeddingOutboxService;
+import com.coc.modi.product.outbox.ProductOutboxService;
 import com.coc.modi.product.product.search.application.ProductSearchPort;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
@@ -52,7 +52,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final ProductEmbeddingOutboxService productEmbeddingOutboxService;
+	private final ProductOutboxService productOutboxService;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -70,6 +70,7 @@ public class ProductService {
 			productSearchLogService.recordSearchLog(condition, sortType, cursor, resolvedSize, memberId);
 		} catch (Exception e) {
 			log.warn("product_search_log_record_failed",
+					kv("log_type", "service"),
 					kv("product.search.keyword", condition != null ? condition.keyword() : null),
 					kv("product.search.sort_type", sortType),
 					kv("product.search.cursor", cursor),
@@ -164,6 +165,7 @@ public class ProductService {
 			productViewService.recordView(productId, memberId);
 		} catch (Exception e) {
 			log.warn("product_view_log_record_failed",
+					kv("log_type", "service"),
 					kv("product.id", productId),
 					kv("member.id", memberId),
 					kv("exception.class", e.getClass().getName()),
@@ -184,6 +186,7 @@ public class ProductService {
 				command.name(),
 				command.description(),
 				command.pricePerDay(),
+				command.securityDepositAmount(),
 				command.category(),
 				command.specs(),
 				command.imageUrls());
@@ -191,15 +194,17 @@ public class ProductService {
 		Product saved = productRepository.saveAndFlush(product);
 		saved.refreshThumbnailImage();
 		log.info("product_created",
+				kv("log_type", "service"),
 				kv("product.id", saved.getId()),
 				kv("seller.id", sellerId),
 				kv("product.category", saved.getCategory()),
-				kv("product.price_per_day", saved.getPricePerDay()));
+				kv("product.price_per_day", saved.getPricePerDay()),
+				kv("product.security_deposit_amount", saved.getSecurityDepositAmount()));
 		
 
 		// 모더레이션 통과 후에만 인덱싱/임베딩 이벤트 발행
 		if (saved.getModerationStatus() == ProductModerationStatus.CLEAR) {
-			productEmbeddingEventPublisher.publishUpdate(saved.getId());
+			productOutboxService.enqueueEmbeddingUpdate(saved.getId());
 		}
 		
 		return ProductDetailResponse.from(saved);
@@ -223,6 +228,7 @@ public class ProductService {
 		product.update(command.name(),
 				command.description(),
 				command.pricePerDay(),
+				command.securityDepositAmount(),
 				command.category(),
 				command.specs());
 		
@@ -242,14 +248,16 @@ public class ProductService {
 		
 		product.refreshThumbnailImage();
 		log.info("product_updated",
+				kv("log_type", "service"),
 				kv("product.id", product.getId()),
 				kv("seller.id", sellerId),
 				kv("product.category", product.getCategory()),
-				kv("product.price_per_day", product.getPricePerDay()));
+				kv("product.price_per_day", product.getPricePerDay()),
+				kv("product.security_deposit_amount", product.getSecurityDepositAmount()));
 		
 
 		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
-			productEmbeddingEventPublisher.publishUpdate(product.getId());
+			productOutboxService.enqueueEmbeddingUpdate(product.getId());
 		}
 	
 		return ProductDetailResponse.from(product);

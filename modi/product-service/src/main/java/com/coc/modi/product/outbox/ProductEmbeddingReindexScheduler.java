@@ -1,4 +1,4 @@
-package com.coc.modi.product.embedding.outbox;
+package com.coc.modi.product.outbox;
 
 import java.util.List;
 
@@ -8,26 +8,30 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ProductEmbeddingReindexScheduler {
 	
-	private final ProductEmbeddingOutboxEventRepository outboxEventRepository;
-	private final ProductEmbeddingOutboxService outboxService;
+	private final ProductOutboxEventRepository outboxEventRepository;
+	private final ProductOutboxService outboxService;
 	
 	@Value("${embedding.reindex.batch-size:1000}")
 	private int batchSize;
 	
 	@Scheduled(cron = "${embedding.reindex.cron:0 0 3 * * *}", zone = "${embedding.reindex.zone:Asia/Seoul}")
 	public void reindexUpdatedProducts() {
-		List<Long> productIds = outboxEventRepository.findReindexTargets(batchSize);
+		List<Long> productIds = outboxEventRepository.findEmbeddingReindexTargets(batchSize);
 		if (productIds.isEmpty()) {
 			return;
 		}
 		for (Long productId : productIds) {
-			outboxService.enqueueUpdate(productId);
+			outboxService.enqueueEmbeddingUpdate(productId);
 		}
-		log.info("상품 임베딩 재발행 대상 처리 완료. count={}", productIds.size());
+		log.info("product_embedding_reindex_enqueued",
+				kv("log_type", "service"),
+				kv("product.count", productIds.size()));
 	}
 }

@@ -63,7 +63,8 @@
 ### 외부 API
 | Method | Path | 설명 |
 | --- | --- | --- |
-| GET | `/api/products` | 상품 검색/목록 |
+| GET | `/api/products/search` | 상품 검색/목록 |
+| POST | `/api/products/bulk` | 상품 다건 조회 |
 | GET | `/api/products/seller` | 판매자 상품 목록 |
 | GET | `/api/products/{productId}` | 상품 상세 조회 |
 | POST | `/api/products` | 상품 등록 |
@@ -72,19 +73,37 @@
 | PATCH | `/api/products/{productId}/inactive` | 상품 비활성화 |
 | DELETE | `/api/products/{productId}` | 상품 삭제 |
 | POST | `/api/images/upload` | 상품 이미지 업로드 |
-| POST | `/api/products/recommendations` | 추천 상품 조회 |
-| POST | `/api/products/ai/chat-test` | AI 추천 채팅 테스트 |
-| POST | `/api/products/reindex` | 검색 인덱스 재생성 |
 | GET | `/api/products/popular-keywords` | 인기 검색어 통계 |
 | GET | `/api/products/popular-products` | 인기 상품 통계 |
-| POST | `/api/products/embeddings/reindex` | 전체 임베딩 재생성 |
-| POST | `/api/products/{productId}/embedding` | 단건 임베딩 재생성 |
+| GET | `/api/products/recent-searches` | 최근 검색어 조회 |
+
+### 관리자 API
+| Method | Path | 설명 |
+| --- | --- | --- |
+| GET | `/api/admin/products/moderation-requests` | 상품 검수 요청 목록 |
+| POST | `/api/admin/products/{productId}/moderation-requests` | 상품 검수 요청 생성 |
 
 ### 내부 API
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/internal/products/bulk` | 상품 일괄 조회 |
 | GET | `/internal/products/{productId}` | 상품 단건 조회 |
+| GET | `/internal/products/{productId}/embedding` | 임베딩 대상 조회 |
+| GET | `/internal/products/embedding-ids` | 임베딩 대상 ID 목록 |
+| GET | `/internal/products/recent-viewed` | 회원 최근 조회 상품 ID |
+
+## ai-service
+서비스 ID: `ai-service`
+
+### 외부 API
+| Method | Path | 설명 |
+| --- | --- | --- |
+| POST | `/api/ai/recommendations` | 추천 상품 조회 |
+| POST | `/api/ai/ai/chat-test` | AI 추천 채팅 테스트 |
+| POST | `/api/ai/descriptions` | 상품 설명 추천 |
+| GET | `/api/ai/recommendations/recent` | 최근 조회 기반 추천 상품 조회 |
+| POST | `/api/ai/embeddings/reindex` | 전체 임베딩 재생성 |
+| POST | `/api/ai/{productId}/embedding` | 단건 임베딩 재생성 |
 
 ## rental-service
 서비스 ID: `rental-service`
@@ -100,9 +119,9 @@
 | POST | `/api/rentals/carts` | 장바구니 기반 대여 생성 |
 | PATCH | `/api/rentals/{rentalItemId}/accept` | 대여 아이템 수락 |
 | PATCH | `/api/rentals/{rentalItemId}/reject` | 대여 아이템 거절 |
-| POST | `/api/rentals/{rentalId}/pay` | 대여 결제 완료 |
+| POST | `/api/rentals/{rentalId}/pay` | 대여 결제 완료(보증금 포함) |
 | PATCH | `/api/rentals/{rentalItemId}/cancel` | 대여 취소 |
-| POST | `/api/rentals/{rentalItemId}/return` | 반납 처리 |
+| POST | `/api/rentals/{rentalItemId}/return` | 반납 처리(보증금 환불, 수수료 차감) |
 | POST | `/api/rentals/{rentalItemId}/refund` | 환불 처리 |
 | POST | `/api/rentals/{rentalItemId}/extend` | 대여 기간 연장 |
 | POST | `/api/rentals/{rentalItemId}/rent` | 대여 시작 |
@@ -144,7 +163,9 @@
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/api/deliveries` | 배송 등록 |
+| PATCH | `/api/deliveries/{rentalItemId}` | 배송 정보 수정 |
 | GET | `/api/deliveries/{deliveryId}` | 배송 상세 조회 |
+| GET | `/api/deliveries/rental-items/{rentalItemId}` | rentalItemId로 배송 조회 |
 
 ## seller-service
 서비스 ID: `seller-service`

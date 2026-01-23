@@ -10,14 +10,6 @@ spring:
         enabled: true
         service-id: modi-config
 
-server:
-  netty:
-    access-log-enabled: true
-
-logging:
-  level:
-    reactor.netty.http.server.AccessLog: INFO
-
 eureka:
   client:
     service-url:

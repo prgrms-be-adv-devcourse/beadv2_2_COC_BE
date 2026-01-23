@@ -101,6 +101,7 @@ erDiagram
     varchar name
     varchar description
     decimal price_per_day
+    decimal security_deposit_amount
     varchar status
     varchar category
     bigint thumbnail_image_id
@@ -165,6 +166,7 @@ erDiagram
     date end_date
     varchar status
     decimal unit_price
+    decimal security_deposit_amount
     datetime returned_at
     datetime canceled_at
   }

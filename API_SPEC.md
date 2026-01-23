@@ -240,7 +240,7 @@
 ### 상품
 - **GET /api/products/search** — 상품 스크롤 목록
   - Query: `keyword?`, `category?:ProductCategory`, `minPrice?:decimal`, `maxPrice?:decimal`, `sellerId?:long`, `startDate?:date`, `endDate?:date`, `cursor?:string`, `size:int=20`, `sortType:ProductSortType=LATEST`
-  - Res: `ProductScrollResponse { products:ProductListResponse[], nextCursor:string, hasNext:boolean }`, `ProductListResponse { productId, name, pricePerDay, status:ProductStatus, sellerId, thumbnailUrl }`
+  - Res: `ProductScrollResponse { products:ProductListResponse[], nextCursor:string, hasNext:boolean }`, `ProductListResponse { productId, name, pricePerDay, securityDepositAmount, status:ProductStatus, sellerId, thumbnailUrl }`
 - **POST /api/products/bulk** — 상품 다건 조회
   - Req: `ProductBulkRequest { productIds:long[] }`
   - Res: `ProductListResponse[]`
@@ -259,13 +259,13 @@
   - Query: `pageable`(size=20, sort=createdAt,desc 기본)
   - Res: `Page<ProductListResponse>`
 - **GET /api/products/{productId}** — 상품 상세 (Auth)
-  - Res: `ProductDetailResponse { productId, sellerId, name, description, pricePerDay, status:ProductStatus, category, thumbnailImageId, specs:map<string,string>, images:ImageInfo[] }`
+  - Res: `ProductDetailResponse { productId, sellerId, name, description, pricePerDay, securityDepositAmount, status:ProductStatus, category, thumbnailImageId, specs:map<string,string>, images:ImageInfo[] }`
   - `ImageInfo { imageId, url, ordering }`
 - **POST /api/products** — 상품 등록 (Auth)
-  - Req: `name`, `description`, `pricePerDay:decimal>0`, `category:ProductCategory`, `specs?:map<string,string>`, `images?:string[]`
+  - Req: `name`, `description`, `pricePerDay:decimal>0`, `securityDepositAmount:decimal>=0`, `category:ProductCategory`, `specs?:map<string,string>`, `images?:string[]`
   - Res: `ProductDetailResponse` (201)
 - **PUT /api/products/{productId}** — 상품 수정 (Auth)
-  - Req: `name`, `description`, `pricePerDay:decimal>0`, `category`, `specs?:map<string,string>`, `images?:ImageInfo[] (imageId?, url, ordering)`
+  - Req: `name`, `description`, `pricePerDay:decimal>0`, `securityDepositAmount:decimal>=0`, `category`, `specs?:map<string,string>`, `images?:ImageInfo[] (imageId?, url, ordering)`
   - Res: `ProductDetailResponse`
 - **PATCH /api/products/{productId}/active** — 활성화 (Auth)
   - Res: `Void`
@@ -283,7 +283,7 @@
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
 - **POST /internal/products/bulk** — 상품 다건 조회
   - Req: `productIds:long[]` (body는 ID 배열)
-  - Res: `ProductBulkResponse[] { productId, sellerId, price:decimal, status:string }`
+  - Res: `ProductBulkResponse[] { productId, sellerId, price:decimal, securityDepositAmount:decimal, status:string }`
 - **GET /internal/products/{productId}** — 상품 단건 조회
   - Path: `productId:long`
   - Res: `ProductInternalSellerResponse { productId, productName, thumbnailImageUrl }`
@@ -314,7 +314,7 @@
   - Res: `Void`
 - **PATCH /api/rentals/{rentalItemId}/reject** — 판매자 거절 (Auth)
   - Res: `Void`
-- **POST /api/rentals/{rentalId}/pay** — 결제 완료 처리 (Auth)
+- **POST /api/rentals/{rentalId}/pay** — 결제 완료 처리(보증금 포함) (Auth)
   - Path: `rentalId:long`
   - Res: `PayRentalResponse { rentalId, paidAt:datetime, amount:decimal, balance:decimal, rentalStatus:string }`
 - **POST /api/rentals/{rentalItemId}/rent** — 대여 시작 처리 (Auth)
@@ -323,7 +323,7 @@
 - **PATCH /api/rentals/{rentalItemId}/cancel** — 대여 취소 (Auth)
   - Path: `rentalItemId:long`
   - Res: `Void`
-- **POST /api/rentals/{rentalItemId}/return** — 반납 처리 (Auth)
+- **POST /api/rentals/{rentalItemId}/return** — 반납 처리(보증금 환불, 수수료 차감) (Auth)
   - Path: `rentalItemId:long`
   - Req: `damageFee?:decimal>=0`, `damageReason?:string<=255`, `lateFee?:decimal>=0`, `lateReason?:string<=255`, `memo?:string<=500`
   - Res: `RentalReturnResponse { rentalId, rentalItemId, status, extraFeeAmount:string }`
