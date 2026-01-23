@@ -135,6 +135,7 @@ public class RentalPaymentService {
 					rentalItem.calculateRentalAmount(),
 					CLOSED_TYPE_REFUNDED,
 					rentalItem.getReturnedAt(),
+					rentalItem.getCanceledAt(),
 					SEQUENCE_REFUNDED
 			);
 			rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);

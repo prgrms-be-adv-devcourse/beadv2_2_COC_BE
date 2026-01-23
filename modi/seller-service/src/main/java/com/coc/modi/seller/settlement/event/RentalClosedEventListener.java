@@ -34,13 +34,13 @@ public class RentalClosedEventListener {
 		if (event == null) {
 			return;
 		}
-		LocalDateTime closedAt = event.closedAt();
-		if (closedAt == null) {
-			log.warn("정산 이벤트 스킵: closedAt 누락. rentalItemId={}", event.rentalItemId());
+		LocalDateTime returnedAt = event.returnedAt();
+		if (returnedAt == null) {
+			log.warn("정산 이벤트 스킵: returnedAt 누락. rentalItemId={}", event.rentalItemId());
 			return;
 		}
 
-		String periodYm = YearMonth.from(closedAt).toString();
+		String periodYm = YearMonth.from(returnedAt).toString();
 		String type = event.type() == null ? "" : event.type().trim().toUpperCase();
 
 		if (TYPE_RETURNED.equals(type)) {
@@ -69,7 +69,7 @@ public class RentalClosedEventListener {
 					event.sellerId(),
 					periodYm,
 					event.rentalItemId(),
-					null
+					event.refundedAt()
 			);
 			if (canceled) {
 				log.info("정산 라인 취소 완료. rentalItemId={}, periodYm={}", event.rentalItemId(), periodYm);

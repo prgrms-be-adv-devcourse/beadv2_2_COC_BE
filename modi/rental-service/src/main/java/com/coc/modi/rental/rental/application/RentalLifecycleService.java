@@ -122,6 +122,7 @@ public class RentalLifecycleService {
 				rentalAmount,
 				CLOSED_TYPE_RETURNED,
 				rentalItem.getReturnedAt(),
+				null,
 				SEQUENCE_RETURNED
 		);
 		rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);
