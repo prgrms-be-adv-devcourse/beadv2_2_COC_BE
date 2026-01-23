@@ -6,13 +6,25 @@ import com.coc.modi.product.product.application.ProductService;
 import com.coc.modi.product.product.application.ProductStatusService;
 import com.coc.modi.product.product.application.dto.ProductCreateCommand;
 import com.coc.modi.product.product.application.dto.ProductDetailResponse;
+import com.coc.modi.product.product.application.dto.ProductListResponse;
+import com.coc.modi.product.product.application.dto.ProductScrollResponse;
+import com.coc.modi.product.product.application.dto.ProductSearchCondition;
 import com.coc.modi.product.product.application.dto.ProductUpdateCommand;
+import com.coc.modi.product.product.presentation.dto.ProductBulkRequest;
 import com.coc.modi.product.product.presentation.dto.ProductCreateRequest;
 import com.coc.modi.product.product.presentation.dto.ProductUpdateRequest;
+import com.coc.modi.product.product.search.domain.ProductSortType;
+import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,18 +38,63 @@ public class ProductController {
 	private final ProductService productService;
 	private final ProductStatusService productStatusService;
 	
+	// 상품 목록 조회
+	@GetMapping("/search")
+	public ResponseEntity<ApiResponse<ProductScrollResponse>> getProducts(
+			@AuthenticationPrincipal CustomMember member,
+			@ModelAttribute ProductSearchCondition condition,
+			@RequestParam(name = "cursor", required = false) String cursor,
+			@RequestParam(name = "size", defaultValue = "20") int size,
+			@RequestParam(name = "sortType", defaultValue = "LATEST") ProductSortType sortType) {
+		
+		Long memberId = member != null ? member.memberId() : null;
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchProducts(condition, cursor, size, sortType, memberId)));
+	}
+	
+	// 상품 다건 조회
+	@PostMapping("/bulk")
+	public ResponseEntity<ApiResponse<List<ProductListResponse>>> getProductsBulk(
+			@Valid @RequestBody ProductBulkRequest request) {
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductListByIds(request.productIds())));
+	}
+	
+	// 판매자 상품 목록 조회
+	@GetMapping("/seller")
+	public ResponseEntity<ApiResponse<Page<ProductListResponse>>> getSellerProducts(
+			@AuthenticationPrincipal CustomMember member,
+			@PageableDefault(
+					size = 20,
+					sort = "createdAt",
+					direction = Sort.Direction.DESC
+			) Pageable pageable) {
+		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.searchSellerProducts(member.memberId(), pageable)));
+	}
+	
 	// 상품 상세 조회
 	@GetMapping("/{productId}")
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProductDetail(@AuthenticationPrincipal CustomMember member,
 																			   @PathVariable("productId") Long productId) {
 		
-		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(member.memberId(), productId)));
+		Long memberId = member != null ? member.memberId() : null;
+		
+		return ResponseEntity.ok(ApiResponse.ok(productService.getProductDetail(memberId, productId)));
 	}
 	
 	// 상품 등록
 	@PostMapping
 	public ResponseEntity<ApiResponse<ProductDetailResponse>> createProduct(@AuthenticationPrincipal CustomMember member,
 																			@Valid @RequestBody ProductCreateRequest request) {
+		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
 		
 		ProductCreateCommand command = ProductCreateCommand.toCommand(member.memberId(), request);
 		
@@ -50,6 +107,10 @@ public class ProductController {
 																			@PathVariable("productId") Long productId,
 																			@Valid @RequestBody ProductUpdateRequest request) {
 		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
+		
 		ProductUpdateCommand command = ProductUpdateCommand.toCommand(member.memberId(), productId, request);
 		
 		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(command)));
@@ -59,6 +120,10 @@ public class ProductController {
 	@PatchMapping("/{productId}/active")
 	public ResponseEntity<ApiResponse<Void>> activeProduct(@AuthenticationPrincipal CustomMember member,
 														   @PathVariable("productId") Long productId) {
+		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
 		
 		productStatusService.activeProduct(member.memberId(), productId);
 		
@@ -70,6 +135,10 @@ public class ProductController {
 	public ResponseEntity<ApiResponse<Void>> disableProduct(@AuthenticationPrincipal CustomMember member,
 														    @PathVariable("productId") Long productId) {
 		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
+		
 		productStatusService.disableProduct(member.memberId(), productId);
 		
 		return ResponseEntity.ok(ApiResponse.ok(null));
@@ -78,7 +147,11 @@ public class ProductController {
 	// 상품 삭제
 	@DeleteMapping("/{productId}")
 	public ResponseEntity<ApiResponse<Void>> deleteProduct(@AuthenticationPrincipal CustomMember member,
-														   @PathVariable("productId") Long productId) {
+										   @PathVariable("productId") Long productId) {
+		
+		if (member == null) {
+			throw new ProductAccessDeniedException("인증");
+		}
 		
 		productStatusService.deleteProduct(member.memberId(), productId);
 		

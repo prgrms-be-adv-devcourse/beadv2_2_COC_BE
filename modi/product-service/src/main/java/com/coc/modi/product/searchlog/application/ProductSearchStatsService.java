@@ -34,7 +34,10 @@ public class ProductSearchStatsService {
 
 		Map<String, Long> counts = new HashMap<>();
 		for (ProductSearchLog logEntry : logs) {
-			String keyword = logEntry.getKeyword();
+			String keyword = logEntry.getKeywordNorm();
+			if (keyword == null || keyword.isBlank()) {
+				keyword = logEntry.getKeywordRaw();
+			}
 			if (keyword == null || keyword.isBlank()) {
 				continue;
 			}
@@ -50,12 +53,15 @@ public class ProductSearchStatsService {
 	}
 
 	private List<ProductSearchLog> loadLogs(LocalDate startDate, LocalDate endDate) {
+		if (startDate == null && endDate == null) {
+			LocalDate today = LocalDate.now();
+			startDate = today;
+			endDate = today;
+		}
+
 		LocalDateTime start = startDate != null ? startDate.atStartOfDay() : null;
 		LocalDateTime end = endDate != null ? endDate.atTime(LocalTime.MAX) : null;
 
-		if (start == null && end == null) {
-			return productSearchLogRepository.findAll();
-		}
 		if (start != null && end != null) {
 			return productSearchLogRepository.findByCreatedAtBetween(start, end);
 		}

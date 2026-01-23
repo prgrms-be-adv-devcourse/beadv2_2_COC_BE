@@ -16,6 +16,7 @@ public record SellerSettlementResponse(
 		BigDecimal settlementAmount,
 		SellerSettlementStatus status,
 		LocalDateTime paidAt,
+		String failureReason,
 		LocalDateTime createdAt,
 		LocalDateTime updatedAt
 ) {
@@ -32,6 +33,7 @@ public record SellerSettlementResponse(
 				settlement.getSettlementAmount(),
 				settlement.getStatus(),
 				settlement.getPaidAt(),
+				settlement.getFailureReason(),
 				settlement.getCreatedAt(),
 				settlement.getUpdatedAt()
 		);

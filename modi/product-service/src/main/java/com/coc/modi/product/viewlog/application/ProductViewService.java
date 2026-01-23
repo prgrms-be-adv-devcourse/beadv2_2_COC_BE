@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,5 +30,32 @@ public class ProductViewService {
 		ProductViewLog log = ProductViewLog.create(productId, memberId, viewDate);
 		productViewLogRepository.save(log);
 		productViewDailyRepository.increment(viewDate, productId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Long> getRecentViewedProductIds(Long memberId, int limit) {
+		if (memberId == null) {
+			return List.of();
+		}
+		int resolvedLimit = limit > 0 ? limit : 10;
+		LocalDateTime startAt = LocalDateTime.now().minusMonths(1);
+		List<Long> prioritized = productViewLogRepository
+				.findRecentViewedProductIdsWithinPeriodPrioritizingAddedToCart(memberId, startAt, resolvedLimit);
+		if (prioritized == null || prioritized.isEmpty()) {
+			return productViewLogRepository.findRecentViewedProductIdsPrioritizingAddedToCart(memberId, resolvedLimit);
+		}
+		return prioritized;
+	}
+
+	@Transactional
+	public void updateAddedToCart(Long memberId, Long productId, boolean addedToCart) {
+		if (memberId == null || productId == null) {
+			return;
+		}
+		int updated = productViewLogRepository.updateAddedToCartByMemberAndProduct(memberId, productId, addedToCart);
+		if (updated == 0 && addedToCart) {
+			ProductViewLog log = ProductViewLog.create(productId, memberId, LocalDate.now(), true);
+			productViewLogRepository.save(log);
+		}
 	}
 }

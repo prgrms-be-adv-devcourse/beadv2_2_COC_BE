@@ -1,8 +1,5 @@
 package com.coc.modi.seller.settlement.presentation;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
-import com.coc.modi.seller.settlement.exception.SettlementInputInvalidException;
 import com.coc.modi.seller.seller.application.SellerService;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.settlement.application.SellerSettlementService;
@@ -34,8 +30,6 @@ public class SellerSettlementController {
 	
 	private final SellerSettlementService sellerSettlementService;
 	private final SellerService sellerService;
-	
-	private static final DateTimeFormatter PAID_AT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	
 	@GetMapping
 	public ResponseEntity<ApiResponse<Page<SellerSettlementResponse>>> getMySettlements(@AuthenticationPrincipal CustomMember member,
@@ -66,18 +60,6 @@ public class SellerSettlementController {
 		return ResponseEntity.ok(ApiResponse.ok(lines));
 	}
 	
-	@PostMapping("/{sellerSettlementId}/pay")
-	public ResponseEntity<ApiResponse<SellerSettlementResponse>> payMySettlement(@AuthenticationPrincipal CustomMember member,
-																				 @PathVariable Long sellerSettlementId,
-																				 @RequestParam(value = "paidAt", required = false) String paidAt) {
-		
-		
-		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
-		LocalDateTime paidAtValue = paidAt != null ? parsePaidAt(paidAt) : LocalDateTime.now();
-		SellerSettlementResponse settlement = sellerSettlementService.markAsPaid(seller.sellerId(), sellerSettlementId, paidAtValue);
-		return ResponseEntity.ok(ApiResponse.ok(settlement));
-	}
-	
 	@PostMapping("/{sellerSettlementId}/cancel")
 	public ResponseEntity<ApiResponse<SellerSettlementResponse>> cancelMySettlement(@AuthenticationPrincipal CustomMember member,
 																					@PathVariable Long sellerSettlementId) {
@@ -85,17 +67,5 @@ public class SellerSettlementController {
 		SellerDetailResponse seller = sellerService.getSellerByMemberId(member.memberId());
 		SellerSettlementResponse settlement = sellerSettlementService.cancelSettlement(seller.sellerId(), sellerSettlementId);
 		return ResponseEntity.ok(ApiResponse.ok(settlement));
-	}
-	
-	private LocalDateTime parsePaidAt(String paidAt) {
-		
-		try {
-			return LocalDateTime.parse(paidAt, PAID_AT_FORMATTER);
-		} catch (DateTimeParseException e) {
-			throw new SettlementInputInvalidException(
-					"paidAt must be ISO-8601 format, e.g. 2024-12-31T23:59:59",
-					e
-			);
-		}
 	}
 }

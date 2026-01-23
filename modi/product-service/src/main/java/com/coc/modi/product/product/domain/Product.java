@@ -44,6 +44,10 @@ public class Product extends BaseEntity {
 	@Enumerated(STRING)
 	@Column(nullable = false, length = 20)
 	private ProductStatus status;
+
+	@Enumerated(STRING)
+	@Column(name = "moderation_status", nullable = true, length = 20)
+	private ProductModerationStatus moderationStatus;
 	
 	@Enumerated(STRING)
 	@Column(nullable = false, length = 50)
@@ -69,6 +73,7 @@ public class Product extends BaseEntity {
 					String description,
 					BigDecimal pricePerDay,
 					ProductStatus status,
+					ProductModerationStatus moderationStatus,
 					ProductCategory category,
 					Map<String, String> specs) {
 		
@@ -77,6 +82,7 @@ public class Product extends BaseEntity {
 		this.description = description;
 		this.pricePerDay = pricePerDay;
 		this.status = status;
+		this.moderationStatus = moderationStatus;
 		this.category = category;
 		this.specs = specs;
 	}
@@ -93,7 +99,15 @@ public class Product extends BaseEntity {
 			throw new ProductInvalidInputException("Seller ID is required.");
 		}
 		
-		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category, specs);
+		Product product = new Product(
+				sellerId,
+				name,
+				description,
+				pricePerDay,
+				ProductStatus.ACTIVE,
+				ProductModerationStatus.PENDING,
+				category,
+				specs);
 		
 		product.addImages(urls);
 		
@@ -119,6 +133,18 @@ public class Product extends BaseEntity {
 			throw new ProductConflictException("삭제된 상품은 상태를 변경할 수 없습니다.");
 		}
 		this.status = status;
+	}
+
+	public void updateModerationStatus(ProductModerationStatus moderationStatus) {
+
+		if (moderationStatus != null) {
+			this.moderationStatus = moderationStatus;
+		}
+	}
+
+	public ProductModerationStatus getModerationStatus() {
+
+		return moderationStatus != null ? moderationStatus : ProductModerationStatus.CLEAR;
 	}
 	
 	public void addImage(ProductImage image) {

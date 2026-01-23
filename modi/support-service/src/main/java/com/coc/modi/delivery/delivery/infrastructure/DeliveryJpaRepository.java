@@ -1,6 +1,7 @@
 package com.coc.modi.delivery.delivery.infrastructure;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,14 +10,12 @@ import org.springframework.data.repository.query.Param;
 import com.coc.modi.delivery.delivery.domain.Delivery;
 
 public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
-	
-	boolean existsByRentalItemIdAndCarrierCodeAndTrackingNumber(Long rentalItemId,
-																String carrierCode,
-																String trackingNumber);
+
+	Optional<Delivery> findByRentalItemId(Long rentalItemId);
 	
 	@Query(value = """
 			SELECT *
-				FROM public.delivery d
+				FROM support.delivery d
 			WHERE d.status not in('DELIVERED', 'CANCELLED')
 				AND (d.last_tracked_at is null
 					OR d.last_tracked_at < (now() - make_interval(mins => :intervalMinutes)))
@@ -29,4 +28,3 @@ public interface DeliveryJpaRepository extends JpaRepository<Delivery, Long> {
 			@Param("limit") int limit
 	);
 }
-

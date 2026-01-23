@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +22,14 @@ import java.math.BigDecimal;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "seller_settlement_line", schema = "seller")
+@Table(
+		name = "seller_settlement_line",
+		schema = "seller",
+		uniqueConstraints = @UniqueConstraint(
+				name = "uk_seller_settlement_line_settlement_rental_item",
+				columnNames = {"seller_settlement_id", "rental_item_id"}
+		)
+)
 public class SellerSettlementLine extends BaseEntity {
 	
 	@Id

@@ -8,6 +8,7 @@ plugins {
 ext {
     // Spring Cloud BOM 버전을 중앙에서 관리.
     set('springCloudVersion', '2025.0.0')
+    set('springAiVersion', '1.0.0-M5')
 }
 
 group = 'com.coc'
@@ -32,6 +33,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
     }
 
     dependencies {
@@ -47,6 +49,7 @@ subprojects {
         // Spring Cloud 의존성 BOM 가져오기.
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
         }
     }
 
@@ -64,6 +67,23 @@ project(':common') {
         annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
         annotationProcessor "jakarta.annotation:jakarta.annotation-api"
         annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    }
+}
+project(':common-logging') {
+    apply plugin: 'java-library'
+
+    bootJar {
+        // 실행 가능한 Spring Boot JAR 비활성화 (라이브러리 모듈)
+        enabled = false
+    }
+
+    jar {
+        // 일반 JAR 생성만 활성화
+        enabled = true
+    }
+
+    dependencies {
+        api 'net.logstash.logback:logstash-logback-encoder:7.4'
     }
 }
 project(':common-security') {
@@ -101,31 +121,19 @@ project(':common-openapi') {
     }
 }
 
-project(':common-ai') {
-
-    dependencies {
-
-        implementation 'org.springframework:spring-web'
-        implementation 'io.projectreactor:reactor-core'
-        implementation 'com.fasterxml.jackson.core:jackson-databind'
-        implementation 'org.slf4j:slf4j-api'
-        implementation 'org.springframework.boot:spring-boot-autoconfigure'
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    }
-}
-
-
 configure([
         project(':account-service'),
         project(':product-service'),
         project(':rental-service'),
         project(':seller-service'),
         project(':member-service'),
-        project(':support-service')
+        project(':support-service'),
+        project(':ai-service')
 ]) {
     dependencies {
 
         implementation project(':common')
+        implementation project(':common-logging')
         implementation project(':common-security')
         implementation project(':common-notification')
         implementation project(':common-openapi')
@@ -160,5 +168,15 @@ configure([
 
         implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
         implementation "io.github.resilience4j:resilience4j-micrometer"
+    }
+}
+
+configure([
+        project(':modi-gateway'),
+        project(':modi-discovery'),
+        project(':modi-config')
+]) {
+    dependencies {
+        implementation project(':common-logging')
     }
 }

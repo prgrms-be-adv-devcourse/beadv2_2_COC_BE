@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -80,13 +82,24 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 			
 			String url = getUrl(key);
 			
-			log.info("S3 업로드 완료: key={}, url={}, size={}, mime={}", key, url, bytes.length, detectedMime);
+			log.info("s3_upload_success",
+					kv("s3.bucket", bucket),
+					kv("s3.key", key),
+					kv("s3.url", url),
+					kv("file.size", bytes.length),
+					kv("file.mime_type", detectedMime));
 			
 			return url;
 		} catch (Exception e) {
 			
-			log.error("S3 업로드 실패: bucket={}, key={}, dirName={}, size={}, mime={}",
-					bucket, key, safeDirName, bytes.length, detectedMime, e);
+			log.error("s3_upload_failed",
+					kv("s3.bucket", bucket),
+					kv("s3.key", key),
+					kv("s3.dir", safeDirName),
+					kv("file.size", bytes.length),
+					kv("file.mime_type", detectedMime),
+					kv("exception.class", e.getClass().getName()),
+					e);
 			
 			throw new ProductInternalException("S3 이미지 업로드 중 오류가 발생했습니다.", e);
 		}
@@ -154,12 +167,16 @@ public class S3ImageStorageAdapter implements ImageStoragePort {
 		String actualMime = head.contentType();
 		
 		boolean sizeOk = actualSize == expectedSize;
-		boolean mimeOk = actualMime.equalsIgnoreCase(expectedMime);
+		boolean mimeOk = actualMime != null && actualMime.equalsIgnoreCase(expectedMime);
 		
 		if (!sizeOk || !mimeOk) {
 			
-			log.error("S3 업로드 검증 실패: key={}, expectedSize={}, actualSize={}, expectedMime={}, actualMime={}",
-					key, expectedSize, actualSize, expectedMime, actualMime);
+			log.error("s3_upload_validation_failed",
+					kv("s3.key", key),
+					kv("file.size.expected", expectedSize),
+					kv("file.size.actual", actualSize),
+					kv("file.mime_type.expected", expectedMime),
+					kv("file.mime_type.actual", actualMime));
 			
 			throw new ProductInternalException("S3 업로드 검증 실패: key=" + key, null);
 		}

@@ -2,7 +2,6 @@ package com.coc.modi.product.product.application.dto;
 
 import com.coc.modi.product.product.domain.Product;
 import com.coc.modi.product.product.domain.ProductStatus;
-import com.coc.modi.product.search.domain.ProductDocument;
 
 import java.math.BigDecimal;
 
@@ -14,18 +13,6 @@ public record ProductListResponse(
 		Long sellerId,
 		String thumbnailUrl
 ) {
-	public static ProductListResponse from(ProductDocument product) {
-		
-		return new ProductListResponse(
-				product.getId(),
-				product.getName(),
-				product.getPricePerDay(),
-				ProductStatus.valueOf(product.getStatus()),
-				product.getSellerId(),
-				product.getThumbnailUrl()
-		);
-	}
-	
 	public static ProductListResponse fromProduct(Product product, String thumbnailUrl) {
 		
 		return new ProductListResponse(

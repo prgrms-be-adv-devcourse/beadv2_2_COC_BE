@@ -2,7 +2,7 @@ package com.coc.modi.product.searchlog.domain;
 
 import com.coc.modi.common.BaseEntity;
 import com.coc.modi.product.product.domain.ProductCategory;
-import com.coc.modi.product.search.domain.ProductSortType;
+import com.coc.modi.product.product.search.domain.ProductSortType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,8 +31,11 @@ public class ProductSearchLog extends BaseEntity {
 	@Column(name = "member_id")
 	private Long memberId;
 
-	@Column(nullable = false, length = 200)
-	private String keyword;
+	@Column(name = "keyword_raw", length = 200)
+	private String keywordRaw;
+
+	@Column(name = "keyword_norm", length = 200)
+	private String keywordNorm;
 
 	@Enumerated(EnumType.STRING)
 	@Column(length = 50)
@@ -64,7 +67,8 @@ public class ProductSearchLog extends BaseEntity {
 	private Integer size;
 
 	private ProductSearchLog(Long memberId,
-						 String keyword,
+						 String keywordRaw,
+						 String keywordNorm,
 						 ProductCategory category,
 						 BigDecimal minPrice,
 						 BigDecimal maxPrice,
@@ -76,7 +80,8 @@ public class ProductSearchLog extends BaseEntity {
 						 Integer size) {
 
 		this.memberId = memberId;
-		this.keyword = keyword;
+		this.keywordRaw = keywordRaw;
+		this.keywordNorm = keywordNorm;
 		this.category = category;
 		this.minPrice = minPrice;
 		this.maxPrice = maxPrice;
@@ -89,7 +94,8 @@ public class ProductSearchLog extends BaseEntity {
 	}
 
 	public static ProductSearchLog create(Long memberId,
-								  String keyword,
+								  String keywordRaw,
+								  String keywordNorm,
 								  ProductCategory category,
 								  BigDecimal minPrice,
 								  BigDecimal maxPrice,
@@ -102,7 +108,8 @@ public class ProductSearchLog extends BaseEntity {
 
 		return new ProductSearchLog(
 				memberId,
-				keyword,
+				keywordRaw,
+				keywordNorm,
 				category,
 				minPrice,
 				maxPrice,

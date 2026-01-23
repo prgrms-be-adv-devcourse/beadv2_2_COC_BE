@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -54,11 +53,15 @@ public class DepositService {
 
     // 예치금 충전 승인
     @Transactional
-    public DepositResponse approveDeposit(DepositApprovalCommand command) {
+    public DepositResponse approveDeposit(Long memberId, DepositApprovalCommand command) {
 
         // 1. orderId로 충전 요청 조회
         PgDeposit deposit = pgDepositRepository.findByPgTidForUpdate(command.orderId())
                 .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+
+        if (!deposit.getMemberId().equals(memberId)) {
+            throw new AccountException(ErrorCode.FORBIDDEN, "본인 요청만 승인할 수 있습니다.");
+        }
 
         if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
 
@@ -101,6 +104,11 @@ public class DepositService {
                 approvedAmount
         );
 
+        if (tossResponse == null) {
+            deposit.fail("Toss 결제 승인 응답 없음");
+            throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 승인 응답이 없습니다.");
+        }
+
         // 4. Toss 결제 승인 결과 확인
         if (!"DONE".equals(tossResponse.status())) {
 
@@ -109,11 +117,34 @@ public class DepositService {
             throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 승인에 실패했습니다.");
         }
 
+        if (!command.orderId().equals(tossResponse.orderId())) {
+            deposit.fail("Toss 승인 orderId 불일치");
+            throw new AccountException(ErrorCode.CONFLICT, "승인 정보가 일치하지 않습니다.");
+        }
+
+        if (!command.paymentKey().equals(tossResponse.paymentKey())) {
+            deposit.fail("Toss 승인 paymentKey 불일치");
+            throw new AccountException(ErrorCode.CONFLICT, "승인 정보가 일치하지 않습니다.");
+        }
+
+        if (tossResponse.totalAmount() != null) {
+            BigDecimal totalAmount = BigDecimal.valueOf(tossResponse.totalAmount());
+            if (totalAmount.compareTo(approvedAmount) != 0) {
+                deposit.fail("Toss 승인 금액 불일치");
+                throw new AccountException(ErrorCode.CONFLICT, "승인 금액이 일치하지 않습니다.");
+            }
+        }
+
         // 5. DB 상태 업데이트
         deposit.approve(command.paymentKey());
 
         // 6. 예치금 잔액 증가
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(deposit.getMemberId(), deposit, deposit.getAmount(), deposit.getPaymentKey());
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forDepositCharge(
+                deposit.getMemberId(),
+                deposit,
+                deposit.getAmount(),
+                deposit.getPaymentKey()
+        );
         
         walletCommandService.createTransactionAndUpdateBalance(txCommand);
 
@@ -146,12 +177,21 @@ public class DepositService {
         }
 
         // 3. 금액 검증
+        if (deposit.getStatus() == PgDepositStatus.SUCCESS && !deposit.isUnused()) {
+            throw new AccountException(ErrorCode.CONFLICT, "사용된 충전은 취소할 수 없습니다.");
+        }
+
         BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
 
             throw new AccountException(ErrorCode.INVALID_INPUT, "요청 금액과 실제 금액이 일치하지 않습니다.");
+        }
+
+        if (deposit.getStatus() == PgDepositStatus.REQUESTED) {
+            deposit.cancel(command.cancelReason());
+            return DepositResponse.from(deposit);
         }
 
         // 4. Toss 취소 API 호출
@@ -161,9 +201,11 @@ public class DepositService {
                 command.cancelReason()
         );
 
-        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
+		if (tossResponse == null) {
+			throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소 응답이 없습니다.");
+		}
 
-            deposit.fail("Toss 결제 취소 실패 : " + tossResponse.status());
+        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
 
             throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소에 실패했습니다.");
         }
@@ -175,8 +217,8 @@ public class DepositService {
                 WalletTransactionCommand.forDepositCancel(
                         deposit.getMemberId(),
                         deposit,
-                        cancelAmount,
-						deposit.getPaymentKey()
+                        deposit.getAmount(),
+                        deposit.getPaymentKey()
                 )
         );
 
@@ -185,13 +227,18 @@ public class DepositService {
 	
 	// 결제 실패
 	@Transactional
-	public DepositResponse failDeposit(DepositFailCommand command) {
+	public DepositResponse failDeposit(Long memberId, DepositFailCommand command) {
 		
 		PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
 				.orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+
+		if (!deposit.getMemberId().equals(memberId)) {
+			throw new AccountException(ErrorCode.FORBIDDEN, "본인 요청만 실패 처리할 수 있습니다.");
+		}
 		
 		deposit.fail(command.failureMessage());
 		
-		return DepositResponse.from(deposit);
-	}
+        return DepositResponse.from(deposit);
+    }
+
 }

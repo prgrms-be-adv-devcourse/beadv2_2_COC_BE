@@ -98,30 +98,30 @@ services:
     networks:
       - msa-net
 
-#  kafka:
-#    image: wurstmeister/kafka
-#    container_name: kafka
-#    restart: unless-stopped
-#    networks:
-#      - msa-net
-#    environment:
-#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-#      KAFKA_ADVERTISED_HOST_NAME: kafka
-#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-#      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-#    depends_on:
-#      - zookeeper
-#    expose:
-#      - "9092"
-#
-#  zookeeper:
-#    image: wurstmeister/zookeeper
-#    container_name: zookeeper
-#    restart: unless-stopped
-#    networks:
-#      - msa-net
-#    expose:
-#      - "2181"
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: unless-stopped
+    networks:
+      - msa-net
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    expose:
+      - "9092"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: unless-stopped
+    networks:
+      - msa-net
+    expose:
+      - "2181"
 
   account-service:
     build:
@@ -228,43 +228,47 @@ services:
     networks:
       - msa-net
 
-#  review-service:
-#    build:
-#      context: .
-#      dockerfile: review-service/Dockerfile
-#    image: modi/review-service:local
-#    container_name: review-service
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      modi-config:
-#        condition: service_healthy
-#    expose:
-#      - "8080"
-#    env_file:
-#      - .env
-#    restart: always
-#    networks:
-#      - msa-net
-#
-#  notification-service:
-#    build:
-#      context: .
-#      dockerfile: notification-service/Dockerfile
-#    image: modi/notification-service:local
-#    container_name: notification-service
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      modi-config:
-#        condition: service_healthy
-#    expose:
-#      - "8080"
-#    env_file:
-#      - .env
-#    restart: always
-#    networks:
-#      - msa-net
+  support-service:
+    build:
+      context: .
+      dockerfile: support-service/Dockerfile
+    image: modi/support-service:local
+    container_name: support-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
+
+  ai-service:
+    build:
+      context: .
+      dockerfile: ai-service/Dockerfile
+    image: modi/ai-service:local
+    container_name: ai-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      modi-config:
+        condition: service_healthy
+      modi-discovery:
+        condition: service_healthy
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - msa-net
 
 networks:
   msa-net:

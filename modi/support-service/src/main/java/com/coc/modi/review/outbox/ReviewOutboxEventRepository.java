@@ -12,7 +12,7 @@ public interface ReviewOutboxEventRepository extends JpaRepository<ReviewOutboxE
 	@Query(
 			value = """
 					select *
-					from review_outbox
+					from support.review_outbox
 					where status = 'PENDING'
 					order by created_at
 					limit :limit

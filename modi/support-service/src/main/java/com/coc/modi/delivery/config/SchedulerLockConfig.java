@@ -20,6 +20,7 @@ public class SchedulerLockConfig {
 		return new JdbcTemplateLockProvider(
 				JdbcTemplateLockProvider.Configuration.builder()
 						.withJdbcTemplate(new JdbcTemplate(dataSource))
+						.withTableName("support.shedlock")
 						.usingDbTime()
 						.build()
 		);

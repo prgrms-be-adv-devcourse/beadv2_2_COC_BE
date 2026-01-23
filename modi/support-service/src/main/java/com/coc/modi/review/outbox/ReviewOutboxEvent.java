@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
 		name = "review_outbox",
-		schema = "review",
+		schema = "support",
 		indexes = {
 				@Index(name = "idx_review_outbox_status_created", columnList = "status, created_at")
 		}

@@ -1,6 +1,7 @@
 package com.coc.modi.review.outbox;
 
 import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.ReviewSummaryRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,9 +27,22 @@ public class ReviewOutboxService {
 		
 		outboxEventRepository.save(outboxEvent);
 	}
+
+	public void enqueueReviewSummaryRequest(Long sellerId, ReviewSummaryRequestEvent event) {
+
+		String payload = writePayload(event);
+		ReviewOutboxEvent outboxEvent = ReviewOutboxEvent.create(
+				"REVIEW_SUMMARY",
+				sellerId,
+				ReviewOutboxEventType.REVIEW_SUMMARY_REQUEST,
+				payload
+		);
+
+		outboxEventRepository.save(outboxEvent);
+	}
 	
-	private String writePayload(NotificationEvent event) {
-		
+	private String writePayload(Object event) {
+
 		try {
 			return objectMapper.writeValueAsString(event);
 		} catch (JsonProcessingException ex) {

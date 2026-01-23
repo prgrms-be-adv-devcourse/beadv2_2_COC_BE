@@ -12,7 +12,7 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 
 	@Modifying
 	@Query(value = """
-			insert into public.product_view_daily (view_date, product_id, view_count, created_at, updated_at)
+			insert into product.product_view_daily (view_date, product_id, view_count, created_at, updated_at)
 			values (:viewDate, :productId, 1, now(), now())
 			on conflict (view_date, product_id) do update
 			set view_count = product_view_daily.view_count + 1,
@@ -24,12 +24,12 @@ public interface ProductViewDailyRepository extends JpaRepository<ProductViewDai
 			select pvd.product_id as productId,
 			       p.name as productName,
 			       sum(pvd.view_count) as viewCount
-			from public.product_view_daily pvd
-			join public.product p on p.id = pvd.product_id
+			from product.product_view_daily pvd
+			join product.product p on p.id = pvd.product_id
 			where (:startDate is null or pvd.view_date >= :startDate)
 			  and (:endDate is null or pvd.view_date <= :endDate)
 			group by pvd.product_id, p.name
-			order by view_count desc, pvd.product_id
+			order by viewCount desc, pvd.product_id
 			limit :limit
 			""", nativeQuery = true)
 	List<PopularProductRow> findPopularProducts(@Param("startDate") LocalDate startDate,

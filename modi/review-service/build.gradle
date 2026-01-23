@@ -1,5 +1,0 @@
-dependencies {
-
-    implementation project(':common-kafka')
-    implementation 'org.springframework.kafka:spring-kafka'
-}

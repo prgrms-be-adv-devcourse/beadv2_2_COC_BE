@@ -3,12 +3,15 @@ package com.coc.modi.seller.seller.application;
 import com.coc.modi.seller.seller.application.dto.SellerRentalResponse;
 import com.coc.modi.seller.seller.exception.SellerDuplicateException;
 import com.coc.modi.seller.seller.exception.SellerNotFoundException;
-import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
 import com.coc.modi.seller.seller.application.dto.SellerCreateCommand;
 import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
 import com.coc.modi.seller.seller.application.dto.SellerUpdateCommand;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
+import com.coc.modi.seller.seller.exception.SellerStatusConflictException;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistration;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationRepository;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +23,7 @@ public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final SellerRentalService sellerRentalService;
-	private final MemberClientAdapter memberClientAdapter;
+    private final SellerRegistrationRepository sellerRegistrationRepository;
 	
 	@Transactional(readOnly = true)
     public SellerDetailResponse getSeller(Long sellerId) {
@@ -39,21 +42,33 @@ public class SellerService {
 
     @Transactional
     public String registerSeller(SellerCreateCommand command) {
-		
+
         if (sellerRepository.existsByMemberId(command.memberId())) {
             throw new SellerDuplicateException("이미 등록된 판매자입니다. memberId=" + command.memberId());
         }
 
-        Seller seller = Seller.create(
-                command.memberId(),
-                command.storeName(),
-                command.bizRegNo(),
-                command.storePhone()
-        );
+        SellerRegistration registration = sellerRegistrationRepository.findByMemberId(command.memberId())
+                .map(existing -> {
+                    if (existing.getStatus() == SellerRegistrationStatus.APPROVED) {
+                        throw new SellerStatusConflictException("seller registration is already approved. memberId=" + command.memberId());
+                    }
+                    existing.resubmit(
+                            command.storeName(),
+                            command.bizRegNo(),
+                            command.storePhone()
+                    );
+                    return existing;
+                })
+                .orElseGet(() -> SellerRegistration.create(
+                        command.memberId(),
+                        command.storeName(),
+                        command.bizRegNo(),
+                        command.storePhone()
+                ));
 
-        sellerRepository.save(seller);
-		
-		return memberClientAdapter.changeMemberRole(seller.getMemberId());
+        sellerRegistrationRepository.save(registration);
+
+		return registration.getStatus().name();
     }
 
 
@@ -67,7 +82,6 @@ public class SellerService {
                 command.bizRegNo(),
                 command.storePhone()
         );
-        seller.changeStatus(command.status());
 
         return SellerDetailResponse.from(seller);
     }

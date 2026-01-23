@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: ai-service
+  config:
+    import: configserver:http://modi-config:8888
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: modi-config
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      moderation:
+        enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://modi-discovery:8761/eureka/}

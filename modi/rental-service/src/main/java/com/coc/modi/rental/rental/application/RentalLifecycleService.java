@@ -11,11 +11,16 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
+import com.coc.modi.kafka.event.RentalReturnedEvent;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,12 +29,14 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RentalLifecycleService {
 	
 	private final RentalAppSupport rentalAppSupport;
 	private final AccountClientAdapter accountClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalQueryRepository rentalQueryRepository;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public void stratRenting(Long rentalItemId, Long memberId) {
@@ -90,6 +97,16 @@ public class RentalLifecycleService {
 						"damageReason", command.damageReason(),
 						"lateReason", command.lateReason(),
 						"memo", command.memo()));
+
+		RentalReturnedEvent event = RentalReturnedEvent.of(
+				rentalItem.getId(),
+				rental.getMemberId(),
+				rentalItem.getSellerId(),
+				rentalItem.getProductId(),
+				rentalItem.getStatus().name(),
+				rentalItem.getReturnedAt()
+		);
+		rentalOutboxService.enqueueRentalReturnedEvent(rentalItem.getId(), event);
 		
 		return new RentalReturnResponse(
 				rental.getId(),
@@ -117,8 +134,11 @@ public class RentalLifecycleService {
 		validateAvailability(rentalItem.getProductId(), oldEndDate.plusDays(1), command.newEndDate(), rentalItem.getId());
 		
 		BigDecimal extraAmount = rentalItem.extendRental(command.newEndDate());
-		
-		accountClientAdapter.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount));
+
+		String chargeRequestId = WalletRequestId.extend(rentalItem.getId(), command.newEndDate());
+		accountClientAdapter.charge(new ChargeWalletCommand(command.memberId(), rental.getId(), extraAmount, chargeRequestId));
+
+		registerExtendCompensationOnRollback(rentalItem, rental, extraAmount, command);
 		
 		rental.recalculateAmountsAndStatus();
 		
@@ -140,5 +160,41 @@ public class RentalLifecycleService {
 			throw new RentalStatusInvalidException(
 					"요청한 기간에 이미 예약된 상품입니다. productId=" + productId + ", startDate=" + startDate + ", endDate=" + endDate);
 		}
+	}
+
+	private void registerExtendCompensationOnRollback(RentalItem rentalItem, Rental rental, BigDecimal extraAmount, ExtendRentalCommand command) {
+
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			return;
+		}
+
+		Long rentalItemId = rentalItem.getId();
+		if (rentalItemId == null) {
+			return;
+		}
+
+		Long rentalId = rental.getId();
+		LocalDate newEndDate = command.newEndDate();
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCompletion(int status) {
+				if (status != STATUS_ROLLED_BACK) {
+					return;
+				}
+				String requestId = WalletRequestId.extendCompRefund(rentalItemId, newEndDate);
+				try {
+					accountClientAdapter.refund(new RefundWalletCommand(
+							command.memberId(),
+							rentalId,
+							rentalItemId,
+							extraAmount,
+							requestId
+					));
+				} catch (Exception ex) {
+					log.error("연장 결제 보상 환불 실패. rentalId={}, rentalItemId={}", rentalId, rentalItemId, ex);
+				}
+			}
+		});
 	}
 }
