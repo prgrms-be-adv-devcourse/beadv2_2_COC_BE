@@ -36,9 +36,7 @@ jobs:
             "rental-service"
             "seller-service"
             "member-service"
-            "review-service"
-            "notification-service"
-            "delivery-service"
+            "support-service"
             "modi-config"
             "modi-gateway"
             "modi-discovery"
@@ -118,10 +116,35 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate Dockerfile (ci)
+        run: |
+          set -euo pipefail
+          service="${{ matrix.service }}"
+          case "$service" in
+            modi-config) port=8888 ;;
+            modi-discovery) port=8761 ;;
+            *) port=8080 ;;
+          esac
+
+          cat <<'EOF' > "./modi/${{ matrix.service }}/Dockerfile.ci"
+          FROM amazoncorretto:17
+
+          WORKDIR /app
+          ARG JAR_FILE=build/libs/*.jar
+          COPY ${JAR_FILE} app.jar
+
+          EXPOSE __PORT__
+          ENTRYPOINT ["java","-jar","app.jar"]
+          EOF
+
+          sed -i.bak "s/__PORT__/${port}/g" "./modi/${{ matrix.service }}/Dockerfile.ci"
+          rm -f "./modi/${{ matrix.service }}/Dockerfile.ci.bak"
+
       - name: Build & Push Docker Images
         uses: docker/build-push-action@v6
         with:
           context: ./modi/${{ matrix.service }}
+          file: ./modi/${{ matrix.service }}/Dockerfile.ci
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.service }}:${{ env.TAG }}
           cache-from: type=gha,scope=${{ matrix.service }}
