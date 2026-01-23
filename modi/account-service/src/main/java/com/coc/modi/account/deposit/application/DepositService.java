@@ -201,9 +201,11 @@ public class DepositService {
                 command.cancelReason()
         );
 
-        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
+		if (tossResponse == null) {
+			throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소 응답이 없습니다.");
+		}
 
-            deposit.fail("Toss 결제 취소 실패 : " + tossResponse.status());
+        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
 
             throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소에 실패했습니다.");
         }

@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.ai.moderation.Categories;
+import org.springframework.ai.moderation.CategoryScores;
 import org.springframework.ai.moderation.Moderation;
 import org.springframework.ai.moderation.ModerationModel;
 import org.springframework.ai.moderation.ModerationPrompt;
+import org.springframework.ai.moderation.ModerationResponse;
+import org.springframework.ai.moderation.ModerationResult;
 import org.springframework.stereotype.Component;
 
 import com.coc.modi.ai.config.ModerationProperties;
@@ -38,18 +42,23 @@ public class SpringAiModerationModel implements ProductModerationModel {
 		String input = buildInput(event);
 		Moderation moderation;
 		try {
-			moderation = moderationModel.call(new ModerationPrompt(input)).getResult();
+			ModerationResponse response = moderationModel.call(new ModerationPrompt(input));
+			moderation = resolveModeration(response);
 		} catch (Exception ex) {
 			log.warn("Moderation API call failed. productId={}", event.productId(), ex);
 			return fallbackResult("MODEL_CALL_FAILED");
 		}
 
-		if (moderation == null || moderation.getCategories() == null) {
+		ModerationResult result = resolveModerationResult(moderation);
+		if (result == null || (result.getCategories() == null && result.getCategoryScores() == null)) {
 			return fallbackResult("EMPTY_RESPONSE");
 		}
 
-		Map<String, Boolean> categoryFlags = moderation.getCategories();
-		Map<String, Double> categoryScores = moderation.getCategoryScores();
+		Map<String, Boolean> categoryFlags = toCategoryFlags(result.getCategories());
+		Map<String, Double> categoryScores = toCategoryScores(result.getCategoryScores());
+		if (categoryFlags.isEmpty() && categoryScores.isEmpty()) {
+			return fallbackResult("EMPTY_RESPONSE");
+		}
 
 		List<String> reasons = extractReasons(categoryFlags, categoryScores);
 		double score = resolveScore(categoryScores);
@@ -129,6 +138,62 @@ public class SpringAiModerationModel implements ProductModerationModel {
 				DEFAULT_MESSAGE,
 				SOURCE
 		);
+	}
+
+	private Moderation resolveModeration(ModerationResponse response) {
+
+		if (response == null || response.getResult() == null) {
+			return null;
+		}
+		return response.getResult().getOutput();
+	}
+
+	private ModerationResult resolveModerationResult(Moderation moderation) {
+
+		if (moderation == null || moderation.getResults() == null || moderation.getResults().isEmpty()) {
+			return null;
+		}
+		return moderation.getResults().get(0);
+	}
+
+	private Map<String, Boolean> toCategoryFlags(Categories categories) {
+
+		if (categories == null) {
+			return Map.of();
+		}
+		Map<String, Boolean> flags = new LinkedHashMap<>();
+		flags.put("sexual", categories.isSexual());
+		flags.put("sexual/minors", categories.isSexualMinors());
+		flags.put("harassment", categories.isHarassment());
+		flags.put("harassment/threatening", categories.isHarassmentThreatening());
+		flags.put("hate", categories.isHate());
+		flags.put("hate/threatening", categories.isHateThreatening());
+		flags.put("self-harm", categories.isSelfHarm());
+		flags.put("self-harm/intent", categories.isSelfHarmIntent());
+		flags.put("self-harm/instructions", categories.isSelfHarmInstructions());
+		flags.put("violence", categories.isViolence());
+		flags.put("violence/graphic", categories.isViolenceGraphic());
+		return flags;
+	}
+
+	private Map<String, Double> toCategoryScores(CategoryScores scores) {
+
+		if (scores == null) {
+			return Map.of();
+		}
+		Map<String, Double> categoryScores = new LinkedHashMap<>();
+		categoryScores.put("sexual", scores.getSexual());
+		categoryScores.put("sexual/minors", scores.getSexualMinors());
+		categoryScores.put("harassment", scores.getHarassment());
+		categoryScores.put("harassment/threatening", scores.getHarassmentThreatening());
+		categoryScores.put("hate", scores.getHate());
+		categoryScores.put("hate/threatening", scores.getHateThreatening());
+		categoryScores.put("self-harm", scores.getSelfHarm());
+		categoryScores.put("self-harm/intent", scores.getSelfHarmIntent());
+		categoryScores.put("self-harm/instructions", scores.getSelfHarmInstructions());
+		categoryScores.put("violence", scores.getViolence());
+		categoryScores.put("violence/graphic", scores.getViolenceGraphic());
+		return categoryScores;
 	}
 
 	private String buildInput(ProductModerationRequestedEvent event) {

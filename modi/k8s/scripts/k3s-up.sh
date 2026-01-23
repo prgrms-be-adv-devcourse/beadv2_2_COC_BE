@@ -56,9 +56,7 @@ if [ "${K3D_IMPORT_IMAGES}" = "true" ]; then
   echo "Building local images with docker compose..." >&2
   docker compose -f "${ROOT_DIR}/docker-compose.yml" build
   echo "Building additional local images..." >&2
-  docker build -f "${ROOT_DIR}/delivery-service/Dockerfile" -t modi/delivery-service:local "${ROOT_DIR}"
-  docker build -f "${ROOT_DIR}/notification-service/Dockerfile" -t modi/notification-service:local "${ROOT_DIR}"
-  docker build -f "${ROOT_DIR}/review-service/Dockerfile" -t modi/review-service:local "${ROOT_DIR}"
+  docker build -f "${ROOT_DIR}/support-service/Dockerfile" -t modi/support-service:local "${ROOT_DIR}"
   docker build -f "${ROOT_DIR}/ai-service/Dockerfile" -t modi/ai-service:local "${ROOT_DIR}"
 
   IMAGES=(
@@ -70,9 +68,7 @@ if [ "${K3D_IMPORT_IMAGES}" = "true" ]; then
     modi/rental-service:local
     modi/seller-service:local
     modi/member-service:local
-    modi/delivery-service:local
-    modi/notification-service:local
-    modi/review-service:local
+    modi/support-service:local
     modi/ai-service:local
   )
 
@@ -98,9 +94,7 @@ DEPLOYMENTS=(
   deployment/rental-service
   deployment/seller-service
   deployment/member-service
-  deployment/notification-service
-  deployment/review-service
-  deployment/delivery-service
+  deployment/support-service
 )
 
 echo "Scaling down services before infra readiness..." >&2

@@ -49,7 +49,11 @@ public class WalletCommandService {
 
         MemberWallet wallet = MemberWallet.create(memberId);
 
-        memberWalletRepository.save(wallet);
+        try {
+			memberWalletRepository.save(wallet);
+		} catch (DataIntegrityViolationException ex) {
+			throw new AccountAlreadyExistsException(String.valueOf(memberId));
+		}
     }
 
 
@@ -59,7 +63,7 @@ public class WalletCommandService {
     public WalletTransaction createTransactionAndUpdateBalance(WalletTransactionCommand command) {
 
         // 1. 예치금 조회
-        MemberWallet wallet = memberWalletRepository.findByMemberId(command.memberId())
+        MemberWallet wallet = memberWalletRepository.findByMemberIdForUpdate(command.memberId())
                 .orElseThrow(() -> new AccountNotFoundException(command.memberId()));
 
         // 2. txType에 따라 예치금 입금, 차감 결정
@@ -112,7 +116,8 @@ public class WalletCommandService {
                 command.relatedRentalItemId(),
                 command.relatedSettlementId(),
                 command.description(),
-				command.paymentKey()
+				command.paymentKey(),
+				command.requestId()
         );
 
         // 4. 예치금 잔액 변경
@@ -138,7 +143,12 @@ public class WalletCommandService {
         Long rentalId = command.rentalId();
         BigDecimal amount = command.amount();
 
-        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(memberId, rentalId, amount);
+        WalletTransactionCommand txCommand = WalletTransactionCommand.forRentalPayment(
+				memberId,
+				rentalId,
+				amount,
+				command.requestId()
+		);
 
         createTransactionAndUpdateBalance(txCommand);
 
@@ -159,7 +169,8 @@ public class WalletCommandService {
                 command.rentalId(),
                 command.rentalItemId(),
                 command.amount(),
-                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId())
+                String.format("렌탈 환불 (itemId=%d)", command.rentalItemId()),
+				command.requestId()
         );
 
         createTransactionAndUpdateBalance(txCommand);

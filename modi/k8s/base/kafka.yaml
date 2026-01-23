@@ -90,6 +90,13 @@ spec:
               value: "1"
             - name: KAFKA_KRAFT_CLUSTER_ID
               value: "b8Qd7mMNSCqvQ8Gx8p6mVg"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms256m -Xmx256m"
+          resources:
+            requests:
+              memory: "256Mi"
+            limits:
+              memory: "512Mi"
           volumeMounts:
             - name: kafka-data
               mountPath: /bitnami/kafka
