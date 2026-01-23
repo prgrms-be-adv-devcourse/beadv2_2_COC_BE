@@ -16,7 +16,7 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
-import com.coc.modi.kafka.event.RentalReturnedEvent;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.kafka.event.SettlementPayoutCompletedEvent;
 import com.coc.modi.kafka.event.SettlementPayoutFailedEvent;
 
@@ -57,30 +57,30 @@ public class KafkaConsumerConfig {
 	}
 
 	@Bean
-	public ConsumerFactory<String, RentalReturnedEvent> rentalReturnedConsumerFactory(
+	public ConsumerFactory<String, RentalClosedEvent> rentalClosedConsumerFactory(
 			KafkaProperties kafkaProperties
 	) {
 
 		Map<String, Object> props = kafkaProperties.buildConsumerProperties();
-		props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, RentalReturnedEvent.class);
+		props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, RentalClosedEvent.class);
 		props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.coc.modi.kafka.event");
 
 		return new DefaultKafkaConsumerFactory<>(
 				props,
 				new StringDeserializer(),
-				new JsonDeserializer<>(RentalReturnedEvent.class),
+				new JsonDeserializer<>(RentalClosedEvent.class),
 				false
 		);
 	}
 
 	@Bean
-	public ConcurrentKafkaListenerContainerFactory<String, RentalReturnedEvent>
-	rentalReturnedKafkaListenerContainerFactory(
-			ConsumerFactory<String, RentalReturnedEvent> consumerFactory,
+	public ConcurrentKafkaListenerContainerFactory<String, RentalClosedEvent>
+	rentalClosedKafkaListenerContainerFactory(
+			ConsumerFactory<String, RentalClosedEvent> consumerFactory,
 			DefaultErrorHandler errorHandler
 	) {
 
-		ConcurrentKafkaListenerContainerFactory<String, RentalReturnedEvent> factory =
+		ConcurrentKafkaListenerContainerFactory<String, RentalClosedEvent> factory =
 				new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory);
 		factory.setCommonErrorHandler(errorHandler);
