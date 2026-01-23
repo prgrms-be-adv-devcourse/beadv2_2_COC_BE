@@ -10,12 +10,13 @@ public record RentalClosedEvent(
 		Instant occurredAt,
 		Long rentalItemId,
 		Long memberId,
-	Long sellerId,
-	Long productId,
-	BigDecimal rentalAmount,
-	String type,
-	LocalDateTime closedAt,
-	int sequence
+		Long sellerId,
+		Long productId,
+		BigDecimal rentalAmount,
+		String type,
+		LocalDateTime returnedAt,
+		LocalDateTime refundedAt,
+		int sequence
 ) {
 
 	public static RentalClosedEvent of(Long rentalItemId,
@@ -24,7 +25,8 @@ public record RentalClosedEvent(
 									   Long productId,
 									   BigDecimal rentalAmount,
 									   String type,
-									   LocalDateTime closedAt,
+									   LocalDateTime returnedAt,
+									   LocalDateTime refundedAt,
 									   int sequence) {
 		return new RentalClosedEvent(
 				UUID.randomUUID(),
@@ -35,7 +37,8 @@ public record RentalClosedEvent(
 				productId,
 				rentalAmount,
 				type,
-				closedAt,
+				returnedAt,
+				refundedAt,
 				sequence
 		);
 	}
