@@ -123,6 +123,9 @@
   - Res: `MemberWalletResponse { balance:decimal, createdAt:datetime }`
 - **GET /api/accounts/transactions** — 내 거래내역 (Auth)
   - Res: `WalletTransactionResponse[] { txType:WalletTransactionType, amount, balanceAfter, relatedRentalId?:long, relatedSettlementId?:long, description, createdAt, paymentKey?:string, pgTid?:string }`
+- **POST /api/accounts/withdrawals** — 출금 요청 (Auth)
+  - Req: `amount:decimal>0`
+  - Res: `WithdrawalResponse { id, status:WithdrawalStatus, requestedAmount, feeAmount, payoutAmount, requestedAt, processedAt }`
 
 ### PG 예치금
 - **POST /api/deposits/pg/request** — 충전 요청 (Auth)
@@ -191,17 +194,24 @@
 - **PATCH /api/admin/sellers/{memberId}/reject** — 판매자 반려 (Auth)
   - Path: `memberId:long`
   - Res: `SellerRegistrationResponse` (래퍼 없음)
+- **GET /api/admin/sellers/registrations** — 판매자 등록 요청 목록 (Auth)
+  - Query: `status?:SellerRegistrationStatus`, `pageable`
+  - Res: `Page<SellerRegistrationResponse>` (래퍼 없음)
 
 ### 채팅
 - **POST /api/chat/rooms** — 채팅방 생성 (Auth)
   - Req: `sellerId:long`, `memberId:long`
   - Res: `ChatRoomResponse { roomId, roomKey, sellerId, memberId, createdAt, updatedAt }`
+- **GET /api/chat/rooms** — 채팅방 목록 조회 (Auth)
+  - Res: `ChatRoomResponse[]`
 - **GET /api/chat/rooms/{roomId}** — 채팅방 조회 (Auth)
   - Res: `ChatRoomResponse`
 - **GET /api/chat/rooms/{roomId}/messages** — 채팅 메시지 조회 (Auth)
   - Query: `cursorId?:long`, `size?:int`
   - Res: `ChatMessageSliceResponse { messages:ChatMessageResponse[], nextCursorId, hasNext }`
   - `ChatMessageResponse { messageId, roomId, senderId, senderRole, content, sentAt }`
+- **POST /api/chat/rooms/{roomId}/leave** — 채팅방 나가기 (Auth)
+  - Res: `Void`
 
 ### 채팅(WebSocket/STOMP)
 - **SEND /app/chat/rooms/{roomId}/send** — 메시지 전송
@@ -282,7 +292,7 @@
 - **GET /api/products/seller** — 내 상품 목록 (Auth)
   - Query: `pageable`(size=20, sort=createdAt,desc 기본)
   - Res: `Page<ProductListResponse>`
-- **GET /api/products/{productId}** — 상품 상세 (Auth)
+- **GET /api/products/{productId}** — 상품 상세
   - Res: `ProductDetailResponse { productId, sellerId, name, description, pricePerDay, securityDepositAmount, status:ProductStatus, category, thumbnailImageId, specs:map<string,string>, images:ImageInfo[] }`
   - `ImageInfo { imageId, url, ordering }`
 - **POST /api/products** — 상품 등록 (Auth)
@@ -375,7 +385,7 @@
 - **GET /api/rentals/{productId}/unavailable-dates** — 상품별 예약 불가 날짜
   - Path: `productId:long`
   - Query: `ym:yyyy-MM`
-  - Res: `UnavailableDatesResponse { productId, ym:yyyy-MM, dates:date[] }`
+  - Res: `UnavailableDatesResponse { productId, ym:yyyy-MM, unavailableDates:date[] }`
 
 ### 장바구니
 - **GET /api/carts** — 내 장바구니 (Auth)

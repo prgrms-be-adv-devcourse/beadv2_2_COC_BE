@@ -12,8 +12,10 @@ import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 import com.coc.modi.rental.rental.infrastructure.client.AccountClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.WalletInfoResponse;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +34,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class RentalPaymentService {
+
+	private static final int SEQUENCE_REFUNDED = 2;
+	private static final String CLOSED_TYPE_REFUNDED = "REFUNDED";
 	
 	private final RentalRepository rentalRepository;
 	private final AccountClientAdapter accountClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalAppSupport rentalAppSupport;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public PayRentalResponse completePayment(Long rentalId, Long memberId) {
@@ -123,6 +129,21 @@ public class RentalPaymentService {
 						"rentalStatus", rental.getStatus().name(),
 						"itemStatus", rentalItem.getStatus().name(),
 						"refundAmount", refundAmount));
+
+		if (rentalItem.getReturnedAt() != null) {
+			RentalClosedEvent closedEvent = RentalClosedEvent.of(
+					rentalItem.getId(),
+					rental.getMemberId(),
+					rentalItem.getSellerId(),
+					rentalItem.getProductId(),
+					rentalItem.calculateRentalAmount(),
+					CLOSED_TYPE_REFUNDED,
+					rentalItem.getReturnedAt(),
+					rentalItem.getCanceledAt(),
+					SEQUENCE_REFUNDED
+			);
+			rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);
+		}
 	}
 
 	private boolean isAlreadyRefunded(Rental rental, RentalItem rentalItem) {

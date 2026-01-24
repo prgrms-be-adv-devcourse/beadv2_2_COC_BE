@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -85,13 +86,12 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 		}
 		
 		if (startDate != null) {
-			
-			builder.and(rentalItem.endDate.goe(startDate));
+			builder.and(rentalItem.returnedAt.goe(startDate.atStartOfDay()));
 		}
 		
 		if (endDate != null) {
-			
-			builder.and(rentalItem.endDate.loe(endDate));
+			LocalDateTime endOfDayExclusive = endDate.plusDays(1).atStartOfDay();
+			builder.and(rentalItem.returnedAt.lt(endOfDayExclusive));
 		}
 		
 		JPAQuery<RentalItem> query = queryFactory
@@ -144,7 +144,7 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 				.distinct()
 				.join(rentalItem.rental, rental)
 				.where(builder)
-				.orderBy(rentalItem.endDate.desc(), rentalItem.id.desc())
+				.orderBy(rentalItem.returnedAt.desc(), rentalItem.id.desc())
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize());
 		
