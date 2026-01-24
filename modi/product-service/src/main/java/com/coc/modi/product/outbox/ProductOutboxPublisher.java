@@ -3,6 +3,7 @@ package com.coc.modi.product.outbox;
 import java.util.List;
 
 import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.ProductEmbeddingEvent;
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @Slf4j
 @Component
@@ -42,8 +45,13 @@ public class ProductOutboxPublisher {
 				event.markSent();
 			} catch (Exception ex) {
 				event.markFailed(ex.getMessage(), maxRetries);
-				log.warn("Outbox publish failed. id={}, type={}, retryCount={}",
-						event.getId(), event.getEventType(), event.getRetryCount(), ex);
+				log.warn("outbox_publish_failed",
+						kv("log_type", "service"),
+						kv("outbox.id", event.getId()),
+						kv("outbox.event_type", event.getEventType()),
+						kv("outbox.retry_count", event.getRetryCount()),
+						kv("exception.class", ex.getClass().getName()),
+						ex);
 			}
 		}
 	}
@@ -58,11 +66,24 @@ public class ProductOutboxPublisher {
 					.get();
 			return;
 		}
+		
+		if (event.getEventType() == ProductOutboxEventType.PRODUCT_EMBEDDING_EVENT) {
+			
+			ProductEmbeddingEvent payload = readPayload(event.getPayload(), ProductEmbeddingEvent.class);
+			kafkaTemplate
+					.send(event.getEventType().getTopic(), payload.productId().toString(), payload)
+					.get();
+			
+			return;
+		}
+		
 		if (event.getEventType() == ProductOutboxEventType.NOTIFICATION_EVENT) {
+			
 			NotificationEvent payload = readPayload(event.getPayload(), NotificationEvent.class);
 			kafkaTemplate
 					.send(event.getEventType().getTopic(), payload.receiverId().toString(), payload)
 					.get();
+			
 			return;
 		}
 

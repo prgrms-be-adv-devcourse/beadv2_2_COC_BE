@@ -1,6 +1,7 @@
 package com.coc.modi.product.outbox;
 
 import com.coc.modi.kafka.event.NotificationEvent;
+import com.coc.modi.kafka.event.ProductEmbeddingEvent;
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,18 @@ public class ProductOutboxService {
 				payload
 		);
 
+		outboxEventRepository.save(outboxEvent);
+	}
+
+	public void enqueueEmbeddingUpdate(Long productId) {
+		ProductEmbeddingEvent event = ProductEmbeddingEvent.update(productId);
+		String payload = writePayload(event);
+		ProductOutboxEvent outboxEvent = ProductOutboxEvent.create(
+				"PRODUCT",
+				productId,
+				ProductOutboxEventType.PRODUCT_EMBEDDING_EVENT,
+				payload
+		);
 		outboxEventRepository.save(outboxEvent);
 	}
 

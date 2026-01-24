@@ -6,6 +6,7 @@ public record ProductResponseDto(
 		Long productId,
 		Long sellerId,
 		BigDecimal price,
+		BigDecimal securityDepositAmount,
 		String status
 ) {
 }

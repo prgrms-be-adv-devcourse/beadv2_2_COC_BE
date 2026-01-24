@@ -3,7 +3,9 @@ package com.coc.modi.admin.notice.presentation;
 import com.coc.modi.common.ApiResponse;
 import com.coc.modi.common.auth.CustomMember;
 import com.coc.modi.admin.notice.application.NoticeService;
+import com.coc.modi.admin.notice.application.dto.AdminNoticeSummaryResponse;
 import com.coc.modi.admin.notice.application.dto.NoticeResponse;
+import com.coc.modi.admin.notice.domain.NoticeStatus;
 import com.coc.modi.admin.notice.presentation.dto.NoticeCreateRequest;
 import com.coc.modi.admin.notice.presentation.dto.NoticeUpdateRequest;
 import com.coc.modi.admin.exception.AdminAccessDeniedException;
@@ -11,15 +13,21 @@ import com.coc.modi.admin.exception.AdminAccessDeniedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,6 +36,29 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminNoticeController {
 
 	private final NoticeService noticeService;
+
+	@GetMapping
+	public ResponseEntity<ApiResponse<Page<AdminNoticeSummaryResponse>>> getNotices(
+			@AuthenticationPrincipal CustomMember member,
+			@RequestParam(required = false) NoticeStatus status,
+			@RequestParam(required = false) String keyword,
+			@PageableDefault(sort = {"pinned", "createdAt"}, direction = Sort.Direction.DESC) Pageable pageable
+	) {
+
+		requireAdmin(member);
+		Page<AdminNoticeSummaryResponse> response = noticeService.getAdminNotices(status, keyword, pageable);
+		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+
+	@GetMapping("/{noticeId}")
+	public ResponseEntity<ApiResponse<NoticeResponse>> getNotice(
+			@AuthenticationPrincipal CustomMember member,
+			@PathVariable Long noticeId
+	) {
+
+		requireAdmin(member);
+		return ResponseEntity.ok(ApiResponse.ok(noticeService.getAdminNotice(noticeId)));
+	}
 
 	@PostMapping
 	public ResponseEntity<ApiResponse<NoticeResponse>> createNotice(

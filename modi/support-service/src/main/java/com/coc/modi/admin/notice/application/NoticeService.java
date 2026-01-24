@@ -1,5 +1,6 @@
 package com.coc.modi.admin.notice.application;
 
+import com.coc.modi.admin.notice.application.dto.AdminNoticeSummaryResponse;
 import com.coc.modi.admin.notice.application.dto.NoticeCreateCommand;
 import com.coc.modi.admin.notice.application.dto.NoticeResponse;
 import com.coc.modi.admin.notice.application.dto.NoticeSummaryResponse;
@@ -114,6 +115,13 @@ public class NoticeService {
 		return notices.map(NoticeSummaryResponse::from);
 	}
 
+	public Page<AdminNoticeSummaryResponse> getAdminNotices(NoticeStatus status, String keyword, Pageable pageable) {
+
+		String normalized = normalizeKeyword(keyword);
+		Page<Notice> notices = noticeRepository.findAdminNotices(status, normalized, pageable);
+		return notices.map(AdminNoticeSummaryResponse::from);
+	}
+
 	@Transactional
 	public NoticeResponse getPublishedNotice(Long noticeId) {
 
@@ -125,6 +133,12 @@ public class NoticeService {
 				.orElseThrow(() -> new NoticeNotFoundException("공지사항을 찾을 수 없습니다. noticeId=" + noticeId));
 
 		notice.increaseViewCount();
+		return NoticeResponse.from(notice);
+	}
+
+	public NoticeResponse getAdminNotice(Long noticeId) {
+
+		Notice notice = findNotice(noticeId);
 		return NoticeResponse.from(notice);
 	}
 
