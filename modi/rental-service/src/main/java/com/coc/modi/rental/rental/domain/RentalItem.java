@@ -54,6 +54,9 @@ public class RentalItem extends BaseEntity {
 	
 	@Column(name = "unit_price", precision = 18, scale = 2, nullable = false)
 	private BigDecimal unitPrice;
+
+	@Column(name = "security_deposit_amount", precision = 18, scale = 2, nullable = false)
+	private BigDecimal securityDepositAmount;
 	
 	@Column(name = "returned_at")
 	private LocalDateTime returnedAt;
@@ -69,6 +72,7 @@ public class RentalItem extends BaseEntity {
 					   LocalDate endDate,
 					   RentalItemStatus status,
 					   BigDecimal unitPrice,
+					   BigDecimal securityDepositAmount,
 					   LocalDateTime returnedAt,
 					   LocalDateTime canceledAt,
 					   List<RentalExtend> extendsHistory) {
@@ -80,6 +84,7 @@ public class RentalItem extends BaseEntity {
 		this.endDate = endDate;
 		this.status = status != null ? status : RentalItemStatus.REQUESTED;
 		this.unitPrice = unitPrice;
+		this.securityDepositAmount = securityDepositAmount;
 		this.returnedAt = returnedAt;
 		this.canceledAt = canceledAt;
 		if (extendsHistory != null) {
@@ -92,7 +97,8 @@ public class RentalItem extends BaseEntity {
 									Long sellerId,
 									LocalDate startDate,
 									LocalDate endDate,
-									BigDecimal unitPrice) {
+									BigDecimal unitPrice,
+									BigDecimal securityDepositAmount) {
 		
 		return RentalItem.builder()
 				.productId(productId)
@@ -101,6 +107,7 @@ public class RentalItem extends BaseEntity {
 				.endDate(endDate)
 				.status(RentalItemStatus.REQUESTED)
 				.unitPrice(unitPrice)
+				.securityDepositAmount(securityDepositAmount)
 				.build();
 	}
 	
@@ -263,6 +270,11 @@ public class RentalItem extends BaseEntity {
 		return this.unitPrice
 				.multiply(BigDecimal.valueOf(rentalDays))
 				.setScale(2, RoundingMode.HALF_UP);
+	}
+
+	public BigDecimal calculateChargeAmount() {
+		BigDecimal deposit = this.securityDepositAmount != null ? this.securityDepositAmount : BigDecimal.ZERO;
+		return calculateRentalAmount().add(deposit);
 	}
 	
 	public void cancelByMemberRequest() {

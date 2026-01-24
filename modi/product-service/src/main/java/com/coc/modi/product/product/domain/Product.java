@@ -40,6 +40,9 @@ public class Product extends BaseEntity {
 	
 	@Column(name = "price_per_day", nullable = false, precision = 18, scale = 2)
 	private BigDecimal pricePerDay;
+
+	@Column(name = "security_deposit_amount", nullable = false, precision = 18, scale = 2)
+	private BigDecimal securityDepositAmount;
 	
 	@Enumerated(STRING)
 	@Column(nullable = false, length = 20)
@@ -72,6 +75,7 @@ public class Product extends BaseEntity {
 					String name,
 					String description,
 					BigDecimal pricePerDay,
+					BigDecimal securityDepositAmount,
 					ProductStatus status,
 					ProductModerationStatus moderationStatus,
 					ProductCategory category,
@@ -81,16 +85,18 @@ public class Product extends BaseEntity {
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
+		this.securityDepositAmount = securityDepositAmount;
 		this.status = status;
 		this.moderationStatus = moderationStatus;
 		this.category = category;
 		this.specs = specs;
 	}
-	
+
 	public static Product create(Long sellerId,
 								 String name,
 								 String description,
 								 BigDecimal pricePerDay,
+								 BigDecimal securityDepositAmount,
 								 ProductCategory category,
 								 Map<String, String> specs,
 								 List<String> urls) {
@@ -104,6 +110,7 @@ public class Product extends BaseEntity {
 				name,
 				description,
 				pricePerDay,
+				securityDepositAmount,
 				ProductStatus.ACTIVE,
 				ProductModerationStatus.PENDING,
 				category,
@@ -117,12 +124,14 @@ public class Product extends BaseEntity {
 	public void update(String name,
 					   String description,
 					   BigDecimal pricePerDay,
+					   BigDecimal securityDepositAmount,
 					   ProductCategory category,
 					   Map<String, String> specs) {
 		
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
+		this.securityDepositAmount = securityDepositAmount;
 		this.category = category;
 		this.specs = specs;
 	}
