@@ -45,6 +45,14 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('D
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/notices/{noticeId}/publish', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/notices/{noticeId}/draft', 'ADMIN');
 
+-- ai-service
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/recommendations', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/ai-service/api/ai/recommendations/recent', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/ai/chat-test', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/descriptions', 'SELLER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/embeddings/reindex', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/ai-service/api/ai/{productId}/embedding', 'ADMIN');
+
 -- product-service
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/images/upload', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/seller', 'SELLER');
