@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.coc.modi.rental.rental.application.RentalQueryService;
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsRequest;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalInternalSearchCondition;
+import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfo;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemInfoListResponse;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RentalItemSellerResponse;
 import com.coc.modi.rental.rental.infrastructure.client.dto.UnavailableProductsResponse;
@@ -36,12 +37,17 @@ public class RentalInternalController {
 		return queryService.getRentalItemList(condition, pageable);
 	}
 
+	@GetMapping("/items/{rentalItemId}/info")
+	public RentalItemInfo getRentalItem(@PathVariable Long rentalItemId) {
+		return queryService.getRentalItemInfo(rentalItemId);
+	}
+
 	@GetMapping("/items/{rentalItemId}")
 	public RentalItemSellerResponse getRentalItemSeller(@PathVariable Long rentalItemId) {
-		
+
 		return queryService.getRentalItemSellerInfo(rentalItemId);
 	}
-	
+
 	@PostMapping("/unavailable-products")
 	public UnavailableProductsResponse getUnavailableProducts(@Valid @RequestBody UnavailableProductsRequest unavailableProductsRequest) {
 		

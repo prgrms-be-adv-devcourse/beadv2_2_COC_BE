@@ -102,6 +102,23 @@ public class Rental extends BaseEntity {
 		this.totalAmount = recalculated;
 		return this.totalAmount;
 	}
+
+	public BigDecimal calculateTotalDepositAmount() {
+		
+		if (items == null || items.isEmpty()) {
+			return BigDecimal.ZERO;
+		}
+		
+		return items.stream()
+				.filter(this::isChargeableItem)
+				.map(item -> item.getSecurityDepositAmount() != null ? item.getSecurityDepositAmount() : BigDecimal.ZERO)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	public BigDecimal calculateTotalChargeAmount() {
+		
+		return getTotalAmount().add(calculateTotalDepositAmount());
+	}
 	
 	private boolean isChargeableItem(RentalItem rentalItem) {
 		

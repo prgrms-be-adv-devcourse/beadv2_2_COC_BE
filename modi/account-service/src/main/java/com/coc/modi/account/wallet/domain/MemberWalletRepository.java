@@ -8,5 +8,7 @@ public interface MemberWalletRepository {
 
     Optional<MemberWallet> findByMemberId(Long memberId);
 
+	Optional<MemberWallet> findByMemberIdForUpdate(Long memberId);
+
     MemberWallet save(MemberWallet wallet);
 }

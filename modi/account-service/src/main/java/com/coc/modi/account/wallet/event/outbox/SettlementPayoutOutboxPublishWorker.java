@@ -78,7 +78,7 @@ public class SettlementPayoutOutboxPublishWorker {
 					outbox.getAmount()
 			);
 			kafkaTemplate.send(
-					KafkaTopics.SETTLEMENT_PAYOUT_COMPLETED_EVENTS,
+					KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_COMPLETED,
 					outbox.getSettlementId().toString(),
 					event
 			).get();
@@ -95,7 +95,7 @@ public class SettlementPayoutOutboxPublishWorker {
 				outbox.getFailureReason()
 		);
 		kafkaTemplate.send(
-				KafkaTopics.SETTLEMENT_PAYOUT_FAILED_EVENTS,
+				KafkaTopics.ACCOUNT_SETTLEMENT_PAYOUT_FAILED,
 				outbox.getSettlementId().toString(),
 				event
 		).get();

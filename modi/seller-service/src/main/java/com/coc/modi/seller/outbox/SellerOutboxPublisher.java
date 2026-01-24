@@ -2,8 +2,8 @@ package com.coc.modi.seller.outbox;
 
 import java.util.List;
 
-import com.coc.modi.kafka.event.SellerApprovedEvent;
-import com.coc.modi.kafka.event.SellerRejectedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,17 +50,18 @@ public class SellerOutboxPublisher {
 
 	private void publishEvent(SellerOutboxEvent event) throws Exception {
 
-		if (event.getEventType() == SellerOutboxEventType.SELLER_APPROVED) {
-			SellerApprovedEvent payload = readPayload(event.getPayload(), SellerApprovedEvent.class);
+		if (event.getEventType() == SellerOutboxEventType.SELLER_REGISTRATION_APPROVED) {
+			SellerRegistrationApprovedEvent payload =
+					readPayload(event.getPayload(), SellerRegistrationApprovedEvent.class);
 			kafkaTemplate
-					.send(event.getEventType().getTopic(), payload.sellerId().toString(), payload)
+					.send(event.getEventType().getTopic(), payload.registrationId().toString(), payload)
 					.get();
 			return;
 		}
-		if (event.getEventType() == SellerOutboxEventType.SELLER_REJECTED) {
-			SellerRejectedEvent payload = readPayload(event.getPayload(), SellerRejectedEvent.class);
+		if (event.getEventType() == SellerOutboxEventType.SELLER_REGISTRATION_REJECTED) {
+			SellerRegistrationRejectedEvent payload = readPayload(event.getPayload(), SellerRegistrationRejectedEvent.class);
 			kafkaTemplate
-					.send(event.getEventType().getTopic(), payload.sellerId().toString(), payload)
+					.send(event.getEventType().getTopic(), payload.registrationId().toString(), payload)
 					.get();
 			return;
 		}

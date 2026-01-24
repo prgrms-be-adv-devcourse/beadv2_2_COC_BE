@@ -36,6 +36,8 @@ spec:
             - name: http
               containerPort: 8080
           env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
             - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
               value: "false"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
@@ -47,14 +49,22 @@ spec:
                 secretKeyRef:
                   name: modi-env
                   key: DB_URL
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
           envFrom:
             - secretRef:
                 name: modi-env
+          resources:
+            requests:
+              memory: "128Mi"
+            limits:
+              memory: "384Mi"
           startupProbe:
             tcpSocket:
               port: 8080
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             tcpSocket:
               port: 8080

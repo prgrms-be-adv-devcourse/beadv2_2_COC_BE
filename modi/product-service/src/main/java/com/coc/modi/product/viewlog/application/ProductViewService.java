@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -37,7 +38,13 @@ public class ProductViewService {
 			return List.of();
 		}
 		int resolvedLimit = limit > 0 ? limit : 10;
-		return productViewLogRepository.findRecentViewedProductIds(memberId, resolvedLimit);
+		LocalDateTime startAt = LocalDateTime.now().minusMonths(1);
+		List<Long> prioritized = productViewLogRepository
+				.findRecentViewedProductIdsWithinPeriodPrioritizingAddedToCart(memberId, startAt, resolvedLimit);
+		if (prioritized == null || prioritized.isEmpty()) {
+			return productViewLogRepository.findRecentViewedProductIdsPrioritizingAddedToCart(memberId, resolvedLimit);
+		}
+		return prioritized;
 	}
 
 	@Transactional
@@ -45,7 +52,7 @@ public class ProductViewService {
 		if (memberId == null || productId == null) {
 			return;
 		}
-		int updated = productViewLogRepository.updateLatestAddedToCart(memberId, productId, addedToCart);
+		int updated = productViewLogRepository.updateAddedToCartByMemberAndProduct(memberId, productId, addedToCart);
 		if (updated == 0 && addedToCart) {
 			ProductViewLog log = ProductViewLog.create(productId, memberId, LocalDate.now(), true);
 			productViewLogRepository.save(log);

@@ -9,6 +9,7 @@ import com.coc.modi.product.product.domain.ProductCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProductCreateRequest(
 		
@@ -21,6 +22,10 @@ public record ProductCreateRequest(
 		@NotNull(message = "대여 금액은 필수입니다.")
 		@Positive(message = "대여 금액은 0보다 커야 합니다.")
         BigDecimal pricePerDay,
+
+		@NotNull(message = "보증금은 필수입니다.")
+		@PositiveOrZero(message = "보증금은 0 이상이어야 합니다.")
+		BigDecimal securityDepositAmount,
 		
 		@NotNull(message = "카테고리는 필수입니다.")
 		ProductCategory category,

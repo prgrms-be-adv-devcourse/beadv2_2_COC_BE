@@ -10,6 +10,8 @@ spring:
         overrides:
           spring.datasource.username: ${DB_USER}
           spring.datasource.password: ${DB_PASSWORD}
+          spring.datasource.hikari.initialization-fail-timeout: -1
+          spring.jpa.database-platform: org.hibernate.dialect.PostgreSQLDialect
           toss.payments.client-key: ${TOSS_CLIENT_KEY}
           toss.payments.secret-key: ${TOSS_SECRET_KEY}
           toss.api-url: ${TOSS_API_URL}
@@ -51,7 +53,6 @@ spring:
           refresh-rate: 0 # every request checks for updates
           force-pull: true # discard local changes and pull from remote when refreshing
         default-label: main
-
 
 eureka:
   client:

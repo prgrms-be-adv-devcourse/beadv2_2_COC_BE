@@ -6,6 +6,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 /src/main/resources/application.yml
+**/Dockerfile
 ### STS ###
 .apt_generated
 .classpath
@@ -22,6 +23,8 @@ bin/
 .idea
 *.iws
 *.iml
+*.DS_Store
+.DS_Store
 *.ipr
 out/
 .idea/

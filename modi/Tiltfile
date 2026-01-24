@@ -2,16 +2,27 @@
 
 # 0) 공통 설정
 config.define_string('k8s_context')
+config.define_string('registry_host')
+config.define_string('registry_port')
 config.define_string_list('services')
 cfg = config.parse()
-k8s_context(cfg.get('k8s_context', 'kind-modi'))
+ctx = cfg.get('k8s_context', '') or 'k3d-modi'
+k8s_context(ctx)
+
+registry_host = cfg.get('registry_host', '')
+registry_port = cfg.get('registry_port', '5001')
+if registry_host:
+  default_registry('%s:%s' % (registry_host, registry_port))
+elif ctx.startswith('k3d-'):
+  cluster_name = ctx[len('k3d-'):]
+  default_registry('k3d-%s-registry:%s' % (cluster_name, registry_port))
 
 # 1) k8s yaml 로드 (kustomize overlay 사용)
-env_path = 'k8s/overlays/kind/.env'
+env_path = 'k8s/overlays/k3s/.env'
 if not os.path.exists(env_path):
-  fail('Missing %s. Copy your .env to k8s/overlays/kind/.env before running Tilt.' % env_path)
+  fail('Missing %s. Copy your .env to k8s/overlays/k3s/.env before running Tilt.' % env_path)
 
-k8s_yaml(kustomize('k8s/overlays/kind'))
+k8s_yaml(kustomize('k8s/overlays/k3s'))
 
 # 2) 로컬 도커 이미지 빌드(각 서비스별)
 shared_paths = [
@@ -25,8 +36,7 @@ shared_paths = [
   'common-security',
   'common-notification',
   'common-openapi',
-  'common-kafka',
-  'common-ai',
+  'common-kafka'
 ]
 
 ignore_paths = [
@@ -110,6 +120,15 @@ docker_build(
 )
 
 docker_build(
+  'modi/support-service:local',
+  context='.',
+  dockerfile='support-service/Dockerfile',
+  build_args={'MODULE': 'support-service'},
+  only=only_paths('support-service'),
+  ignore=ignore_paths,
+)
+
+docker_build(
   'modi/ai-service:local',
   context='.',
   dockerfile='ai-service/Dockerfile',
@@ -118,14 +137,6 @@ docker_build(
   ignore=ignore_paths,
 )
 
-docker_build(
-  'modi/delivery-service:local',
-  context='.',
-  dockerfile='delivery-service/Dockerfile',
-  build_args={'MODULE': 'delivery-service'},
-  only=only_paths('delivery-service'),
-  ignore=ignore_paths,
-)
 
 # 3) k8s 리소스(이름은 매니페스트 metadata.name와 맞춰야 함)
 # 특정 리소스만 띄우고 싶으면:
@@ -142,14 +153,28 @@ k8s_resource('elasticsearch', auto_init=auto_init_for('elasticsearch'), port_for
 k8s_resource('logstash', auto_init=auto_init_for('logstash'), port_forwards=5044)
 k8s_resource('kibana', auto_init=auto_init_for('kibana'), port_forwards=5601)
 
+core_deps = ['modi-config', 'modi-discovery']
+kafka_deps = core_deps + ['kafka']
+redis_deps = kafka_deps + ['redis']
+search_deps = kafka_deps + ['elasticsearch']
+ai_deps = kafka_deps + ['pgvector']
+
 k8s_resource('modi-discovery', port_forwards=8761, auto_init=auto_init_for('modi-discovery'))
 k8s_resource('modi-config', port_forwards=8888, auto_init=auto_init_for('modi-config'))
-k8s_resource('modi-gateway', port_forwards=8080, auto_init=auto_init_for('modi-gateway'))
+k8s_resource('modi-gateway', port_forwards=8080, auto_init=auto_init_for('modi-gateway'),
+             resource_deps=kafka_deps)
 
-k8s_resource('account-service', auto_init=auto_init_for('account-service'))
-k8s_resource('product-service', auto_init=auto_init_for('product-service'))
-k8s_resource('rental-service', auto_init=auto_init_for('rental-service'))
-k8s_resource('seller-service', auto_init=auto_init_for('seller-service'))
-k8s_resource('member-service', auto_init=auto_init_for('member-service'))
-k8s_resource('delivery-service', auto_init=auto_init_for('delivery-service'))
-k8s_resource('ai-service', auto_init=auto_init_for('ai-service'))
+k8s_resource('account-service', auto_init=auto_init_for('account-service'),
+             resource_deps=kafka_deps)
+k8s_resource('product-service', auto_init=auto_init_for('product-service'),
+             resource_deps=search_deps)
+k8s_resource('rental-service', auto_init=auto_init_for('rental-service'),
+             resource_deps=redis_deps)
+k8s_resource('seller-service', auto_init=auto_init_for('seller-service'),
+             resource_deps=redis_deps)
+k8s_resource('member-service', auto_init=auto_init_for('member-service'),
+             resource_deps=redis_deps)
+k8s_resource('support-service', auto_init=auto_init_for('support-service'),
+             resource_deps=redis_deps)
+k8s_resource('ai-service', auto_init=auto_init_for('ai-service'),
+             resource_deps=ai_deps)

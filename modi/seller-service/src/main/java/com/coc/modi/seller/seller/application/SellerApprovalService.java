@@ -2,65 +2,120 @@ package com.coc.modi.seller.seller.application;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import com.coc.modi.kafka.event.SellerApprovedEvent;
-import com.coc.modi.kafka.event.SellerRejectedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
+import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
 import com.coc.modi.seller.outbox.SellerOutboxService;
-import com.coc.modi.seller.seller.application.dto.SellerDetailResponse;
+import com.coc.modi.seller.seller.application.dto.SellerRegistrationResponse;
 import com.coc.modi.seller.seller.domain.Seller;
 import com.coc.modi.seller.seller.domain.SellerRepository;
-import com.coc.modi.seller.seller.domain.SellerStatus;
-import com.coc.modi.seller.seller.exception.SellerNotFoundException;
+import com.coc.modi.seller.seller.exception.SellerStatusConflictException;
 import com.coc.modi.seller.seller.infrastructure.client.member.MemberClientAdapter;
 import com.coc.modi.seller.seller.infrastructure.client.member.dto.MemberEmailResponse;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistration;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationRepository;
+import com.coc.modi.seller.seller.registration.domain.SellerRegistrationStatus;
+import com.coc.modi.seller.seller.registration.exception.SellerRegistrationNotFoundException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class SellerApprovalService {
 
 	private final SellerRepository sellerRepository;
+	private final SellerRegistrationRepository sellerRegistrationRepository;
 	private final SellerOutboxService sellerOutboxService;
 	private final MemberClientAdapter memberClientAdapter;
 
 	@Transactional
-	public SellerDetailResponse approveSeller(Long sellerId) {
+	public SellerRegistrationResponse approveSeller(Long memberId, Long approvedBy) {
 
-		Seller seller = sellerRepository.findById(sellerId)
-				.orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + sellerId));
+		SellerRegistration registration = sellerRegistrationRepository.findByMemberId(memberId)
+				.orElseThrow(() -> new SellerRegistrationNotFoundException("판매자 등록 요청을 찾을 수 없습니다. memberId=" + memberId));
 
-		boolean wasPending = seller.getStatus() == SellerStatus.PENDING;
+		if (registration.getStatus() == SellerRegistrationStatus.APPROVED) {
+			throw new SellerStatusConflictException("seller registration is already approved. memberId=" + memberId);
+		}
+		if (registration.getStatus() != SellerRegistrationStatus.PENDING) {
+			throw new SellerStatusConflictException(
+					"seller registration approval is only allowed from PENDING. status=" + registration.getStatus()
+			);
+		}
+		if (sellerRepository.existsByMemberId(memberId)) {
+			throw new SellerStatusConflictException("seller is already registered. memberId=" + memberId);
+		}
+
+		Seller seller = Seller.create(
+				registration.getMemberId(),
+				registration.getStoreName(),
+				registration.getBizRegNo(),
+				registration.getStorePhone()
+		);
 		seller.approve();
 		sellerRepository.save(seller);
 
-		if (wasPending) {
-			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
-			sellerOutboxService.enqueueSellerApproved(
-					SellerApprovedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
-			);
-		}
+		registration.approve(approvedBy);
+		sellerRegistrationRepository.save(registration);
 
-		return SellerDetailResponse.from(seller);
+		MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
+		String email = emailResponse != null ? emailResponse.email() : null;
+		if (!StringUtils.hasText(email)) {
+			log.warn("승인 메일 발송을 위한 이메일이 비어있습니다. sellerId={}, memberId={}",
+					seller.getId(), seller.getMemberId());
+		}
+		sellerOutboxService.enqueueSellerApproved(
+				SellerRegistrationApprovedEvent.of(registration.getId(), seller.getMemberId(), email)
+		);
+
+		return SellerRegistrationResponse.from(registration);
 	}
 
 	@Transactional
-	public SellerDetailResponse rejectSeller(Long sellerId) {
+	public SellerRegistrationResponse rejectSeller(Long memberId) {
 
-		Seller seller = sellerRepository.findById(sellerId)
-				.orElseThrow(() -> new SellerNotFoundException("판매자를 찾을 수 없습니다. id=" + sellerId));
+		SellerRegistration registration = sellerRegistrationRepository.findByMemberId(memberId)
+				.orElseThrow(() -> new SellerRegistrationNotFoundException("판매자 등록 요청을 찾을 수 없습니다. memberId=" + memberId));
 
-		boolean wasPending = seller.getStatus() == SellerStatus.PENDING;
-		seller.reject();
-		sellerRepository.save(seller);
-
-		if (wasPending) {
-			MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
-			sellerOutboxService.enqueueSellerRejected(
-					SellerRejectedEvent.of(seller.getId(), seller.getMemberId(), emailResponse.email())
+		if (registration.getStatus() == SellerRegistrationStatus.REJECTED) {
+			return SellerRegistrationResponse.from(registration);
+		}
+		if (registration.getStatus() != SellerRegistrationStatus.PENDING) {
+			throw new SellerStatusConflictException(
+					"seller registration rejection is only allowed from PENDING. status=" + registration.getStatus()
 			);
 		}
 
-		return SellerDetailResponse.from(seller);
+		registration.reject();
+		sellerRegistrationRepository.save(registration);
+
+		MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(registration.getMemberId());
+		String email = emailResponse != null ? emailResponse.email() : null;
+		if (!StringUtils.hasText(email)) {
+			log.warn("거절 메일 발송을 위한 이메일이 비어있습니다. registrationId={}, memberId={}",
+					registration.getId(), registration.getMemberId());
+		}
+		sellerOutboxService.enqueueSellerRejected(
+				SellerRegistrationRejectedEvent.of(registration.getId(), registration.getMemberId(), email)
+		);
+
+		return SellerRegistrationResponse.from(registration);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<SellerRegistrationResponse> getRegistrations(SellerRegistrationStatus status, Pageable pageable) {
+
+		Page<SellerRegistration> registrations;
+		if (status == null) {
+			registrations = sellerRegistrationRepository.findAll(pageable);
+		} else {
+			registrations = sellerRegistrationRepository.findByStatus(status, pageable);
+		}
+		return registrations.map(SellerRegistrationResponse::from);
 	}
 }

@@ -40,10 +40,17 @@ public class Product extends BaseEntity {
 	
 	@Column(name = "price_per_day", nullable = false, precision = 18, scale = 2)
 	private BigDecimal pricePerDay;
+
+	@Column(name = "security_deposit_amount", nullable = false, precision = 18, scale = 2)
+	private BigDecimal securityDepositAmount;
 	
 	@Enumerated(STRING)
 	@Column(nullable = false, length = 20)
 	private ProductStatus status;
+
+	@Enumerated(STRING)
+	@Column(name = "moderation_status", nullable = true, length = 20)
+	private ProductModerationStatus moderationStatus;
 	
 	@Enumerated(STRING)
 	@Column(nullable = false, length = 50)
@@ -68,7 +75,9 @@ public class Product extends BaseEntity {
 					String name,
 					String description,
 					BigDecimal pricePerDay,
+					BigDecimal securityDepositAmount,
 					ProductStatus status,
+					ProductModerationStatus moderationStatus,
 					ProductCategory category,
 					Map<String, String> specs) {
 		
@@ -76,15 +85,18 @@ public class Product extends BaseEntity {
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
+		this.securityDepositAmount = securityDepositAmount;
 		this.status = status;
+		this.moderationStatus = moderationStatus;
 		this.category = category;
 		this.specs = specs;
 	}
-	
+
 	public static Product create(Long sellerId,
 								 String name,
 								 String description,
 								 BigDecimal pricePerDay,
+								 BigDecimal securityDepositAmount,
 								 ProductCategory category,
 								 Map<String, String> specs,
 								 List<String> urls) {
@@ -93,7 +105,16 @@ public class Product extends BaseEntity {
 			throw new ProductInvalidInputException("Seller ID is required.");
 		}
 		
-		Product product = new Product(sellerId, name, description, pricePerDay, ProductStatus.ACTIVE, category, specs);
+		Product product = new Product(
+				sellerId,
+				name,
+				description,
+				pricePerDay,
+				securityDepositAmount,
+				ProductStatus.ACTIVE,
+				ProductModerationStatus.PENDING,
+				category,
+				specs);
 		
 		product.addImages(urls);
 		
@@ -103,12 +124,14 @@ public class Product extends BaseEntity {
 	public void update(String name,
 					   String description,
 					   BigDecimal pricePerDay,
+					   BigDecimal securityDepositAmount,
 					   ProductCategory category,
 					   Map<String, String> specs) {
 		
 		this.name = name;
 		this.description = description;
 		this.pricePerDay = pricePerDay;
+		this.securityDepositAmount = securityDepositAmount;
 		this.category = category;
 		this.specs = specs;
 	}
@@ -119,6 +142,18 @@ public class Product extends BaseEntity {
 			throw new ProductConflictException("삭제된 상품은 상태를 변경할 수 없습니다.");
 		}
 		this.status = status;
+	}
+
+	public void updateModerationStatus(ProductModerationStatus moderationStatus) {
+
+		if (moderationStatus != null) {
+			this.moderationStatus = moderationStatus;
+		}
+	}
+
+	public ProductModerationStatus getModerationStatus() {
+
+		return moderationStatus != null ? moderationStatus : ProductModerationStatus.CLEAR;
 	}
 	
 	public void addImage(ProductImage image) {

@@ -12,6 +12,7 @@ public record ProductCreateCommand(
 		String name,
 		String description,
 		BigDecimal pricePerDay,
+		BigDecimal securityDepositAmount,
 		ProductCategory category,
 		Map<String, String> specs,
 		List<String> imageUrls
@@ -24,6 +25,7 @@ public record ProductCreateCommand(
 				productCreateRequest.name(),
 				productCreateRequest.description(),
 				productCreateRequest.pricePerDay(),
+				productCreateRequest.securityDepositAmount(),
 				productCreateRequest.category(),
 				productCreateRequest.specs(),
 				productCreateRequest.images());

@@ -49,7 +49,7 @@ public class ChatMessageService {
 		ChatRoom room = chatRoomRepository.findById(command.roomId())
 				.orElseThrow(() -> new ChatRoomNotFoundException("채팅방을 찾을 수 없습니다. roomId=" + command.roomId()));
 
-		chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), command.senderId())
+		chatParticipantRepository.findActiveByRoomIdAndMemberId(room.getId(), command.senderId())
 				.orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다. roomId=" + room.getId()));
 
 		ChatParticipantRole role = resolveRole(command.senderRole());
@@ -76,7 +76,7 @@ public class ChatMessageService {
 			if (memberId == null) {
 				continue;
 			}
-			chatParticipantRepository.findByRoomIdAndMemberId(roomId, memberId)
+			chatParticipantRepository.findActiveByRoomIdAndMemberId(roomId, memberId)
 					.ifPresent(participant -> participant.markRead(messageId, readAt));
 		}
 	}
@@ -86,7 +86,7 @@ public class ChatMessageService {
 		if (roomId == null || memberId == null) {
 			return;
 		}
-		ChatParticipant participant = chatParticipantRepository.findByRoomIdAndMemberId(roomId, memberId)
+		ChatParticipant participant = chatParticipantRepository.findActiveByRoomIdAndMemberId(roomId, memberId)
 				.orElse(null);
 		if (participant == null) {
 			return;
@@ -107,7 +107,7 @@ public class ChatMessageService {
 		ChatRoom room = chatRoomRepository.findById(roomId)
 				.orElseThrow(() -> new ChatRoomNotFoundException("채팅방을 찾을 수 없습니다. roomId=" + roomId));
 
-		ChatParticipant participant = chatParticipantRepository.findByRoomIdAndMemberId(room.getId(), requesterId)
+		ChatParticipant participant = chatParticipantRepository.findActiveByRoomIdAndMemberId(room.getId(), requesterId)
 				.orElseThrow(() -> new ChatAccessDeniedException("채팅방 참가자가 아닙니다. roomId=" + room.getId()));
 
 		List<ChatMessage> messages = chatMessageRepository.findMessages(roomId, cursorId, pageSize + 1);

@@ -21,7 +21,11 @@ public class SellerProductService {
     public ProductSummaryResponse getProductSummary(Long productId) {
 
         try {
-            return productFeignClient.getProduct(productId);
+            ProductSummaryResponse response = productFeignClient.getProduct(productId);
+            if (response == null) {
+                throw new SellerException(ErrorCode.INTERNAL_ERROR, "상품 서비스 응답이 비어 있습니다.");
+            }
+            return response;
         } catch (FeignException ex) {
             log.warn("상품 서비스 호출 실패 productId={}", productId, ex);
             throw new SellerException(ErrorCode.INTERNAL_ERROR, "상품 서비스 호출에 실패했습니다.");

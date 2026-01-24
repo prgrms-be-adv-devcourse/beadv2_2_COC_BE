@@ -2,5 +2,6 @@ dependencies {
     implementation project(':common-kafka')
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'io.projectreactor:reactor-core'
+    implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter:${springAiVersion}"
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }

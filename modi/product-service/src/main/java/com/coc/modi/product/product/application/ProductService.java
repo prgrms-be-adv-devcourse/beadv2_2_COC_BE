@@ -14,15 +14,17 @@ import com.coc.modi.product.product.domain.ProductImage;
 import com.coc.modi.product.product.domain.ProductImageRepository;
 import com.coc.modi.product.product.domain.ProductImageSpec;
 import com.coc.modi.product.product.domain.ProductRepository;
+import com.coc.modi.product.product.domain.ProductModerationStatus;
 import com.coc.modi.product.product.domain.ProductStatus;
 import com.coc.modi.product.product.exception.ProductAccessDeniedException;
 import com.coc.modi.product.product.exception.ProductInvalidInputException;
 import com.coc.modi.product.product.exception.ProductNotFoundException;
 import com.coc.modi.product.product.presentation.internal.dto.ProductEmbeddingResponse;
-import com.coc.modi.product.embedding.outbox.ProductEmbeddingOutboxService;
+import com.coc.modi.product.outbox.ProductOutboxService;
 import com.coc.modi.product.product.search.application.ProductSearchPort;
 import com.coc.modi.product.product.search.domain.ProductSortType;
 import com.coc.modi.product.searchlog.application.ProductSearchLogService;
+import com.coc.modi.product.support.ProductSearchSizeNormalizer;
 import com.coc.modi.product.viewlog.application.ProductViewService;
 
 import lombok.RequiredArgsConstructor;
@@ -50,7 +52,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final ProductSearchPort productSearchPort;
 	private final SellerIdResolver sellerIdResolver;
-	private final ProductEmbeddingOutboxService productEmbeddingOutboxService;
+	private final ProductOutboxService productOutboxService;
 	private final ProductImageRepository productImageRepository;
 	private final ProductSearchLogService productSearchLogService;
 	private final ProductViewService productViewService;
@@ -62,16 +64,17 @@ public class ProductService {
 												int size,
 												ProductSortType sortType,
 												Long memberId) {
-		
-		ProductScrollResponse response = productSearchPort.searchProducts(condition, cursor, size, sortType);
+		int resolvedSize = ProductSearchSizeNormalizer.normalize(size);
+		ProductScrollResponse response = productSearchPort.searchProducts(condition, cursor, resolvedSize, sortType);
 		try {
-			productSearchLogService.recordSearchLog(condition, sortType, cursor, size, memberId);
+			productSearchLogService.recordSearchLog(condition, sortType, cursor, resolvedSize, memberId);
 		} catch (Exception e) {
 			log.warn("product_search_log_record_failed",
-					kv("product.search.keyword", condition.keyword()),
+					kv("log_type", "service"),
+					kv("product.search.keyword", condition != null ? condition.keyword() : null),
 					kv("product.search.sort_type", sortType),
 					kv("product.search.cursor", cursor),
-					kv("product.search.size", size),
+					kv("product.search.size", resolvedSize),
 					kv("member.id", memberId),
 					kv("exception.class", e.getClass().getName()),
 					e);
@@ -97,6 +100,7 @@ public class ProductService {
 		
 		List<Long> thumbnailIds = products.stream()
 				.map(Product::getThumbnailImageId)
+				.filter(Objects::nonNull)
 				.distinct()
 				.toList();
 		
@@ -104,9 +108,8 @@ public class ProductService {
 		
 		return distinctIds.stream()
 				.map(productMap::get)
-				.map(product -> product == null
-						? null
-						: ProductListResponse.fromProduct(
+				.filter(Objects::nonNull)
+				.map(product -> ProductListResponse.fromProduct(
 						product,
 						thumbnailUrlMap.get(product.getThumbnailImageId())))
 				.toList();
@@ -118,7 +121,7 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(memberId);
 		
-		Page<Product> products = productRepository.findBySellerIdAndStatusNot(sellerId, ProductStatus.DELETE, pageable);
+		Page<Product> products = productRepository.findNonDeletedBySellerId(sellerId, pageable);
 		
 		List<Long> thumbnailIds = products.getContent().stream().map(Product::getThumbnailImageId).toList();
 		
@@ -132,10 +135,23 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public ProductDetailResponse getProductDetail(Long memberId, Long productId) {
 		
-		Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
+		if (product.getModerationStatus() != ProductModerationStatus.CLEAR) {
+			
+			Long sellerId = sellerIdResolver.getSellerId(memberId);
+			
+			if (!Objects.equals(product.getSellerId(), sellerId)) {
+				
+				throw new ProductAccessDeniedException("접근");
+			}
+		}
+		
 		if (product.getStatus() == ProductStatus.INACTIVE) {
+			if (memberId == null) {
+				throw new ProductAccessDeniedException("접근");
+			}
 			
 			Long sellerId = sellerIdResolver.getSellerId(memberId);
 			
@@ -149,6 +165,7 @@ public class ProductService {
 			productViewService.recordView(productId, memberId);
 		} catch (Exception e) {
 			log.warn("product_view_log_record_failed",
+					kv("log_type", "service"),
 					kv("product.id", productId),
 					kv("member.id", memberId),
 					kv("exception.class", e.getClass().getName()),
@@ -169,6 +186,7 @@ public class ProductService {
 				command.name(),
 				command.description(),
 				command.pricePerDay(),
+				command.securityDepositAmount(),
 				command.category(),
 				command.specs(),
 				command.imageUrls());
@@ -176,13 +194,18 @@ public class ProductService {
 		Product saved = productRepository.saveAndFlush(product);
 		saved.refreshThumbnailImage();
 		log.info("product_created",
+				kv("log_type", "service"),
 				kv("product.id", saved.getId()),
 				kv("seller.id", sellerId),
 				kv("product.category", saved.getCategory()),
-				kv("product.price_per_day", saved.getPricePerDay()));
+				kv("product.price_per_day", saved.getPricePerDay()),
+				kv("product.security_deposit_amount", saved.getSecurityDepositAmount()));
 		
-		// ES 인덱싱/임베딩 이벤트 발행
-		productEmbeddingOutboxService.enqueueUpdate(saved.getId());
+
+		// 모더레이션 통과 후에만 인덱싱/임베딩 이벤트 발행
+		if (saved.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productOutboxService.enqueueEmbeddingUpdate(saved.getId());
+		}
 		
 		return ProductDetailResponse.from(saved);
 	}
@@ -193,8 +216,10 @@ public class ProductService {
 		
 		Long sellerId = sellerIdResolver.getSellerId(command.memberId());
 		
-		Product product = productRepository.findByIdAndStatusNot(command.productId(), ProductStatus.DELETE)
+		Product product = productRepository.findNonDeletedById(command.productId())
 				.orElseThrow(() -> new ProductNotFoundException(command.productId()));
+
+		boolean moderationChanged = shouldModerate(product, command);
 		
 		if (!sellerId.equals(product.getSellerId())) {
 			throw new ProductAccessDeniedException("수정");
@@ -203,6 +228,7 @@ public class ProductService {
 		product.update(command.name(),
 				command.description(),
 				command.pricePerDay(),
+				command.securityDepositAmount(),
 				command.category(),
 				command.specs());
 		
@@ -215,15 +241,24 @@ public class ProductService {
 		}
 		
 		productRepository.flush();
+
+		if (moderationChanged) {
+			product.updateModerationStatus(ProductModerationStatus.PENDING);
+		}
 		
 		product.refreshThumbnailImage();
 		log.info("product_updated",
+				kv("log_type", "service"),
 				kv("product.id", product.getId()),
 				kv("seller.id", sellerId),
 				kv("product.category", product.getCategory()),
-				kv("product.price_per_day", product.getPricePerDay()));
+				kv("product.price_per_day", product.getPricePerDay()),
+				kv("product.security_deposit_amount", product.getSecurityDepositAmount()));
 		
-		productEmbeddingOutboxService.enqueueUpdate(product.getId());
+
+		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			productOutboxService.enqueueEmbeddingUpdate(product.getId());
+		}
 	
 		return ProductDetailResponse.from(product);
 	}
@@ -247,9 +282,12 @@ public class ProductService {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new ProductNotFoundException(productId));
 		
-		String thumbnailImageUrl = productImageRepository.findById(product.getThumbnailImageId())
-				.map(ProductImage::getUrl)
-				.orElse(null);
+		Long thumbnailImageId = product.getThumbnailImageId();
+		String thumbnailImageUrl = thumbnailImageId == null
+				? null
+				: productImageRepository.findById(thumbnailImageId)
+						.map(ProductImage::getUrl)
+						.orElse(null);
 		
 		return ProductInternalSellerResponse.from(product, thumbnailImageUrl);
 	}
@@ -268,7 +306,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public List<Long> getEmbeddingTargetIds() {
 		
-		return productRepository.findByStatusNot(ProductStatus.DELETE).stream()
+		return productRepository.findNonDeletedByModerationStatus(ProductModerationStatus.CLEAR).stream()
 				.map(Product::getId)
 				.toList();
 	}
@@ -301,5 +339,19 @@ public class ProductService {
 				});
 		
 		return products;
+	}
+
+	private boolean shouldModerate(Product product, ProductUpdateCommand command) {
+
+		if (!Objects.equals(product.getName(), command.name())) {
+			return true;
+		}
+		if (!Objects.equals(product.getDescription(), command.description())) {
+			return true;
+		}
+		if (!Objects.equals(product.getSpecs(), command.specs())) {
+			return true;
+		}
+		return command.images() != null;
 	}
 }

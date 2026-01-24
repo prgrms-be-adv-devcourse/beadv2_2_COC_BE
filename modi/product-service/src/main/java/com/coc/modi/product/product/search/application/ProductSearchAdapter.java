@@ -27,8 +27,14 @@ import com.coc.modi.product.product.search.infrastructure.ProductSearchQueryRepo
 import com.coc.modi.product.searchlog.application.KeywordNormalizationService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import com.coc.modi.product.support.ProductSearchSizeNormalizer;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ProductSearchAdapter implements ProductSearchPort {
 
 	private static final ZoneOffset CURSOR_ZONE = ZoneOffset.ofHours(9);
@@ -45,6 +51,7 @@ public class ProductSearchAdapter implements ProductSearchPort {
 												int size,
 												ProductSortType sortType) {
 		ProductSortType effectiveSortType = sortType != null ? sortType : ProductSortType.LATEST;
+		int resolvedSize = ProductSearchSizeNormalizer.normalize(size);
 
 		List<ProductListResponse> items = new ArrayList<>();
 		String currentCursor = cursor;
@@ -56,12 +63,12 @@ public class ProductSearchAdapter implements ProductSearchPort {
 		String normalizedKeyword = keywordNormalizationService.normalizeForSearch(
 				condition != null ? condition.keyword() : null);
 
-		while (items.size() < size && hasMore && safetyLimit-- > 0) {
+		while (items.size() < resolvedSize && hasMore && safetyLimit-- > 0) {
 			List<Product> products = searchQueryRepository.search(
 					condition,
 					normalizedKeyword,
 					currentCursor,
-					size,
+					resolvedSize,
 					effectiveSortType
 			);
 			if (products.isEmpty()) {
@@ -78,18 +85,29 @@ public class ProductSearchAdapter implements ProductSearchPort {
 						.toList();
 
 				if (!productIds.isEmpty()) {
-					RentalRequest request = new RentalRequest(condition.startDate(), condition.endDate(), productIds);
-					RentalResponse rentalResponse = rentalAvailabilityClient.unavailableProducts(request);
+					try {
+						RentalRequest request = new RentalRequest(condition.startDate(), condition.endDate(), productIds);
+						RentalResponse rentalResponse = rentalAvailabilityClient.unavailableProducts(request);
 
-					Set<Long> unavailableIds = new HashSet<>(
-							Optional.ofNullable(rentalResponse)
-									.map(RentalResponse::unavailableProductIds)
-									.orElseGet(List::of)
-					);
+						Set<Long> unavailableIds = new HashSet<>(
+								Optional.ofNullable(rentalResponse)
+										.map(RentalResponse::unavailableProductIds)
+										.orElseGet(List::of)
+						);
 
-					availableProducts = products.stream()
-							.filter(product -> !unavailableIds.contains(product.getId()))
-							.toList();
+						availableProducts = products.stream()
+								.filter(product -> !unavailableIds.contains(product.getId()))
+								.toList();
+					} catch (Exception e) {
+						log.warn("rental_availability_lookup_failed",
+								kv("log_type", "service"),
+								kv("error.type", "RENTAL_AVAILABILITY_LOOKUP_FAILED"),
+								kv("product.search.start_date", condition.startDate()),
+								kv("product.search.end_date", condition.endDate()),
+								kv("product.search.product_count", productIds.size()),
+								kv("exception.class", e.getClass().getName()),
+								e);
+					}
 				}
 			}
 
@@ -106,15 +124,15 @@ public class ProductSearchAdapter implements ProductSearchPort {
 					.toList());
 
 			currentCursor = buildNextCursor(products, effectiveSortType);
-			hasMore = products.size() == size && currentCursor != null;
+			hasMore = products.size() == resolvedSize && currentCursor != null;
 		}
 
 		if (items.isEmpty()) {
 			return new ProductScrollResponse(List.of(), null, false);
 		}
 
-		if (items.size() > size) {
-			items = items.subList(0, size);
+		if (items.size() > resolvedSize) {
+			items = items.subList(0, resolvedSize);
 		}
 
 		String nextCursor = (hasMore && !lastBatch.isEmpty())

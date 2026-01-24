@@ -21,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
-
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
@@ -36,26 +33,15 @@ public class DepositService {
     private final WalletCommandService  walletCommandService;
     private static final String PG_PROVIDER = "TOSS_PAYMENTS";
 
-    @Value("${account.deposit.card-fee-rate:0.03}")
-    private BigDecimal cardFeeRate;
-
-    private static final int MONEY_SCALE = 0;
-
     // 예치금 충전 요청
     @Transactional
     public DepositResponse requestDeposit(DepositCommand command) {
 
         String orderId = generateOrderId();
 
-        BigDecimal amount = command.amount();
-        BigDecimal feeAmount = calculateFee(amount);
-        BigDecimal totalAmount = amount.add(feeAmount);
-
         PgDeposit pgDeposit = PgDeposit.createRequest(
                 command.memberId(),
-                amount,
-                feeAmount,
-                totalAmount,
+                command.amount(),
                 PG_PROVIDER,
                 orderId
         );
@@ -67,15 +53,19 @@ public class DepositService {
 
     // 예치금 충전 승인
     @Transactional
-    public DepositResponse approveDeposit(DepositApprovalCommand command) {
+    public DepositResponse approveDeposit(Long memberId, DepositApprovalCommand command) {
 
         // 1. orderId로 충전 요청 조회
         PgDeposit deposit = pgDepositRepository.findByPgTidForUpdate(command.orderId())
                 .orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
 
+        if (!deposit.getMemberId().equals(memberId)) {
+            throw new AccountException(ErrorCode.FORBIDDEN, "본인 요청만 승인할 수 있습니다.");
+        }
+
         if (deposit.getStatus() == PgDepositStatus.SUCCESS) {
 
-            BigDecimal requestedAmount = deposit.getTotalAmount();
+            BigDecimal requestedAmount = deposit.getAmount();
             BigDecimal approvedAmount = command.amount();
 
             if (approvedAmount != null && requestedAmount.compareTo(approvedAmount) != 0) {
@@ -97,7 +87,7 @@ public class DepositService {
         }
 
         // 2. 금액 검증
-        BigDecimal requestedAmount = deposit.getTotalAmount();
+        BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal approvedAmount = command.amount();
 
         if (approvedAmount == null || requestedAmount.compareTo(approvedAmount) != 0) {
@@ -114,12 +104,35 @@ public class DepositService {
                 approvedAmount
         );
 
+        if (tossResponse == null) {
+            deposit.fail("Toss 결제 승인 응답 없음");
+            throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 승인 응답이 없습니다.");
+        }
+
         // 4. Toss 결제 승인 결과 확인
         if (!"DONE".equals(tossResponse.status())) {
 
             deposit.fail("Toss 결제 승인 실패 : " + tossResponse.status());
 
             throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 승인에 실패했습니다.");
+        }
+
+        if (!command.orderId().equals(tossResponse.orderId())) {
+            deposit.fail("Toss 승인 orderId 불일치");
+            throw new AccountException(ErrorCode.CONFLICT, "승인 정보가 일치하지 않습니다.");
+        }
+
+        if (!command.paymentKey().equals(tossResponse.paymentKey())) {
+            deposit.fail("Toss 승인 paymentKey 불일치");
+            throw new AccountException(ErrorCode.CONFLICT, "승인 정보가 일치하지 않습니다.");
+        }
+
+        if (tossResponse.totalAmount() != null) {
+            BigDecimal totalAmount = BigDecimal.valueOf(tossResponse.totalAmount());
+            if (totalAmount.compareTo(approvedAmount) != 0) {
+                deposit.fail("Toss 승인 금액 불일치");
+                throw new AccountException(ErrorCode.CONFLICT, "승인 금액이 일치하지 않습니다.");
+            }
         }
 
         // 5. DB 상태 업데이트
@@ -164,12 +177,21 @@ public class DepositService {
         }
 
         // 3. 금액 검증
-        BigDecimal requestedAmount = deposit.getTotalAmount();
+        if (deposit.getStatus() == PgDepositStatus.SUCCESS && !deposit.isUnused()) {
+            throw new AccountException(ErrorCode.CONFLICT, "사용된 충전은 취소할 수 없습니다.");
+        }
+
+        BigDecimal requestedAmount = deposit.getAmount();
         BigDecimal cancelAmount = command.cancelAmount();
 
         if (cancelAmount == null || requestedAmount.compareTo(cancelAmount) != 0) {
 
             throw new AccountException(ErrorCode.INVALID_INPUT, "요청 금액과 실제 금액이 일치하지 않습니다.");
+        }
+
+        if (deposit.getStatus() == PgDepositStatus.REQUESTED) {
+            deposit.cancel(command.cancelReason());
+            return DepositResponse.from(deposit);
         }
 
         // 4. Toss 취소 API 호출
@@ -179,9 +201,11 @@ public class DepositService {
                 command.cancelReason()
         );
 
-        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
+		if (tossResponse == null) {
+			throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소 응답이 없습니다.");
+		}
 
-            deposit.fail("Toss 결제 취소 실패 : " + tossResponse.status());
+        if (!"CANCELED".equalsIgnoreCase(tossResponse.status())) {
 
             throw new AccountException(ErrorCode.INTERNAL_ERROR, "결제 취소에 실패했습니다.");
         }
@@ -203,21 +227,18 @@ public class DepositService {
 	
 	// 결제 실패
 	@Transactional
-    public DepositResponse failDeposit(DepositFailCommand command) {
+	public DepositResponse failDeposit(Long memberId, DepositFailCommand command) {
 		
 		PgDeposit deposit = pgDepositRepository.findByPgTid(command.orderId())
 				.orElseThrow(() -> new AccountTransactionNotFoundException(command.orderId()));
+
+		if (!deposit.getMemberId().equals(memberId)) {
+			throw new AccountException(ErrorCode.FORBIDDEN, "본인 요청만 실패 처리할 수 있습니다.");
+		}
 		
 		deposit.fail(command.failureMessage());
 		
         return DepositResponse.from(deposit);
     }
 
-    private BigDecimal calculateFee(BigDecimal amount) {
-
-        if (amount == null) {
-            return BigDecimal.ZERO;
-        }
-        return amount.multiply(cardFeeRate).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
-    }
 }
