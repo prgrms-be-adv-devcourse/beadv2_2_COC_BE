@@ -1,6 +1,6 @@
 # MODI 서비스 API 명세
 
-본 문서는 member-service, account-service, seller-service, product-service, rental-service, review-service, notification-service, delivery-service, ai-service의 컨트롤러 기반 API 명세입니다. 기본 응답은 `ApiResponse<T>`(`success:boolean, code:string, message:string, data:T`)이며, 일부 내부/관리자 API는 래퍼 없이 원본을 반환합니다. 리뷰 삭제는 204 No Content, 알림 스트림은 `text/event-stream`을 반환하며 채팅 메시지는 WebSocket(STOMP)로 전송됩니다. 인증/재발급/로그아웃 과정에서 리프레시 토큰은 HttpOnly 쿠키로 전달됩니다.
+본 문서는 member-service, account-service, seller-service, product-service, rental-service, support-service, ai-service의 컨트롤러 기반 API 명세입니다. 기본 응답은 `ApiResponse<T>`(`success:boolean, code:string, message:string, data:T`)이며, 일부 내부/관리자 API는 래퍼 없이 원본을 반환합니다. 리뷰 삭제는 204 No Content, 알림 스트림은 `text/event-stream`을 반환하며 채팅 메시지는 WebSocket(STOMP)로 전송됩니다. 인증/재발급/로그아웃 과정에서 리프레시 토큰은 HttpOnly 쿠키로 전달됩니다.
 
 ## 인증/권한
 - JWT Bearer: 헤더 `Authorization: Bearer <accessToken>`
@@ -77,7 +77,10 @@
   - Req: `email`
   - Res: `Void`
 - **POST /api/auth/password/reset/confirm**
-  - Req: `email`, `code:string(6)`, `newPassword:string(규칙 동일)`
+  - Req: `email`, `code:string(6)`
+  - Res: `PasswordResetConfirmResponse { resetToken }`
+- **POST /api/auth/password/reset**
+  - Req: `resetToken`, `newPassword:string(규칙 동일)`
   - Res: `Void`
 - **POST /api/auth/oauth2/signup**
   - Req: `OAuth2SignupRequest`
@@ -85,11 +88,6 @@
 - **POST /api/auth/oauth2/connect** — OAuth2 계정 연결 (Auth)
   - Req: `OAuth2ConnectRequest`
   - Res: `Void`
-
-### 관리자
-- **POST /api/admin/members** — 관리자 계정 생성 (Auth)
-    - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
-    - Res: `AdminMemberCreateResponse { memberId, email, role }`
 
 ### 내부
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
@@ -99,6 +97,20 @@
   - Res: `MemberAuthzResponse { memberId, roles:string[] }`
 - **GET /internal/members/{memberId}/email** — 이메일 조회
   - Res: `MemberEmailResponse { memberId, email }`
+- **GET /internal/members** — 회원 목록 조회
+  - Query: `pageable`
+  - Res: `MemberPageResponse { content:MemberSummaryResponse[], totalPages, totalElements, size, number, ... }`
+- **GET /internal/members/{memberId}** — 회원 요약 조회
+  - Res: `MemberSummaryResponse { memberId, email, name, phone, role, status, createdAt, updatedAt }`
+- **GET /internal/members/search** — 이메일로 회원 조회
+  - Query: `email:string`
+  - Res: `MemberSummaryResponse`
+- **POST /internal/members/batch** — 회원 ID 목록 조회
+  - Req: `memberIds:long[]`
+  - Res: `MemberSummaryResponse[]`
+- **POST /internal/members/admin** — 관리자 계정 생성 (내부)
+  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
+  - Res: `InternalAdminMemberCreateResponse { memberId, email, role }`
 
 ---
 ## account-service
@@ -173,10 +185,12 @@
   - Res: `SellerDetailResponse`
 
 ### 관리자
-- **PATCH /api/admin/sellers/{sellerId}/approve** — 판매자 승인 (Auth)
-  - Res: `SellerDetailResponse` (래퍼 없음)
-- **PATCH /api/admin/sellers/{sellerId}/reject** — 판매자 반려 (Auth)
-  - Res: `SellerDetailResponse` (래퍼 없음)
+- **PATCH /api/admin/sellers/{memberId}/approve** — 판매자 승인 (Auth)
+  - Path: `memberId:long`
+  - Res: `SellerRegistrationResponse { registrationId, memberId, storeName, bizRegNo, storePhone, status, approvedBy }` (래퍼 없음)
+- **PATCH /api/admin/sellers/{memberId}/reject** — 판매자 반려 (Auth)
+  - Path: `memberId:long`
+  - Res: `SellerRegistrationResponse` (래퍼 없음)
 
 ### 채팅
 - **POST /api/chat/rooms** — 채팅방 생성 (Auth)
@@ -205,9 +219,18 @@
 - **POST /api/settlements/sellers/self/{sellerSettlementId}/cancel** — 정산 취소 (Auth)
   - Res: `SellerSettlementResponse`
 
-### 판매자 정산 배치(셀프)
-- **POST /api/settlements/sellers/self/batches/run** — 셀프 배치 생성+실행 (Auth)
-  - Req: `SellerSettlementBatchRunRequest { periodYm:yyyy-MM, startDate?:yyyy-MM-dd, endDate?:yyyy-MM-dd, pageSize?:int>0 }`
+### 정산 관리자 (Auth)
+- **GET /api/admin/settlements/seller-settlements** — 판매자 정산 조회
+  - Query: `periodYm?:yyyy-MM`, `sellerId?:long`, `status?:SellerSettlementStatus`, `pageable`
+  - Res: `Page<SellerSettlementResponse>`
+- **POST /api/admin/settlements/seller-settlements/{sellerSettlementId}/pay** — 관리자 지급 처리
+  - Query: `paidAt?:ISO_LOCAL_DATE_TIME`(기본 now)
+  - Res: `SellerSettlementResponse`
+- **POST /api/admin/settlements/seller-settlements/pay-bulk** — 관리자 일괄 지급/실패 처리
+  - Req: `SettlementBulkPayRequest { sellerId?:long, periodYm?:yyyy-MM, status?:SellerSettlementStatus, paidAt?:ISO_LOCAL_DATE_TIME }`
+  - Res: `SettlementBulkPayResponse { requestedCount, successCount, failedCount }`
+- **POST /api/admin/settlements/batches/run** — 관리자 배치 실행
+  - Req: `SettlementAdminBatchRunRequest { periodYm:yyyy-MM, startDate?:yyyy-MM-dd, endDate?:yyyy-MM-dd, sellerId?:long, pageSize?:int>0 }`
   - Res: `SettlementBatchResponse { id, periodYm, status:SettlementBatchStatus, startedAt, completedAt, createdAt, updatedAt }`
 
 ### 정산 배치 내부 (래퍼 ApiResponse)
@@ -236,6 +259,7 @@
 - ProductCategory: `LAPTOP`, `DESKTOP`, `CAMERA`, `TABLET`, `MOBILE`, `MONITOR`, `ACCESSORY`, `DRONE`, `AUDIO`, `PROJECTOR`
 - ProductStatus: `ACTIVE`, `INACTIVE`, `DELETE`
 - ProductSortType: `LATEST`, `OLDEST`, `PRICE_HIGH`, `PRICE_LOW`
+- ProductModerationStatus: `PENDING`, `CLEAR`, `REVIEW`, `BLOCKED`
 
 ### 상품
 - **GET /api/products/search** — 상품 스크롤 목록
@@ -278,6 +302,14 @@
 - **POST /api/images/upload** — 이미지 업로드 (Auth)
   - Req: multipart `file`, query `dir?:string`
   - Res: `String`(imageUrl) (201)
+
+### 관리자
+- **GET /api/admin/products/moderation-requests** — 상품 검수 요청 목록 (Auth)
+  - Query: `moderationStatus:ProductModerationStatus=PENDING`, `pageable`(size=20, sort=createdAt,asc 기본)
+  - Res: `Page<ProductModerationSummaryResponse { productId, name, sellerId, status:ProductStatus, moderationStatus:ProductModerationStatus, createdAt }>`
+- **POST /api/admin/products/{productId}/moderation-requests** — 상품 검수 요청 생성 (Auth)
+  - Path: `productId:long`
+  - Res: `Void`
 
 ### 내부 상품 (래퍼 없음)
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
@@ -336,7 +368,7 @@
   - Res: `Void`
 - **GET /api/rentals/{rentalId}** — 대여 상세 (Auth)
   - Path: `rentalId:long`
-  - Res: `RentalResponse { rentalId, paidAt, items:RentalItemResponse[] }`, `RentalItemResponse { rentalItemId, productId, startDate, endDate, status, unitPrice:decimal }`
+  - Res: `RentalResponse { rentalId, paidAt, items:RentalItemResponse[] }`, `RentalItemResponse { rentalItemId, productId, startDate, endDate, status, unitPrice:decimal, securityDepositAmount:decimal }`
 - **GET /api/rentals** — 대여 검색 (Auth)
   - Query: `startDate?:date`, `endDate?:date`, `rentalStatus?:RentalStatus`
   - Res: `RentalResponse[]`
@@ -365,6 +397,8 @@
   - Query(ModelAttribute): `sellerId:long`, `productId?:long`, `status:RentalItemStatus`, `startDate:date`, `endDate:date`, `pageable`
   - Res: `RentalItemInfoListResponse { rentalItemInfoList:RentalItemInfo[], totalCount:long, totalPages:int }`
   - `RentalItemInfo { rentalItemId, productId, memberId, sellerId, status, totalAmount:decimal, startDate, endDate, paidAt }`
+- **GET /internal/rentals/items/{rentalItemId}/info** — 대여 아이템 상세 조회
+  - Res: `RentalItemInfo { rentalItemId, productId, memberId, sellerId, status, totalAmount:decimal, startDate, endDate, paidAt }`
 - **POST /internal/rentals/unavailable-products** — 기간 중 대여 불가 상품
   - Req: `startDate:date(오늘 이후)`, `endDate:date(오늘 이후)`, `productIds:long[]`
   - Res: `UnavailableProductsResponse { unavailableProductIds:long[] }`
@@ -372,9 +406,13 @@
   - Res: `RentalItemSellerResponse`
 
 ---
-## review-service
-### API
+## support-service
+### Enum
+- DeliveryStatus: `REGISTERED`, `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, `DELIVERED`, `EXCEPTION`, `CANCELLED`
+- NoticeStatus: `DRAFT`, `PUBLISHED`, `DELETED`
+- BlacklistStatus: `ACTIVE`, `SUSPENDED`
 
+### 리뷰
 - **POST /api/reviews** — 판매자 리뷰 작성 (Auth)
   - Req: `rentalItemId:long`, `sellerId:long`, `rating:short(1~5)`, `content:string`
   - Res: `ReviewResponse { reviewId, rentalItemId, sellerId, memberId, rating, content, createdAt, updatedAt }` (201)
@@ -384,46 +422,75 @@
 - **DELETE /api/reviews/{reviewId}** — 리뷰 삭제(소프트) (Auth)
   - Res: `204 No Content` (래퍼 없음)
 - **GET /api/reviews** — 판매자 리뷰 목록
-  - Query: `sellerId:long`
+  - Query: `sellerId:long`, `rating?:int`, `pageable`
   - Res: `ReviewListResponse[] { reviewId, rentalItemId, sellerId, memberId, rating, content, createdAt }`
 - **GET /api/reviews/me** — 내가 작성한 리뷰 목록 (Auth)
+  - Query: `rating?:int`, `pageable`
   - Res: `ReviewListResponse[]`
 - **GET /api/reviews/summary** — 리뷰 요약 조회
   - Query: `sellerId:long`
   - Res: `ReviewSummaryResponse { sellerId, summary, reviewCount, summarizedAt }` or `204 No Content`
 
-### 내부
-- Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **GET /internal/rentals/items/{rentalItemId}/info** (rental-service)
-  - Res: `RentalItemReviewInfo { rentalItemId, memberId, sellerId, status }`
-
----
-## notification-service
-### API
-
+### 알림
 - **GET /api/notifications/stream** — 알림 SSE 구독 (Auth)
   - Res: `SseEmitter` stream(`text/event-stream`), 클라이언트는 Last-Event-ID 지원 시 재연결 처리
 
----
-## delivery-service
-### Enum
-- DeliveryStatus: `REGISTERED`, `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, `DELIVERED`, `EXCEPTION`, `CANCELLED`
-
-### API
-
-- **POST /api/deliveries** — 배송 등록
+### 배송
+- **POST /api/deliveries** — 배송 등록 (Auth)
   - Req: `rentalItemId:long`, `carrierCode:string<=30`, `trackingNumber:string<=50`
   - Res: `DeliveryCreateResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus }` (201)
-- **PATCH /api/deliveries/{rentalItemId}** — 배송 수정
+- **PATCH /api/deliveries/{rentalItemId}** — 배송 수정 (Auth)
   - Path: `rentalItemId:long`
   - Req: `carrierCode:string<=30`, `trackingNumber:string<=50`
   - Res: `DeliveryDetailResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus, statusRaw, createdAt:datetime, updatedAt:datetime }`
-- **GET /api/deliveries/{deliveryId}** — 배송 단건 조회
+- **GET /api/deliveries/{deliveryId}** — 배송 단건 조회 (Auth)
   - Path: `deliveryId:long`
   - Res: `DeliveryDetailResponse { deliveryId, rentalItemId, carrierCode, trackingNumber, status:DeliveryStatus, statusRaw, createdAt:datetime, updatedAt:datetime }`
-- **GET /api/deliveries/rental-items/{rentalItemId}** — 대여 아이템 배송 단건 조회
+- **GET /api/deliveries/rental-items/{rentalItemId}** — 대여 아이템 배송 단건 조회 (Auth)
   - Path: `rentalItemId:long`
   - Res: `DeliveryDetailResponse`
+
+### 공지
+- **GET /api/notices** — 공지 목록
+  - Query: `keyword?:string`, `pageable`(sort=pinned,createdAt desc)
+  - Res: `Page<NoticeSummaryResponse { id, title, pinned, viewCount, createdAt }>`
+- **GET /api/notices/{noticeId}** — 공지 상세
+  - Res: `NoticeResponse { id, title, content, status:NoticeStatus, pinned, viewCount, displayStartAt, displayEndAt, createdAt, updatedAt }`
+
+### 관리자 - 공지 (Auth, ADMIN)
+- **POST /api/admin/notices** — 공지 생성
+  - Req: `title:string<=200`, `content:string`, `pinned?:boolean`, `status?:NoticeStatus`, `displayStartAt?:datetime`, `displayEndAt?:datetime`
+  - Res: `NoticeResponse` (201)
+- **PATCH /api/admin/notices/{noticeId}** — 공지 수정
+  - Req: `title?:string<=200`, `content?:string`, `pinned?:boolean`, `displayStartAt?:datetime`, `displayEndAt?:datetime`
+  - Res: `NoticeResponse`
+- **DELETE /api/admin/notices/{noticeId}** — 공지 삭제
+  - Res: `204 No Content` (래퍼 없음)
+- **PATCH /api/admin/notices/{noticeId}/publish** — 공지 발행
+  - Res: `NoticeResponse`
+- **PATCH /api/admin/notices/{noticeId}/draft** — 공지 임시저장
+  - Res: `NoticeResponse`
+
+### 관리자 - 블랙리스트 (Auth, ADMIN)
+- **GET /api/admin/blacklists** — 블랙리스트 목록
+  - Query: `status?:BlacklistStatus`, `pageable`
+  - Res: `Page<BlacklistSummaryResponse { memberId, email, name, status, suspendedAt, suspendedUntil, releasedAt }>`
+- **GET /api/admin/blacklists/search** — 이메일 조회
+  - Query: `email:string`
+  - Res: `BlacklistSummaryResponse`
+- **GET /api/admin/blacklists/{memberId}** — 블랙리스트 상세
+  - Res: `BlacklistDetailResponse { memberId, email, name, phone, status, reason, memo, suspendedAt, suspendedUntil, releasedAt, createdAt, updatedAt }`
+- **POST /api/admin/blacklists** — 블랙리스트 등록
+  - Req: `BlacklistSuspendRequest { memberId:long, reason:string<=500, memo?:string<=1000 }`
+  - Res: `BlacklistDetailResponse` (201)
+- **PATCH /api/admin/blacklists/{memberId}/release** — 블랙리스트 해제
+  - Req: `BlacklistReleaseRequest { memo?:string<=1000 }` (body optional)
+  - Res: `BlacklistDetailResponse`
+
+### 관리자 - 관리자 계정 (Auth, ADMIN)
+- **POST /api/admin/members** — 관리자 계정 생성
+  - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
+  - Res: `AdminMemberCreateResponse { memberId, email, role }`
 
 ---
 ## ai-service

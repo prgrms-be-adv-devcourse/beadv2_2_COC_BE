@@ -11,7 +11,8 @@ public record RentalItemResponse(
 		LocalDate startDate,
 		LocalDate endDate,
 		String status,
-		BigDecimal unitPrice
+		BigDecimal unitPrice,
+		BigDecimal securityDepositAmount
 ) {
 	
 	public static RentalItemResponse from(RentalItem rentalItem) {
@@ -22,6 +23,7 @@ public record RentalItemResponse(
 				rentalItem.getStartDate(),
 				rentalItem.getEndDate(),
 				rentalItem.getStatus().toString(),
-				rentalItem.getUnitPrice());
+				rentalItem.getUnitPrice(),
+				rentalItem.getSecurityDepositAmount());
 	}
 }

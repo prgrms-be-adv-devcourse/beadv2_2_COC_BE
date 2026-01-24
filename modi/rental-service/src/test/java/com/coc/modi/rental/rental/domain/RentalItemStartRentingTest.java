@@ -37,7 +37,14 @@ class RentalItemStartRentingTest {
 	}
 
 	private RentalItem createPaidItem(LocalDate startDate, LocalDate endDate) {
-		RentalItem item = RentalItem.create(1L, 2L, startDate, endDate, new BigDecimal("1000.00"));
+		BigDecimal securityDepositAmount = new BigDecimal("0.00");
+		RentalItem item = RentalItem.create(
+				1L,
+				2L,
+				startDate,
+				endDate,
+				new BigDecimal("1000.00"),
+				securityDepositAmount);
 		item.decide(RentalItemStatus.ACCEPTED);
 		item.markPaid();
 		return item;

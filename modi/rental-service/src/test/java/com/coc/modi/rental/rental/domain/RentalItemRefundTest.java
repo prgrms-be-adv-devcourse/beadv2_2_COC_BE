@@ -51,7 +51,14 @@ class RentalItemRefundTest {
 	}
 
 	private RentalItem createPaidItem(LocalDate startDate, LocalDate endDate, BigDecimal unitPrice) {
-		RentalItem item = RentalItem.create(1L, 2L, startDate, endDate, unitPrice);
+		BigDecimal securityDepositAmount = new BigDecimal("0.00");
+		RentalItem item = RentalItem.create(
+				1L,
+				2L,
+				startDate,
+				endDate,
+				unitPrice,
+				securityDepositAmount);
 		item.decide(RentalItemStatus.ACCEPTED);
 		item.markPaid();
 		return item;
