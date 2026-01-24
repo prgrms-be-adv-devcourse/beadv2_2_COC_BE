@@ -39,6 +39,8 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('G
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/blacklists/{memberId}', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/support-service/api/admin/blacklists', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/blacklists/{memberId}/release', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/notices', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/notices/{noticeId}', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/support-service/api/admin/notices', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/notices/{noticeId}', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('DELETE', '/support-service/api/admin/notices/{noticeId}', 'ADMIN');

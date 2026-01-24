@@ -179,6 +179,8 @@
 ### 관리자 API - 공지
 | Method | Path | 설명 |
 | --- | --- | --- |
+| GET | `/api/admin/notices` | 공지 목록 조회(관리자) |
+| GET | `/api/admin/notices/{noticeId}` | 공지 상세 조회(관리자) |
 | POST | `/api/admin/notices` | 공지 생성 |
 | PATCH | `/api/admin/notices/{noticeId}` | 공지 수정 |
 | DELETE | `/api/admin/notices/{noticeId}` | 공지 삭제 |

@@ -35,4 +35,15 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 	Optional<Notice> findPublishedVisibleById(@Param("noticeId") Long noticeId,
 											  @Param("status") NoticeStatus status,
 											  @Param("now") LocalDateTime now);
+
+	@Query("""
+			select n from Notice n
+			where (:status is null or n.status = :status)
+			  and (:keyword is null
+				   or lower(n.title) like :keyword
+				   or lower(n.content) like :keyword)
+			""")
+	Page<Notice> findAdminNotices(@Param("status") NoticeStatus status,
+								  @Param("keyword") String keyword,
+								  Pageable pageable);
 }
