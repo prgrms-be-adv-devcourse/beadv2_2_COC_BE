@@ -39,14 +39,4 @@ public class SellerInternalController {
 
         return sellerService.getSeller(sellerId);
     }
-
-	@GetMapping("/registrations")
-	public SellerRegistrationPageResponse getRegistrations(
-			@RequestParam(value = "status", required = false) SellerRegistrationStatus status,
-			Pageable pageable
-	) {
-
-		Page<SellerRegistrationResponse> response = sellerApprovalService.getRegistrations(status, pageable);
-		return SellerRegistrationPageResponse.from(response);
-	}
 }
