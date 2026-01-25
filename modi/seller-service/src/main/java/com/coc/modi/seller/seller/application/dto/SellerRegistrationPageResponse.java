@@ -13,15 +13,18 @@ public record SellerRegistrationPageResponse(
 		boolean last
 ) {
 
-	public static SellerRegistrationPageResponse from(Page<SellerRegistrationResponse> registrations) {
+	public static SellerRegistrationPageResponse from(Page<SellerRegistrationResponse> page) {
 
+		if (page == null) {
+			return new SellerRegistrationPageResponse(List.of(), 0, 0, 0L, 0, true);
+		}
 		return new SellerRegistrationPageResponse(
-				registrations.getContent(),
-				registrations.getNumber(),
-				registrations.getSize(),
-				registrations.getTotalElements(),
-				registrations.getTotalPages(),
-				registrations.isLast()
+				page.getContent(),
+				page.getNumber(),
+				page.getSize(),
+				page.getTotalElements(),
+				page.getTotalPages(),
+				page.isLast()
 		);
 	}
 }
