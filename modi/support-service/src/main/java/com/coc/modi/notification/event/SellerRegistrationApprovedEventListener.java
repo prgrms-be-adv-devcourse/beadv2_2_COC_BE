@@ -25,7 +25,7 @@ public class SellerRegistrationApprovedEventListener {
 	@KafkaListener(
 			topics = KafkaTopics.SELLER_REGISTRATION_APPROVED,
 			groupId = "support-service-notification",
-			containerFactory = "notificationKafkaListenerContainerFactory"
+			containerFactory = "sellerRegistrationApprovedKafkaListenerContainerFactory"
 	)
 	public void onSellerApproved(SellerRegistrationApprovedEvent event) {
 

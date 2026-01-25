@@ -63,6 +63,8 @@ public class SellerApprovalService {
 		registration.approve(approvedBy);
 		sellerRegistrationRepository.save(registration);
 
+		memberClientAdapter.changeMemberRole(seller.getMemberId());
+
 		MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
 		String email = emailResponse != null ? emailResponse.email() : null;
 		if (!StringUtils.hasText(email)) {
