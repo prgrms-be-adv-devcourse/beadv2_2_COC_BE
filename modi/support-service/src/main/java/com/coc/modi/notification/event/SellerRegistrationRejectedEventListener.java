@@ -25,7 +25,7 @@ public class SellerRegistrationRejectedEventListener {
 	@KafkaListener(
 			topics = KafkaTopics.SELLER_REGISTRATION_REJECTED,
 			groupId = "support-service-notification",
-			containerFactory = "notificationKafkaListenerContainerFactory"
+			containerFactory = "sellerRegistrationRejectedKafkaListenerContainerFactory"
 	)
 	public void onSellerRejected(SellerRegistrationRejectedEvent event) {
 
