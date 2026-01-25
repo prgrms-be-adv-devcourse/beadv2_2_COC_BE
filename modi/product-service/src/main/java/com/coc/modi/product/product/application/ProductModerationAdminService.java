@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.coc.modi.kafka.event.ProductModerationRequestedEvent;
+import com.coc.modi.kafka.event.ProductModerationResultEvent;
 import com.coc.modi.product.outbox.ProductOutboxService;
 import com.coc.modi.product.product.application.dto.ProductModerationSummaryResponse;
 import com.coc.modi.product.product.domain.Product;
@@ -26,9 +27,11 @@ public class ProductModerationAdminService {
 
 	private static final int SPEC_VALUE_LIMIT = 200;
 	private static final String REQUEST_REASON = "ADMIN_REQUEST";
+	private static final String OVERRIDE_REASON = "ADMIN_OVERRIDE";
 
 	private final ProductRepository productRepository;
 	private final ProductOutboxService productOutboxService;
+	private final ProductModerationResultService productModerationResultService;
 
 	@Transactional(readOnly = true)
 	public Page<ProductModerationSummaryResponse> getModerationRequests(ProductModerationStatus moderationStatus,
@@ -61,6 +64,27 @@ public class ProductModerationAdminService {
 		);
 
 		productOutboxService.enqueueModerationRequested(product.getId(), event);
+	}
+
+	@Transactional
+	public void approveModeration(Long productId, String reason) {
+
+		Product product = productRepository.findNonDeletedById(productId)
+				.orElseThrow(() -> new ProductNotFoundException(productId));
+
+		if (product.getModerationStatus() == ProductModerationStatus.CLEAR) {
+			return;
+		}
+
+		String message = (reason != null && !reason.isBlank()) ? reason : null;
+		ProductModerationResultEvent event = ProductModerationResultEvent.of(
+				product.getId(),
+				ProductModerationStatus.CLEAR.name(),
+				1.0d,
+				List.of(OVERRIDE_REASON),
+				message
+		);
+		productModerationResultService.handle(event);
 	}
 
 	private List<String> limitSpecValues(Map<String, String> specs) {

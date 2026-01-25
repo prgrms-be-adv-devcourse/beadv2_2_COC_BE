@@ -89,6 +89,7 @@
 | --- | --- | --- |
 | GET | `/api/admin/products/moderation-requests` | 상품 검수 요청 목록 |
 | POST | `/api/admin/products/{productId}/moderation-requests` | 상품 검수 요청 생성 |
+| PATCH | `/api/admin/products/{productId}/moderation/approve` | 상품 수동 승인 |
 
 ### 내부 API
 | Method | Path | 설명 |

@@ -66,6 +66,7 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('DELETE', '/product-service/api/products/{productId}', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/admin/products/moderation-requests', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/admin/products/{productId}/moderation-requests', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/product-service/api/admin/products/{productId}/moderation/approve', 'ADMIN');
 
 -- rental-service
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/rental-service/api/carts', 'MEMBER');
