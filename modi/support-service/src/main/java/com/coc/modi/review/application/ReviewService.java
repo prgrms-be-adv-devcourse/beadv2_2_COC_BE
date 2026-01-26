@@ -49,11 +49,11 @@ public class ReviewService {
 	@Transactional
 	public ReviewResponse createReview(CreateReviewCommand command) {
 
-		validateReviewEligibility(command);
+		Long sellerId = validateReviewEligibility(command);
 
 		Review review = Review.create(
-				command.rentalItemid(),
-				command.sellerId(),
+				command.rentalItemId(),
+				sellerId,
 				command.memberId(),
 				command.rating(),
 				command.content()
@@ -169,18 +169,20 @@ public class ReviewService {
 		}
 	}
 
-	private void validateReviewEligibility(CreateReviewCommand command) {
-		ReturnedRentalItem cached = returnedRentalCache.find(command.rentalItemid()).orElse(null);
+	private Long validateReviewEligibility(CreateReviewCommand command) {
+		Long sellerId;
+		ReturnedRentalItem cached = returnedRentalCache.find(command.rentalItemId()).orElse(null);
 		if (cached != null) {
-			validateReturnedRental(command, cached.memberId(), cached.sellerId(), cached.status(), cached.returnedAt());
+			validateReturnedRental(command, cached.memberId(), cached.status(), cached.returnedAt());
+			sellerId = cached.sellerId();
 		} else {
-			RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemid());
+			RentalItemInfo rentalItem = rentalClientAdapter.getRentalItem(command.rentalItemId());
 
 			if (rentalItem == null) {
 				throw new ReviewException(ErrorCode.RENTAL_ITEM_NOT_FOUND, "대여 상품 정보를 찾을 수 없습니다.");
 			}
 
-			validateReturnedRental(command, rentalItem.memberId(), rentalItem.sellerId(), rentalItem.status(), rentalItem.returnedAt());
+			validateReturnedRental(command, rentalItem.memberId(), rentalItem.status(), rentalItem.returnedAt());
 
 			if ("RETURNED".equals(rentalItem.status())) {
 				returnedRentalCache.save(new ReturnedRentalItem(
@@ -192,24 +194,21 @@ public class ReviewService {
 						rentalItem.returnedAt()
 				));
 			}
+			sellerId = rentalItem.sellerId();
 		}
 
-		if (reviewRepository.existsByRentalItemIdAndStatus(command.rentalItemid(), ReviewStatus.ACTIVE)) {
+		if (reviewRepository.existsByRentalItemIdAndStatus(command.rentalItemId(), ReviewStatus.ACTIVE)) {
 			throw new ReviewException(ErrorCode.CONFLICT, "이미 리뷰가 작성된 상품입니다.");
 		}
+		return sellerId;
 	}
 
 	private void validateReturnedRental(CreateReviewCommand command,
 			Long memberId,
-			Long sellerId,
 			String status,
 			LocalDateTime returnedAt) {
 		if (!command.memberId().equals(memberId)) {
 			throw new ReviewException(ErrorCode.REVIEW_FORBIDDEN, "대여자만 리뷰를 작성할 수 있습니다.");
-		}
-
-		if (!command.sellerId().equals(sellerId)) {
-			throw new ReviewException(ErrorCode.INVALID_INPUT, "판매자 정보가 일치하지 않습니다.");
 		}
 
 		if (!"RETURNED".equals(status)) {
