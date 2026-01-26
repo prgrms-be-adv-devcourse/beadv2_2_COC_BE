@@ -85,13 +85,21 @@ public class RentalQueryRepositoryImpl implements RentalQueryRepository {
 			builder.and(rentalItem.status.eq(status));
 		}
 		
-		if (startDate != null) {
-			builder.and(rentalItem.returnedAt.goe(startDate.atStartOfDay()));
-		}
-		
-		if (endDate != null) {
-			LocalDateTime endOfDayExclusive = endDate.plusDays(1).atStartOfDay();
-			builder.and(rentalItem.returnedAt.lt(endOfDayExclusive));
+		if (status == RentalItemStatus.RETURNED) {
+			if (startDate != null) {
+				builder.and(rentalItem.returnedAt.goe(startDate.atStartOfDay()));
+			}
+			if (endDate != null) {
+				LocalDateTime endOfDayExclusive = endDate.plusDays(1).atStartOfDay();
+				builder.and(rentalItem.returnedAt.lt(endOfDayExclusive));
+			}
+		} else {
+			if (startDate != null) {
+				builder.and(rentalItem.startDate.goe(startDate));
+			}
+			if (endDate != null) {
+				builder.and(rentalItem.endDate.loe(endDate));
+			}
 		}
 		
 		JPAQuery<RentalItem> query = queryFactory

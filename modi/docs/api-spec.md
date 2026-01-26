@@ -39,6 +39,8 @@
 | PATCH | `/internal/members/{memberId}/role` | 회원 역할 변경 (SELLER) |
 | GET | `/internal/members` | 회원 목록 조회 |
 | GET | `/internal/members/{memberId}` | 회원 요약 조회 |
+| GET | `/internal/members/{memberId}/authz` | 회원 권한 조회 |
+| GET | `/internal/members/{memberId}/email` | 회원 이메일 조회 |
 | GET | `/internal/members/search` | 이메일로 회원 조회 |
 | POST | `/internal/members/batch` | 회원 ID 목록 조회 |
 | POST | `/internal/members/admin` | 관리자 계정 생성 (내부) |
@@ -51,6 +53,7 @@
 | --- | --- | --- |
 | GET | `/api/accounts/balance` | 지갑 잔액 조회 |
 | GET | `/api/accounts/transactions` | 지갑 거래 내역 조회 |
+| POST | `/api/accounts/withdrawals` | 출금 요청 |
 | POST | `/api/deposits/pg/request` | 예치금 충전 요청 |
 | POST | `/api/deposits/pg/approve` | 예치금 충전 승인 |
 | GET | `/api/deposits/pg/config` | 결제 위젯 설정 조회 |
@@ -202,6 +205,13 @@
 | --- | --- | --- |
 | POST | `/api/admin/members` | 관리자 계정 생성 |
 
+### 관리자 API - 판매자 승인
+| Method | Path | 설명 |
+| --- | --- | --- |
+| PATCH | `/api/admin/sellers/{memberId}/approve` | 판매자 승인 |
+| PATCH | `/api/admin/sellers/{memberId}/reject` | 판매자 반려 |
+| GET | `/api/admin/sellers/registrations` | 판매자 등록 요청 목록 |
+
 ## seller-service
 서비스 ID: `seller-service`
 
@@ -219,8 +229,10 @@
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/api/chat/rooms` | 채팅방 생성 |
+| GET | `/api/chat/rooms` | 채팅방 목록 조회 |
 | GET | `/api/chat/rooms/{roomId}` | 채팅방 조회 |
 | GET | `/api/chat/rooms/{roomId}/messages` | 채팅 메시지 조회 |
+| POST | `/api/chat/rooms/{roomId}/leave` | 채팅방 나가기 |
 
 ### 외부 API - 정산
 | Method | Path | 설명 |
@@ -228,13 +240,6 @@
 | GET | `/api/settlements/sellers/self` | 정산 목록 조회 |
 | GET | `/api/settlements/sellers/self/{sellerSettlementId}` | 정산 상세 조회 |
 | GET | `/api/settlements/sellers/self/{sellerSettlementId}/lines` | 정산 상세 라인 조회 |
-| POST | `/api/settlements/sellers/self/{sellerSettlementId}/cancel` | 정산 취소 |
-
-### 관리자 API - 판매자 승인
-| Method | Path | 설명 |
-| --- | --- | --- |
-| PATCH | `/api/admin/sellers/{memberId}/approve` | 판매자 승인 |
-| PATCH | `/api/admin/sellers/{memberId}/reject` | 판매자 반려 |
 
 ### 관리자 API - 정산
 | Method | Path | 설명 |
@@ -242,14 +247,15 @@
 | GET | `/api/admin/settlements/seller-settlements` | 판매자 정산 조회 |
 | POST | `/api/admin/settlements/seller-settlements/{sellerSettlementId}/pay` | 정산 지급 처리 |
 | POST | `/api/admin/settlements/seller-settlements/pay-bulk` | 정산 일괄 처리 |
-| POST | `/api/admin/settlements/batches/run` | 정산 배치 실행 |
 
 ### 내부 API
 | Method | Path | 설명 |
 | --- | --- | --- |
 | GET | `/internal/sellers/by-member/{memberId}` | memberId로 sellerId 조회 |
 | GET | `/internal/sellers/{sellerId}` | sellerId로 판매자 조회 |
-| POST | `/internal/settlements/batches/monthly/run` | 월 정산 배치 실행 |
+| PATCH | `/internal/sellers/{memberId}/approve` | 판매자 승인(내부) |
+| PATCH | `/internal/sellers/{memberId}/reject` | 판매자 반려(내부) |
+| GET | `/internal/sellers/registrations` | 판매자 등록 요청 목록(내부) |
 | GET | `/internal/settlements/batches` | 정산 배치 목록 조회 |
 | GET | `/internal/settlements/batches/{batchId}` | 정산 배치 상세 조회 |
 | GET | `/internal/settlements/seller-settlements` | 판매자 정산 전체 조회 |
