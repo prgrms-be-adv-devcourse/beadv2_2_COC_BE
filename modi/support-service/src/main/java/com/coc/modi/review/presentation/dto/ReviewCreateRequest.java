@@ -9,14 +9,13 @@ import jakarta.validation.constraints.NotNull;
 
 public record ReviewCreateRequest(
 		@NotNull Long rentalItemId,
-		@NotNull Long sellerId,
 		@NotNull @Min(1) @Max(5) Short rating,
 		@NotBlank String content
 ) {
 
 	public CreateReviewCommand toCommand(Long memberId) {
 		
-		return new CreateReviewCommand(rentalItemId, sellerId, memberId, rating, content);
+		return new CreateReviewCommand(rentalItemId, memberId, rating, content);
 
 	}
 }
