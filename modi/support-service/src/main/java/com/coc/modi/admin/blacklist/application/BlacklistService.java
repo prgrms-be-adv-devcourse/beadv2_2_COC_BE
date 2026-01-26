@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BlacklistService {
 
+	private static final String MEMBER_STATUS_INACTIVE = "INACTIVE";
+	private static final String MEMBER_STATUS_ACTIVE = "ACTIVE";
+
 	private final MemberAdminClient memberAdminClient;
 	private final MemberBlacklistRepository blacklistRepository;
 
@@ -103,6 +106,7 @@ public class BlacklistService {
 		}
 
 		MemberBlacklist saved = blacklistRepository.save(blacklist);
+		memberAdminClient.updateMemberStatus(command.memberId(), MEMBER_STATUS_INACTIVE);
 		return BlacklistDetailResponse.of(member, saved);
 	}
 
@@ -118,6 +122,7 @@ public class BlacklistService {
 
 		blacklist.release(command.memo(), LocalDateTime.now(), command.releasedBy());
 		MemberBlacklist saved = blacklistRepository.save(blacklist);
+		memberAdminClient.updateMemberStatus(command.memberId(), MEMBER_STATUS_ACTIVE);
 		return BlacklistDetailResponse.of(member, saved);
 	}
 
