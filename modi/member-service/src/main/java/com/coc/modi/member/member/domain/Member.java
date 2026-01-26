@@ -91,6 +91,11 @@ public class Member extends BaseEntity {
 		this.role = memberRole;
 	}
 
+	public void updateStatus(MemberStatus status) {
+
+		this.status = status;
+	}
+
 	public void connectProvider(String provider, String providerId) {
 
 		this.provider = provider;

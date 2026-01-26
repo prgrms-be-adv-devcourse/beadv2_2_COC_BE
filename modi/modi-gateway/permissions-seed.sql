@@ -34,6 +34,9 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/deliveries/{deliveryId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/deliveries/rental-items/{rentalItemId}', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/support-service/api/admin/members', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/sellers/{memberId}/approve', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/support-service/api/admin/sellers/{memberId}/reject', 'ADMIN');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/sellers/registrations', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/blacklists', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/blacklists/search', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/support-service/api/admin/blacklists/{memberId}', 'ADMIN');

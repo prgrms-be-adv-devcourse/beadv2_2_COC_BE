@@ -17,6 +17,7 @@ import com.coc.modi.member.member.application.dto.InternalAdminMemberCreateRespo
 import com.coc.modi.member.member.application.dto.MemberEmailResponse;
 import com.coc.modi.member.member.application.dto.MemberPageResponse;
 import com.coc.modi.member.member.application.dto.MemberSummaryResponse;
+import com.coc.modi.member.member.domain.MemberStatus;
 import com.coc.modi.member.member.presentation.dto.InternalAdminMemberCreateRequest;
 import com.coc.modi.member.member.presentation.dto.MemberAuthzResponse;
 
@@ -35,6 +36,13 @@ public class MemberInternalController {
 	public String changeMemberRole(@PathVariable("memberId") Long memberId) {
 		
 		return memberService.updateRoleToSeller(memberId);
+	}
+
+	@PatchMapping("/{memberId}/status")
+	public void changeMemberStatus(@PathVariable("memberId") Long memberId,
+								   @RequestParam("status") MemberStatus status) {
+
+		memberService.updateStatus(memberId, status);
 	}
 
 	@GetMapping("/{memberId}/authz")

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import com.coc.modi.admin.application.dto.AdminMemberCreateResponse;
 import com.coc.modi.admin.infrastructure.client.member.dto.AdminMemberCreateInternalRequest;
@@ -36,4 +37,10 @@ public interface MemberAdminClient {
 
 	@PostMapping("/internal/members/admin")
 	AdminMemberCreateResponse createAdmin(@RequestBody AdminMemberCreateInternalRequest request);
+
+	@PatchMapping("/internal/members/{memberId}/status")
+	void updateMemberStatus(
+			@PathVariable("memberId") Long memberId,
+			@RequestParam("status") String status
+	);
 }
