@@ -63,6 +63,7 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/seller', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/product-service/api/products/recent-searches', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/products', 'SELLER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/product-service/api/products/bulk', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PUT', '/product-service/api/products/{productId}', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/product-service/api/products/{productId}/active', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/product-service/api/products/{productId}/inactive', 'SELLER');
@@ -88,6 +89,7 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/rental-service/api/rentals/{rentalItemId}/return', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/rental-service/api/rentals/{rentalItemId}/refund', 'MEMBER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/rental-service/api/rentals/{rentalItemId}/extend', 'MEMBER');
+INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/rental-service/api/rentals/{productId}/unavailable-dates', 'MEMBER');
 
 -- seller-service
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/sellers', 'MEMBER');
@@ -103,9 +105,6 @@ INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('P
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}', 'SELLER');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/settlements/sellers/self/{sellerSettlementId}/lines', 'SELLER');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/seller-service/api/admin/sellers/{memberId}/approve', 'ADMIN');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('PATCH', '/seller-service/api/admin/sellers/{memberId}/reject', 'ADMIN');
-INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/admin/sellers/registrations', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('GET', '/seller-service/api/admin/settlements/seller-settlements', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/admin/settlements/seller-settlements/{sellerSettlementId}/pay', 'ADMIN');
 INSERT INTO gateway_endpoint_permission (method, path_pattern, roles) VALUES ('POST', '/seller-service/api/admin/settlements/seller-settlements/pay-bulk', 'ADMIN');

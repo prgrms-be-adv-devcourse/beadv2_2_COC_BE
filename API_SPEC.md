@@ -93,6 +93,9 @@
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
 - **PATCH /internal/members/{memberId}/role** — 판매자 롤로 변경 및 새 액세스 토큰 발급
   - Res: `String accessToken` (래퍼 없음)
+- **PATCH /internal/members/{memberId}/status** — 회원 상태 변경
+  - Req: `status:MemberStatus`
+  - Res: `Void`
 - **GET /internal/members/{memberId}/authz** — 역할 목록 조회
   - Res: `MemberAuthzResponse { memberId, roles:string[] }`
 - **GET /internal/members/{memberId}/email** — 이메일 조회
@@ -186,17 +189,14 @@
   - Res: `SellerIdResponse { sellerId, memberId }`
 - **GET /internal/sellers/{sellerId}** — 판매자 조회
   - Res: `SellerDetailResponse`
-
-### 관리자
-- **PATCH /api/admin/sellers/{memberId}/approve** — 판매자 승인 (Auth)
-  - Path: `memberId:long`
-  - Res: `SellerRegistrationResponse { registrationId, memberId, storeName, bizRegNo, storePhone, status, approvedBy }` (래퍼 없음)
-- **PATCH /api/admin/sellers/{memberId}/reject** — 판매자 반려 (Auth)
-  - Path: `memberId:long`
-  - Res: `SellerRegistrationResponse` (래퍼 없음)
-- **GET /api/admin/sellers/registrations** — 판매자 등록 요청 목록 (Auth)
+- **PATCH /internal/sellers/{memberId}/approve** — 판매자 승인(내부)
+  - Query: `approvedBy:long`
+  - Res: `SellerRegistrationResponse { registrationId, memberId, storeName, bizRegNo, storePhone, status, approvedBy }`
+- **PATCH /internal/sellers/{memberId}/reject** — 판매자 반려(내부)
+  - Res: `SellerRegistrationResponse`
+- **GET /internal/sellers/registrations** — 판매자 등록 요청 목록(내부)
   - Query: `status?:SellerRegistrationStatus`, `pageable`
-  - Res: `Page<SellerRegistrationResponse>` (래퍼 없음)
+  - Res: `SellerRegistrationPageResponse { content:SellerRegistrationResponse[], page, size, totalElements, totalPages, last }`
 
 ### 채팅
 - **POST /api/chat/rooms** — 채팅방 생성 (Auth)
@@ -226,8 +226,6 @@
   - Res: `SellerSettlementResponse`
 - **GET /api/settlements/sellers/self/{sellerSettlementId}/lines** — 라인 상세 (Auth)
   - Res: `SellerSettlementLineResponse[] { id, sellerSettlementId, sellerId, rentalItemId, memberId, productId, rentalAmount, feeAmount }`
-- **POST /api/settlements/sellers/self/{sellerSettlementId}/cancel** — 정산 취소 (Auth)
-  - Res: `SellerSettlementResponse`
 
 ### 정산 관리자 (Auth)
 - **GET /api/admin/settlements/seller-settlements** — 판매자 정산 조회
@@ -239,15 +237,9 @@
 - **POST /api/admin/settlements/seller-settlements/pay-bulk** — 관리자 일괄 지급/실패 처리
   - Req: `SettlementBulkPayRequest { sellerId?:long, periodYm?:yyyy-MM, status?:SellerSettlementStatus, paidAt?:ISO_LOCAL_DATE_TIME }`
   - Res: `SettlementBulkPayResponse { requestedCount, successCount, failedCount }`
-- **POST /api/admin/settlements/batches/run** — 관리자 배치 실행
-  - Req: `SettlementAdminBatchRunRequest { periodYm:yyyy-MM, startDate?:yyyy-MM-dd, endDate?:yyyy-MM-dd, sellerId?:long, pageSize?:int>0 }`
-  - Res: `SettlementBatchResponse { id, periodYm, status:SettlementBatchStatus, startedAt, completedAt, createdAt, updatedAt }`
 
 ### 정산 배치 내부 (래퍼 ApiResponse)
 - Auth: 내부 토큰 헤더 `X-Internal-Token: <token>` (설정: `internal.api.header`, `internal.api.token`)
-- **POST /internal/settlements/batches/monthly/run** — 월 정산 배치 실행
-  - Req: `SettlementBatchMonthlyRunRequest { periodYm?:yyyy-MM }`
-  - Res: `SettlementBatchResponse`
 - **GET /internal/settlements/batches** — 배치 목록
   - Query: `periodYm?:string`, `pageable`
   - Res: `Page<SettlementBatchResponse>`
@@ -319,6 +311,10 @@
   - Res: `Page<ProductModerationSummaryResponse { productId, name, sellerId, status:ProductStatus, moderationStatus:ProductModerationStatus, createdAt }>`
 - **POST /api/admin/products/{productId}/moderation-requests** — 상품 검수 요청 생성 (Auth)
   - Path: `productId:long`
+  - Res: `Void`
+- **PATCH /api/admin/products/{productId}/moderation/approve** — 상품 수동 승인 (Auth)
+  - Path: `productId:long`
+  - Query: `reason?:string`
   - Res: `Void`
 
 ### 내부 상품 (래퍼 없음)
@@ -468,6 +464,11 @@
   - Res: `NoticeResponse { id, title, content, status:NoticeStatus, pinned, viewCount, displayStartAt, displayEndAt, createdAt, updatedAt }`
 
 ### 관리자 - 공지 (Auth, ADMIN)
+- **GET /api/admin/notices** — 공지 목록 조회(관리자)
+  - Query: `status?:NoticeStatus`, `keyword?:string`, `pageable`(sort=pinned,createdAt desc)
+  - Res: `Page<AdminNoticeSummaryResponse { id, title, pinned, viewCount, status, createdAt }>`
+- **GET /api/admin/notices/{noticeId}** — 공지 상세 조회(관리자)
+  - Res: `NoticeResponse { id, title, content, status:NoticeStatus, pinned, viewCount, displayStartAt, displayEndAt, createdAt, updatedAt }`
 - **POST /api/admin/notices** — 공지 생성
   - Req: `title:string<=200`, `content:string`, `pinned?:boolean`, `status?:NoticeStatus`, `displayStartAt?:datetime`, `displayEndAt?:datetime`
   - Res: `NoticeResponse` (201)
@@ -501,6 +502,17 @@
 - **POST /api/admin/members** — 관리자 계정 생성
   - Req: `email:string(email)`, `password:string(8-20, 영문+숫자+특수문자)`, `name:string<=20`, `phone:string(휴대폰)`
   - Res: `AdminMemberCreateResponse { memberId, email, role }`
+
+### 관리자 - 판매자 승인 (Auth, ADMIN)
+- **PATCH /api/admin/sellers/{memberId}/approve** — 판매자 승인
+  - Path: `memberId:long`
+  - Res: `ApiResponse<SellerRegistrationResponse { registrationId, memberId, storeName, bizRegNo, storePhone, status, approvedBy }>`
+- **PATCH /api/admin/sellers/{memberId}/reject** — 판매자 반려
+  - Path: `memberId:long`
+  - Res: `ApiResponse<SellerRegistrationResponse>`
+- **GET /api/admin/sellers/registrations** — 판매자 등록 요청 목록
+  - Query: `status?:SellerRegistrationStatus`, `pageable`
+  - Res: `ApiResponse<Page<SellerRegistrationResponse>>`
 
 ---
 ## ai-service
