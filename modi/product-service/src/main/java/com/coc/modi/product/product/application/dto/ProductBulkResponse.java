@@ -8,6 +8,7 @@ public record ProductBulkResponse(
 		Long productId,
 		Long sellerId,
 		BigDecimal price,
+		BigDecimal securityDepositAmount,
 		String status
 ) {
 	
@@ -17,6 +18,7 @@ public record ProductBulkResponse(
 				product.getId(),
 				product.getSellerId(),
 				product.getPricePerDay(),
+				product.getSecurityDepositAmount(),
 				product.getStatus().name()
 		);
 	}

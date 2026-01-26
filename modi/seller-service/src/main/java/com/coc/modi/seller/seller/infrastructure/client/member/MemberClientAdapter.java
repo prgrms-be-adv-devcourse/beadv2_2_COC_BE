@@ -20,9 +20,9 @@ public class MemberClientAdapter {
 	
 	@Retry(name = "memberRoleRetry")
 	@CircuitBreaker(name = "memberRoleCircuitBreaker", fallbackMethod = "fallbackChangeMemberRole")
-	public String changeMemberRole(Long memberId) {
+	public void changeMemberRole(Long memberId) {
 		
-		return memberFeignClient.changeMemberRole(memberId);
+		memberFeignClient.changeMemberRole(memberId);
 	}
 
 	@Retry(name = "memberEmailRetry")

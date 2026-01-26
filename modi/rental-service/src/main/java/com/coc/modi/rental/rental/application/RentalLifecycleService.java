@@ -11,6 +11,7 @@ import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.domain.RentalQueryRepository;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.kafka.event.RentalReturnedEvent;
 import com.coc.modi.rental.outbox.RentalOutboxService;
 
@@ -31,6 +32,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class RentalLifecycleService {
+
+	private static final int SEQUENCE_RETURNED = 1;
+	private static final String CLOSED_TYPE_RETURNED = "RETURNED";
 	
 	private final RentalAppSupport rentalAppSupport;
 	private final AccountClientAdapter accountClientAdapter;
@@ -85,28 +89,66 @@ public class RentalLifecycleService {
 		BigDecimal damageFee = command.damageFee() == null ? BigDecimal.ZERO : command.damageFee();
 		BigDecimal lateFee = command.lateFee() == null ? BigDecimal.ZERO : command.lateFee();
 		BigDecimal totalFee = damageFee.add(lateFee);
+		BigDecimal depositAmount = rentalItem.getSecurityDepositAmount() == null
+				? BigDecimal.ZERO
+				: rentalItem.getSecurityDepositAmount();
+		BigDecimal depositRefundAmount = depositAmount.subtract(totalFee);
+		if (depositRefundAmount.signum() < 0) {
+			depositRefundAmount = BigDecimal.ZERO;
+		}
 		
-		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_RETURNED,
-				Map.of("rentalId", rental.getId(),
-						"rentalItemId", rentalItem.getId(),
-						"rentalStatus", rental.getStatus().name(),
-						"itemStatus", rentalItem.getStatus().name(),
-						"damageFee", damageFee,
-						"lateFee", lateFee,
-						"extraFeeTotal", totalFee,
-						"damageReason", command.damageReason(),
-						"lateReason", command.lateReason(),
-						"memo", command.memo()));
+		Map<String, Object> payload = new java.util.LinkedHashMap<>();
+		payload.put("rentalId", rental.getId());
+		payload.put("rentalItemId", rentalItem.getId());
+		payload.put("rentalStatus", rental.getStatus().name());
+		payload.put("itemStatus", rentalItem.getStatus().name());
+		payload.put("damageFee", damageFee);
+		payload.put("lateFee", lateFee);
+		payload.put("extraFeeTotal", totalFee);
+		payload.put("depositAmount", depositAmount);
+		payload.put("depositRefundAmount", depositRefundAmount);
+		payload.put("damageReason", command.damageReason());
+		payload.put("lateReason", command.lateReason());
+		payload.put("memo", command.memo());
 
+		rentalEventLogService.logEvent(rental, RentalEventType.RENTAL_RETURNED, payload);
+
+		BigDecimal rentalAmount = rentalItem.calculateRentalAmount();
 		RentalReturnedEvent event = RentalReturnedEvent.of(
 				rentalItem.getId(),
 				rental.getMemberId(),
 				rentalItem.getSellerId(),
 				rentalItem.getProductId(),
+				rentalAmount,
 				rentalItem.getStatus().name(),
 				rentalItem.getReturnedAt()
 		);
 		rentalOutboxService.enqueueRentalReturnedEvent(rentalItem.getId(), event);
+
+		if (depositRefundAmount.signum() > 0) {
+			String requestId = WalletRequestId.depositRefund(rentalItem.getId());
+			accountClientAdapter.refund(new RefundWalletCommand(
+					rental.getMemberId(),
+					rental.getId(),
+					rentalItem.getId(),
+					depositRefundAmount,
+					requestId
+			));
+			registerDepositRefundCompensationOnRollback(rental, rentalItem, depositRefundAmount);
+		}
+
+		RentalClosedEvent closedEvent = RentalClosedEvent.of(
+				rentalItem.getId(),
+				rental.getMemberId(),
+				rentalItem.getSellerId(),
+				rentalItem.getProductId(),
+				rentalAmount,
+				CLOSED_TYPE_RETURNED,
+				rentalItem.getReturnedAt(),
+				null,
+				SEQUENCE_RETURNED
+		);
+		rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);
 		
 		return new RentalReturnResponse(
 				rental.getId(),
@@ -193,6 +235,42 @@ public class RentalLifecycleService {
 					));
 				} catch (Exception ex) {
 					log.error("연장 결제 보상 환불 실패. rentalId={}, rentalItemId={}", rentalId, rentalItemId, ex);
+				}
+			}
+		});
+	}
+
+	private void registerDepositRefundCompensationOnRollback(Rental rental,
+															RentalItem rentalItem,
+															BigDecimal refundAmount) {
+
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			return;
+		}
+
+		Long rentalItemId = rentalItem.getId();
+		if (rentalItemId == null) {
+			return;
+		}
+
+		Long rentalId = rental.getId();
+
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCompletion(int status) {
+				if (status != STATUS_ROLLED_BACK) {
+					return;
+				}
+				String requestId = WalletRequestId.depositRefundCompCharge(rentalItemId);
+				try {
+					accountClientAdapter.charge(new ChargeWalletCommand(
+							rental.getMemberId(),
+							rentalId,
+							refundAmount,
+							requestId
+					));
+				} catch (Exception ex) {
+					log.error("보증금 환불 보상 차지 실패. rentalId={}, rentalItemId={}", rentalId, rentalItemId, ex);
 				}
 			}
 		});

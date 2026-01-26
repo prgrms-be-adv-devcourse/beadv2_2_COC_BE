@@ -4,6 +4,7 @@ import com.coc.modi.seller.settlement.exception.SettlementBatchNotFoundException
 import com.coc.modi.seller.settlement.exception.SellerSettlementConflictException;
 import com.coc.modi.seller.settlement.domain.SellerSettlement;
 import com.coc.modi.seller.settlement.domain.SellerSettlementRepository;
+import com.coc.modi.seller.settlement.domain.SellerSettlementStatus;
 import com.coc.modi.seller.settlement.domain.SettlementBatch;
 import com.coc.modi.seller.settlement.domain.SettlementBatchRepository;
 import com.coc.modi.seller.settlement.infrastructure.SellerSettlementLineJdbcRepository;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +67,31 @@ public class SettlementAggregationService {
 				productId,
 				rentalAmount,
 				feeAmount
+		);
+	}
+
+	public boolean cancelLine(Long sellerId,
+							  String periodYm,
+							  Long rentalItemId,
+							  LocalDateTime canceledAt) {
+
+		if (sellerId == null || periodYm == null || periodYm.isBlank() || rentalItemId == null) {
+			return false;
+		}
+
+		SellerSettlement settlement = sellerSettlementRepository.findBySellerIdAndPeriodYm(sellerId, periodYm)
+				.orElse(null);
+		if (settlement == null) {
+			return false;
+		}
+		if (settlement.getStatus() == SellerSettlementStatus.PAID) {
+			return false;
+		}
+
+		return sellerSettlementLineJdbcRepository.cancelLineAndAdjust(
+				settlement.getId(),
+				rentalItemId,
+				canceledAt
 		);
 	}
 	

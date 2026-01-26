@@ -18,6 +18,7 @@ import com.coc.modi.member.member.application.dto.UpdateMemberPasswordCommand;
 import com.coc.modi.member.member.domain.Member;
 import com.coc.modi.member.member.domain.MemberRole;
 import com.coc.modi.member.member.domain.MemberRepository;
+import com.coc.modi.member.member.domain.MemberStatus;
 import com.coc.modi.member.member.exception.AuthCodeInvalidException;
 import com.coc.modi.member.member.exception.EmailDuplicatedException;
 import com.coc.modi.member.member.exception.MemberException;
@@ -316,6 +317,32 @@ public class MemberService {
 		);
 		
 		return jwtTokenProvider.generateAccessToken(memberId);
+	}
+
+	@Transactional
+	public void updateStatus(Long memberId, MemberStatus status) {
+
+		if (memberId == null) {
+			throw new IllegalArgumentException("memberId는 필수입니다.");
+		}
+		if (status == null) {
+			throw new IllegalArgumentException("status는 필수입니다.");
+		}
+
+		Member member = getMemberOrThrow(memberId);
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			return;
+		}
+
+		if (member.getStatus() == status) {
+			return;
+		}
+
+		member.updateStatus(status);
+
+		if (status != MemberStatus.ACTIVE) {
+			refreshTokenService.delete(memberId);
+		}
 	}
 
 	@Transactional(readOnly = true)

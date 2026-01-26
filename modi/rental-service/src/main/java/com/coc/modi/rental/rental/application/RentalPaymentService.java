@@ -12,8 +12,10 @@ import com.coc.modi.rental.rental.exception.RentalNotFoundException;
 import com.coc.modi.rental.rental.exception.RentalStatusInvalidException;
 import com.coc.modi.rental.rental.infrastructure.client.AccountClientAdapter;
 import com.coc.modi.rental.rental.infrastructure.client.dto.ChargeWalletCommand;
+import com.coc.modi.kafka.event.RentalClosedEvent;
 import com.coc.modi.rental.rental.infrastructure.client.dto.RefundWalletCommand;
 import com.coc.modi.rental.rental.infrastructure.client.dto.WalletInfoResponse;
+import com.coc.modi.rental.outbox.RentalOutboxService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +34,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class RentalPaymentService {
+
+	private static final int SEQUENCE_REFUNDED = 2;
+	private static final String CLOSED_TYPE_REFUNDED = "REFUNDED";
 	
 	private final RentalRepository rentalRepository;
 	private final AccountClientAdapter accountClientAdapter;
 	private final RentalEventLogService rentalEventLogService;
 	private final RentalAppSupport rentalAppSupport;
+	private final RentalOutboxService rentalOutboxService;
 	
 	@Transactional
 	public PayRentalResponse completePayment(Long rentalId, Long memberId) {
@@ -67,11 +73,13 @@ public class RentalPaymentService {
 		}
 		
 		BigDecimal totalAmount = rental.getTotalAmount();
+		BigDecimal totalDepositAmount = rental.calculateTotalDepositAmount();
+		BigDecimal totalChargeAmount = totalAmount.add(totalDepositAmount);
 
 		String chargeRequestId = WalletRequestId.payment(rental.getId());
 		
 		WalletInfoResponse walletInfoResponse = accountClientAdapter.charge(
-				new ChargeWalletCommand(memberId, rental.getId(), totalAmount, chargeRequestId));
+				new ChargeWalletCommand(memberId, rental.getId(), totalChargeAmount, chargeRequestId));
 
 		registerPaymentCompensationOnRollback(rental, memberId);
 		
@@ -85,11 +93,13 @@ public class RentalPaymentService {
 		rentalEventLogService.logEvent(rental, RentalEventType.PAID,
 				Map.of("rentalId", rental.getId(),
 						"paidAt", paidAt,
-						"amount", totalAmount,
+						"amount", totalChargeAmount,
+						"rentalAmount", totalAmount,
+						"depositAmount", totalDepositAmount,
 						"walletBalance", walletInfoResponse.balance(),
 						"rentalStatus", rental.getStatus().name()));
 		
-		return PayRentalResponse.create(rental, totalAmount, walletInfoResponse.balance(), paidAt);
+		return PayRentalResponse.create(rental, totalChargeAmount, walletInfoResponse.balance(), paidAt);
 	}
 	
 	
@@ -119,6 +129,21 @@ public class RentalPaymentService {
 						"rentalStatus", rental.getStatus().name(),
 						"itemStatus", rentalItem.getStatus().name(),
 						"refundAmount", refundAmount));
+
+		if (rentalItem.getReturnedAt() != null) {
+			RentalClosedEvent closedEvent = RentalClosedEvent.of(
+					rentalItem.getId(),
+					rental.getMemberId(),
+					rentalItem.getSellerId(),
+					rentalItem.getProductId(),
+					rentalItem.calculateRentalAmount(),
+					CLOSED_TYPE_REFUNDED,
+					rentalItem.getReturnedAt(),
+					rentalItem.getCanceledAt(),
+					SEQUENCE_REFUNDED
+			);
+			rentalOutboxService.enqueueRentalClosedEvent(rentalItem.getId(), closedEvent);
+		}
 	}
 
 	private boolean isAlreadyRefunded(Rental rental, RentalItem rentalItem) {
@@ -139,7 +164,7 @@ public class RentalPaymentService {
 
 		List<RefundTarget> refundTargets = rental.getItems().stream()
 				.filter(item -> item.getStatus() == RentalItemStatus.ACCEPTED)
-				.map(item -> new RefundTarget(item.getId(), item.calculateRentalAmount()))
+				.map(item -> new RefundTarget(item.getId(), item.calculateChargeAmount()))
 				.toList();
 
 		if (refundTargets.isEmpty()) {

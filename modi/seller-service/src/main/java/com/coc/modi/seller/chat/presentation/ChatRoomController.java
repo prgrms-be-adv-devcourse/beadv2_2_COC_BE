@@ -35,6 +35,14 @@ public class ChatRoomController {
 		return ResponseEntity.ok(ApiResponse.ok(response));
 	}
 
+	@GetMapping
+	public ResponseEntity<ApiResponse<java.util.List<ChatRoomResponse>>> getRooms(
+			@AuthenticationPrincipal CustomMember member
+	) {
+		java.util.List<ChatRoomResponse> responses = chatRoomService.getRooms(member.memberId());
+		return ResponseEntity.ok(ApiResponse.ok(responses));
+	}
+
 	@GetMapping("/{roomId}")
 	public ResponseEntity<ApiResponse<ChatRoomResponse>> getRoom(
 			@PathVariable Long roomId,
@@ -42,5 +50,14 @@ public class ChatRoomController {
 	) {
 		ChatRoomResponse response = chatRoomService.getRoom(roomId, member.memberId());
 		return ResponseEntity.ok(ApiResponse.ok(response));
+	}
+
+	@PostMapping("/{roomId}/leave")
+	public ResponseEntity<ApiResponse<Void>> leaveRoom(
+			@PathVariable Long roomId,
+			@AuthenticationPrincipal CustomMember member
+	) {
+		chatRoomService.leaveRoom(roomId, member.memberId());
+		return ResponseEntity.ok(ApiResponse.ok(null));
 	}
 }

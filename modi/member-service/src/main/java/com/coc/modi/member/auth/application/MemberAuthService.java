@@ -69,6 +69,13 @@ public class MemberAuthService {
 
 	public MemberLoginResponse issueTokens(Member member, boolean secureCookie) {
 
+		if (member.getStatus() == MemberStatus.WITHDRAWN) {
+			throw new MemberAccessDeniedException("탈퇴한 회원입니다.");
+		}
+		if (member.getStatus() == MemberStatus.INACTIVE) {
+			throw new MemberAccessDeniedException("정지된 회원입니다.");
+		}
+
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
 		String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 

@@ -3,6 +3,8 @@ package com.coc.modi.seller.seller.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.coc.modi.kafka.event.SellerRegistrationApprovedEvent;
 import com.coc.modi.kafka.event.SellerRegistrationRejectedEvent;
@@ -61,6 +63,8 @@ public class SellerApprovalService {
 		registration.approve(approvedBy);
 		sellerRegistrationRepository.save(registration);
 
+		memberClientAdapter.changeMemberRole(seller.getMemberId());
+
 		MemberEmailResponse emailResponse = memberClientAdapter.getMemberEmail(seller.getMemberId());
 		String email = emailResponse != null ? emailResponse.email() : null;
 		if (!StringUtils.hasText(email)) {
@@ -103,5 +107,17 @@ public class SellerApprovalService {
 		);
 
 		return SellerRegistrationResponse.from(registration);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<SellerRegistrationResponse> getRegistrations(SellerRegistrationStatus status, Pageable pageable) {
+
+		Page<SellerRegistration> registrations;
+		if (status == null) {
+			registrations = sellerRegistrationRepository.findAll(pageable);
+		} else {
+			registrations = sellerRegistrationRepository.findByStatus(status, pageable);
+		}
+		return registrations.map(SellerRegistrationResponse::from);
 	}
 }

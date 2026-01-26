@@ -15,6 +15,10 @@ final class WalletRequestId {
 		return "rental-refund:" + rentalItemId;
 	}
 
+	static String depositRefund(Long rentalItemId) {
+		return "rental-deposit-refund:" + rentalItemId;
+	}
+
 	static String extend(Long rentalItemId, LocalDate newEndDate) {
 		return "rental-extend:" + rentalItemId + ":" + newEndDate;
 	}
@@ -25,6 +29,10 @@ final class WalletRequestId {
 
 	static String refundCompCharge(Long rentalItemId) {
 		return "rental-refund-comp-charge:" + rentalItemId;
+	}
+
+	static String depositRefundCompCharge(Long rentalItemId) {
+		return "rental-deposit-refund-comp-charge:" + rentalItemId;
 	}
 
 	static String extendCompRefund(Long rentalItemId, LocalDate newEndDate) {

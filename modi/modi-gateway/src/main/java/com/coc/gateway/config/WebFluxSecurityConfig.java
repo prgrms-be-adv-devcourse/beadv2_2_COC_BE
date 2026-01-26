@@ -104,6 +104,7 @@ public class WebFluxSecurityConfig {
 								"/member-service/oauth2/**",
 								"/member-service/login/oauth2/**",
 								"/member-service/api/members/signup",
+								"/support-service/api/notices/**",
 								"/favicon.ico"
 						).permitAll()
 						.pathMatchers(whitelist.toArray(new String[0])).permitAll()

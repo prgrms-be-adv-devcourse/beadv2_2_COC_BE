@@ -3,6 +3,8 @@
 # -------------------------
 HELP.md
 .gradle/
+.gradle-wrapper/
+.gradle-home/
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -25,6 +27,7 @@ HELP.md
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 **/md/
+docs/presentation-outline.md
 **/src/main/generated/
 
 ### IntelliJ IDEA ###

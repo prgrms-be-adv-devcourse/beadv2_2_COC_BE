@@ -95,7 +95,8 @@ public class RentalCreationService {
 					product.sellerId(),
 					cartItem.getStartDate(),
 					cartItem.getEndDate(),
-					product.price()
+					product.price(),
+					product.securityDepositAmount()
 			);
 			
 			rental.addItem(rentalItem);
@@ -139,7 +140,8 @@ public class RentalCreationService {
 				product.sellerId(),
 				command.startDate(),
 				command.endDate(),
-				product.price()
+				product.price(),
+				product.securityDepositAmount()
 		);
 		
 		rental.addItem(rentalItem);

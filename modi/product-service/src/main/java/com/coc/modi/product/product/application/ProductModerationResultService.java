@@ -20,6 +20,8 @@ import com.coc.modi.product.product.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -71,7 +73,11 @@ public class ProductModerationResultService {
 		try {
 			return ProductModerationStatus.valueOf(result);
 		} catch (IllegalArgumentException ex) {
-			log.warn("Unknown moderation result. result={}", result, ex);
+			log.warn("product_moderation_result_unknown",
+					kv("log_type", "service"),
+					kv("moderation.result", result),
+					kv("exception.class", ex.getClass().getName()),
+					ex);
 			return null;
 		}
 	}
