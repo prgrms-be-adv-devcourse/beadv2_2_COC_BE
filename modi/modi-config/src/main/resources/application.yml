@@ -46,11 +46,11 @@ spring:
           resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.permitted-number-of-calls-in-half-open-state: 3
           resilience4j.circuitbreaker.instances.settlementPayoutCircuitBreaker.automatic-transition-from-open-to-half-open-enabled: true
           openai.api-key: ${OPENAI_API_KEY}
-          security.oauth2.client.registration.naver.client-id: ${NAVER_CLIENT_ID}
-          security.oauth2.client.registration.naver.client-secret: ${NAVER_CLIENT_SECRET}
-          security.oauth2.client.registration.google.client-id: ${GOOGLE_CLIENT_ID}
-          security.oauth2.client.registration.google.client-secret: ${GOOGLE_CLIENT_SECRET}
-          security.oauth2.client.registration.kakao.client-id: ${KAKAO_CLIENT_ID}
+          security.oauth2.client.registration.naver.client-id: ${OAUTH2_NAVER_CLIENT_ID}
+          security.oauth2.client.registration.naver.client-secret: ${OAUTH2_NAVER_CLIENT_SECRET}
+          security.oauth2.client.registration.google.client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
+          security.oauth2.client.registration.google.client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+          security.oauth2.client.registration.kakao.client-id: ${OAUTH2_KAKAO_CLIENT_ID}
         git:
           uri: ${GIT_URI}
           username: ${GIT_USER}
