@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.coc.modi.admin.seller.application.dto.SellerRegistrationResponse;
+import com.coc.modi.admin.infrastructure.client.AdminFeignClientConfig;
 import com.coc.modi.admin.seller.infrastructure.client.dto.SellerRegistrationPageRequest;
 import com.coc.modi.admin.seller.infrastructure.client.dto.SellerRegistrationPageResponse;
 
@@ -15,7 +16,8 @@ import com.coc.modi.admin.seller.infrastructure.client.dto.SellerRegistrationPag
 		contextId = "supportSellerApprovalClient",
 		name = "seller-service",
 		url = "${seller-service.url}",
-		path = "/internal/sellers"
+		path = "/internal/sellers",
+		configuration = AdminFeignClientConfig.class
 )
 public interface SellerApprovalClient {
 

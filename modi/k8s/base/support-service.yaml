@@ -37,11 +37,13 @@ spec:
               containerPort: 8086
           env:
             - name: JAVA_TOOL_OPTIONS
-              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
+              value: "-Xms128m -Xmx512m -XX:MaxMetaspaceSize=256m"
             - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
               value: "false"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
               value: "true"
+            - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+              value: "servlet"
             - name: SERVER_PORT
               value: "8086"
             - name: SPRING_DATASOURCE_URL
@@ -51,14 +53,16 @@ spec:
                   key: SUPPORT_DB_URL
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "kafka:9092"
+            - name: FEIGN_HTTPCLIENT_ENABLED
+              value: "true"
           envFrom:
             - secretRef:
                 name: modi-env
           resources:
             requests:
-              memory: "200Mi"
+              memory: "400Mi"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
           startupProbe:
             tcpSocket:
               port: 8086

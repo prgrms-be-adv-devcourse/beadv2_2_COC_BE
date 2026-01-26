@@ -1,6 +1,8 @@
 spring:
   application:
     name: support-service
+  main:
+    web-application-type: servlet
   config:
     import: configserver:http://modi-config:8888
 

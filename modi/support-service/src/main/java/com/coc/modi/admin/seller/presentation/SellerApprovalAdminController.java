@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,9 +63,15 @@ public class SellerApprovalAdminController {
 	}
 
 	private void requireAdmin(CustomMember member) {
-
-		if (member == null || !"ADMIN".equals(member.role())) {
-			throw new AdminAccessDeniedException("관리자 권한이 필요합니다.");
+		if (member != null && "ADMIN".equals(member.role())) {
+			return;
 		}
+		if (SecurityContextHolder.getContext().getAuthentication() != null
+				&& SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+						.anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority())
+								|| "ADMIN".equals(auth.getAuthority()))) {
+			return;
+		}
+		throw new AdminAccessDeniedException("관리자 권한이 필요합니다.");
 	}
 }

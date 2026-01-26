@@ -6,8 +6,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import com.coc.modi.common.auth.InternalApiFeignConfig;
+
 @EnableJpaAuditing
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.coc.modi", defaultConfiguration = InternalApiFeignConfig.class)
 @EnableScheduling
 @SpringBootApplication(scanBasePackages = "com.coc.modi")
 public class RentalServiceApplication {

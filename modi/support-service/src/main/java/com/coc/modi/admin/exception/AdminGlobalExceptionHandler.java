@@ -16,7 +16,7 @@ import com.coc.modi.common.BaseException;
 import com.coc.modi.common.ErrorCode;
 import feign.FeignException;
 
-@RestControllerAdvice(basePackages = "com.coc.modi.member.admin")
+@RestControllerAdvice(basePackages = "com.coc.modi.admin")
 public class AdminGlobalExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminGlobalExceptionHandler.class);

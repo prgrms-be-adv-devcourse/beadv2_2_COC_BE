@@ -32,6 +32,8 @@ spring:
           seller-service.url: ${SELLER_SERVICE_URL}
           eureka.client.service-url.defaultZone: ${EUREKA_URI}
           spring.elasticsearch.uris: ${ELASTIC_URL}
+          spring.cloud.openfeign.httpclient.enabled: true
+          spring.cloud.openfeign.okhttp.enabled: false
           cloud.aws.s3.bucket: ${S3_BUCKET_NAME}
           cloud.aws.region.static: ${S3_REGION}
           cloud.aws.credentials.accessKey: ${S3_ACCESS_KEY}

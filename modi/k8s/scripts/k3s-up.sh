@@ -82,7 +82,6 @@ STATEFULSETS=(
   statefulset/pgvector
   statefulset/kafka
   statefulset/redis
-  statefulset/elasticsearch
 )
 
 DEPLOYMENTS=(

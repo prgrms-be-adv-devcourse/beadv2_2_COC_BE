@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PatchMapping;
 
 import com.coc.modi.admin.application.dto.AdminMemberCreateResponse;
+import com.coc.modi.admin.infrastructure.client.AdminFeignClientConfig;
 import com.coc.modi.admin.infrastructure.client.member.dto.AdminMemberCreateInternalRequest;
 import com.coc.modi.admin.infrastructure.client.member.dto.MemberPageRequest;
 import com.coc.modi.admin.infrastructure.client.member.dto.MemberPageResponse;
@@ -19,7 +20,8 @@ import com.coc.modi.admin.infrastructure.client.member.dto.MemberSummaryResponse
 
 @FeignClient(
 		name = "memberAdminClient",
-		url = "${member-service.url}"
+		url = "${member-service.url}",
+		configuration = AdminFeignClientConfig.class
 )
 public interface MemberAdminClient {
 

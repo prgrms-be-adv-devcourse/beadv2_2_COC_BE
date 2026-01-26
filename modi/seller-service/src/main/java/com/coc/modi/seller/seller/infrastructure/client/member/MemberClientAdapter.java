@@ -41,6 +41,6 @@ public class MemberClientAdapter {
 	private MemberEmailResponse fallbackGetMemberEmail(Long memberId, Throwable throwable) {
 		
 		log.warn("회원 이메일 조회 실패 memberId={}", memberId, throwable);
-		throw new SellerException(ErrorCode.INTERNAL_ERROR, "회원 서비스 호출에 실패했습니다.");
+		return null;
 	}
 }

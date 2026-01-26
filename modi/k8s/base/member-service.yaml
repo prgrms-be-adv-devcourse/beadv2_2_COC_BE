@@ -37,7 +37,7 @@ spec:
               containerPort: 8085
           env:
             - name: JAVA_TOOL_OPTIONS
-              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m"
+              value: "-Xms128m -Xmx256m -XX:MaxMetaspaceSize=256m"
             - name: SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED
               value: "false"
             - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
@@ -58,7 +58,7 @@ spec:
             requests:
               memory: "200Mi"
             limits:
-              memory: "512Mi"
+              memory: "768Mi"
           startupProbe:
             tcpSocket:
               port: 8085
