@@ -2,6 +2,8 @@ package com.coc.modi.delivery.delivery.infrastructure.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 public record TrackerDeliveryResponse(
 		Data data,
 		List<ApiError> errors
@@ -29,6 +31,7 @@ public record TrackerDeliveryResponse(
 	) {
 	}
 	
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ApiError(
 			String message
 	) {
