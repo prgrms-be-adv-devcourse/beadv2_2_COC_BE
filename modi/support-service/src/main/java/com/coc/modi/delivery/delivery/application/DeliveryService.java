@@ -139,10 +139,8 @@ public class DeliveryService {
 		}
 
 		RentalItemSellerResponse rentalInfo;
-		SellerIdResponse sellerInfo;
 		try {
 			rentalInfo = rentalInternalFeignClient.getRentalItemSeller(rentalItemId);
-			sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
 		} catch (FeignException ex) {
 			log.warn("내부 서비스 호출 실패 rentalItemId={}, memberId={}", rentalItemId, memberId, ex);
 			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈/판매자 서비스 호출에 실패했습니다.");
@@ -152,13 +150,22 @@ public class DeliveryService {
 			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "렌탈 정보를 확인할 수 없습니다. rentalItemId: " + rentalItemId);
 		}
 
-		Long sellerId = sellerInfo != null ? sellerInfo.sellerId() : null;
 		Long buyerId = rentalInfo.memberId();
 
-		boolean sellerMatch = sellerId != null && sellerId.equals(rentalInfo.sellerId());
-		boolean buyerMatch = buyerId != null && buyerId.equals(memberId);
+		if (buyerId != null && buyerId.equals(memberId)) {
+			return;
+		}
 
-		if (!sellerMatch && !buyerMatch) {
+		SellerIdResponse sellerInfo;
+		try {
+			sellerInfo = sellerInternalFeignClient.getSellerByMember(memberId);
+		} catch (FeignException ex) {
+			log.warn("판매자 서비스 호출 실패 rentalItemId={}, memberId={}", rentalItemId, memberId, ex);
+			throw new DeliveryException(ErrorCode.INTERNAL_ERROR, "판매자 서비스 호출에 실패했습니다.");
+		}
+
+		Long sellerId = sellerInfo != null ? sellerInfo.sellerId() : null;
+		if (sellerId == null || !sellerId.equals(rentalInfo.sellerId())) {
 			throw new DeliveryForbiddenException(
 					"조회 권한이 없습니다. rentalItemId: " + rentalItemId + ", memberId: " + memberId);
 		}
